@@ -376,7 +376,7 @@
         }
       }, [selectedRowId, selectedRecord]);
 
-      // 2. Wait patiently for the database connection to supply the record before opening
+      // Wait patiently for the database connection to supply the record before opening deep link
       useEffect(() => {
         if (pendingDeepLink && deceasedList.length > 0) {
           const record = deceasedList.find(d => d.id === pendingDeepLink);
@@ -932,11 +932,20 @@
         return deceasedList.filter(item => {
           const matchSearch = item.deceasedName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               item.ref.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchLoc = locationFilter === "All" || item.location === locationFilter;
+          
+          let matchLoc = true;
+          if (activeBrand === "cromer") {
+            matchLoc = item.location === "Cromer";
+          } else if (activeBrand === "gowards") {
+            matchLoc = item.location === "Fakenham";
+          } else {
+            matchLoc = locationFilter === "All" || item.location === locationFilter;
+          }
+
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           return matchSearch && matchLoc && matchStatus;
         });
-      }, [deceasedList, searchQuery, locationFilter, statusFilter]);
+      }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand]);
 
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
@@ -993,10 +1002,16 @@
               <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <h2 className="text-base md:text-lg font-black text-white mr-2">Active Case Dashboard</h2>
-                  <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
-                    <option value="All">All Branches</option>
-                    {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
-                  </select>
+                  {activeBrand === "joint" ? (
+                    <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
+                      <option value="All">All Branches</option>
+                      {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                    </select>
+                  ) : (
+                    <span className="bg-slate-900 border border-slate-800 text-xs text-amber-400 font-extrabold px-3 py-1.5 rounded-lg flex-1 sm:flex-none">
+                      📍 {activeBrand === "cromer" ? "Cromer Branch" : "Fakenham Branch"} Only
+                    </span>
+                  )}
                   <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
                     <option value="Active">📁 Active Custody ({deceasedList.filter(d => !d.isArchived).length})</option>
                     <option value="Archived">🗃️ Archived Files ({deceasedList.filter(d => d.isArchived).length})</option>
@@ -1294,7 +1309,7 @@
                                 {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
                                   const isCurrent = formState?.pickupStatus === st;
                                   return (
-                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
+                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
                                   );
                                 })}
                               </div>

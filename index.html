@@ -59,29 +59,17 @@
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // ==========================================================
-    // 1. PASTE YOUR copied FIREBASE CONFIGURATION OBJECT HERE:
+    // 1. YOUR LIVE FIREBASE CONFIGURATION OBJECT:
     // ==========================================================
-   // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBG7j-uqX15Yb4ccGruvbK7s8SyNUwW-rk",
-  authDomain: "parlourcare-fcc26.firebaseapp.com",
-  projectId: "parlourcare-fcc26",
-  storageBucket: "parlourcare-fcc26.firebasestorage.app",
-  messagingSenderId: "86774427040",
-  appId: "1:86774427040:web:db65b7e2da8abdd9b108c5",
-  measurementId: "G-YZ6KT1P1BQ"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+    const myFirebaseConfig = {
+      apiKey: "AIzaSyBG7j-uqX15Yb4ccGruvbK7s8SyNUwW-rk",
+      authDomain: "parlourcare-fcc26.firebaseapp.com",
+      projectId: "parlourcare-fcc26",
+      storageBucket: "parlourcare-fcc26.firebasestorage.app",
+      messagingSenderId: "86774427040",
+      appId: "1:86774427040:web:db65b7e2da8abdd9b108c5",
+      measurementId: "G-YZ6KT1P1BQ"
+    };
 
     // ==========================================================
     // 2. LIVE CONFIG ROUTER (Do not modify this block)
@@ -1217,7 +1205,7 @@ const analytics = getAnalytics(app);
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Selected Wood</label>
+                              <label className="text-[10px] font-bold uppercase text-amber-450 block mb-1">Selected Wood</label>
                               <select value={selectedRecord?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange(selectedRecord.id, 'coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
@@ -1378,7 +1366,7 @@ const analytics = getAnalytics(app);
                               <div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{selectedRecord?.pickupStaffEmails || 'None'}</span></div>
                             </div>
                             <div className="mt-4 grid grid-cols-2 gap-2">
-                              <button type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 flex items-center justify-center gap-1">Preview</button>
+                              <button type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 flex items-center justify-center gap-1">Preview</button>
                               <a href={dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl flex items-center justify-center gap-1 text-center font-bold shadow-md shadow-amber-500/10">Send</a>
                             </div>
                           </div>
@@ -1495,7 +1483,7 @@ const analytics = getAnalytics(app);
                         <button 
                           type="button" 
                           onClick={() => handleArchiveToggle(selectedRecord.id)}
-                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.FolderOpen size={14} className="text-amber-400" />

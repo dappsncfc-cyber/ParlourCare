@@ -242,6 +242,7 @@
     function App() {
       const [deceasedList, setDeceasedList] = useState(() => {
         const local = localStorage.getItem('norfolk_mortuary_cases');
+        // Fall back to empty array if local storage is cleared or empty
         return local ? JSON.parse(local) : initialCaseload;
       });
       const [selectedRowId, setSelectedRowId] = useState(null); 
@@ -1054,7 +1055,7 @@
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Grooming & Sanitary</label>
                               <textarea value={selectedRecord?.preparationsDetails || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'preparationsDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
-                        </div>
+                            </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Jewellery Custody</label>
                               <textarea value={selectedRecord?.jewelleryDetails || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
@@ -1139,7 +1140,7 @@
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
-                              <input type="text" value={selectedRecord?.dob || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-450 font-bold w-full focus:outline-none" />
+                              <input type="text" value={selectedRecord?.dob || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
@@ -1261,7 +1262,7 @@
                     {/* DOCUMENT PRINT STATION */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
                       <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400">
-                        <Icons.Printer size={13} className="text-indigo-450" />
+                        <Icons.Printer size={13} className="text-indigo-455" />
                         <span className="text-[9px] font-bold tracking-widest uppercase">Document Print Station</span>
                       </div>
                       
@@ -1297,7 +1298,7 @@
                             className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                           >
                             <span className="flex items-center gap-2">
-                              <Icons.Truck size={14} className="text-rose-450" />
+                              <Icons.Truck size={14} className="text-rose-455" />
                               Print Coroner Dispatch (Tab 3)
                             </span>
                             <Icons.Printer size={12} className="text-slate-500" />
@@ -1345,7 +1346,7 @@
                     {/* FILE ADMINISTRATION CARD */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
                       <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400">
-                        <Icons.FolderOpen size={13} className="text-indigo-450" />
+                        <Icons.FolderOpen size={13} className="text-indigo-455" />
                         <span className="text-[9px] font-bold tracking-widest uppercase">File Administration</span>
                       </div>
                       

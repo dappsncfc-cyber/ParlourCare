@@ -445,67 +445,77 @@
         setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       };
 
-      const executeIframePrint = (htmlContent) => {
+      const executeIframePrint = (htmlContent, isSticker = false) => {
         try {
-          const existingIframe = document.getElementById('mortuary-print-iframe');
-          if (existingIframe) {
-            existingIframe.remove();
+          // Initialize print output in a new sandboxed about:blank tab with standard top-bar desk controls
+          const printWindow = window.open('about:blank', '_blank');
+          if (printWindow) {
+            const decoratedHtml = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <title>Mortuary Portal - Print</title>
+                  <style>
+                    body { 
+                      margin: 0; 
+                      padding: 0; 
+                      background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; 
+                      color: #000000; 
+                      font-family: 'Segoe UI', Arial, sans-serif; 
+                      -webkit-print-color-adjust: exact; 
+                      print-color-adjust: exact; 
+                    }
+                    .print-canvas { 
+                      background: #ffffff; 
+                      min-height: ${isSticker ? 'auto' : '100vh'}; 
+                      box-sizing: border-box; 
+                      padding: ${isSticker ? '0' : '40px'};
+                      ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''}
+                    }
+                    @media print {
+                      body { padding: 0 !important; margin: 0 !important; }
+                      .no-print { display: none !important; }
+                      .print-canvas { padding: 0 !important; background: transparent !important; }
+                      ${isSticker ? '@page { size: 51mm 51mm; margin: 0mm; }' : ''}
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="no-print" style="background: #0f172a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: sticky; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); -webkit-font-smoothing: antialiased;">
+                    <span style="color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">📄 Norfolk Mortuary Portal - ${isSticker ? 'Sticker Desk' : 'Print Desk'}</span>
+                    <div style="display: flex; gap: 8px;">
+                      <button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(234, 179, 8, 0.2); transition: background 0.2s;">
+                        🖨️ Tap to Print
+                      </button>
+                      <button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">
+                        Close Tab
+                      </button>
+                    </div>
+                  </div>
+                  <div class="print-canvas">
+                    ${htmlContent}
+                  </div>
+                  <script>
+                    window.onload = function() {
+                      setTimeout(() => {
+                        window.print();
+                      }, 500);
+                    };
+                  <\/script>
+                </body>
+              </html>
+            `;
+            
+            printWindow.document.open();
+            printWindow.document.write(decoratedHtml);
+            printWindow.document.close();
+          } else {
+            showNotification(
+              "Print Desk Blocked", 
+              "Your browser blocked the print window. Please click allow pop-ups for this mortuary portal.", 
+              "info"
+            );
           }
-
-          const iframe = document.createElement('iframe');
-          iframe.id = 'mortuary-print-iframe';
-          iframe.style.position = 'fixed';
-          iframe.style.right = '0';
-          iframe.style.bottom = '0';
-          iframe.style.width = '0';
-          iframe.style.height = '0';
-          iframe.style.border = '0';
-          iframe.style.zIndex = '-9999';
-          document.body.appendChild(iframe);
-
-          const doc = iframe.contentWindow.document || iframe.contentDocument;
-          const decoratedHtml = `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Mortuary Portal - Print</title>
-                <style>
-                  body { 
-                    margin: 0; 
-                    padding: 40px; 
-                    background-color: #ffffff; 
-                    color: #000000; 
-                    font-family: 'Segoe UI', Arial, sans-serif; 
-                    -webkit-print-color-adjust: exact; 
-                    print-color-adjust: exact; 
-                  }
-                  @media print {
-                    body { padding: 0 !important; margin: 0 !important; }
-                    .no-print { display: none !important; }
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="print-canvas">
-                  ${htmlContent}
-                </div>
-              </body>
-            </html>
-          `;
-          
-          doc.open();
-          doc.write(decoratedHtml);
-          doc.close();
-
-          setTimeout(() => {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                iframe.remove();
-              }
-            }, 5000);
-          }, 800);
         } catch (error) {
           console.error("Print execution failed:", error);
           showNotification("Print Error", "An error occurred while generating the print template.", "info");
@@ -553,7 +563,7 @@
 
       const printCareDocument = (record) => {
         const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #000; background: #fff; line-height: 1.5;">
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
             ${printDocHeader(record, "Clinical Mortuary & Registration Record")}
             ${printRecordCard(record)}
             
@@ -587,7 +597,7 @@
 
       const printWorkshopDocument = (record) => {
         const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #000; background: #fff; line-height: 1.5;">
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
             ${printDocHeader(record, "Coffin Joinery & Workshop Specification")}
             ${printRecordCard(record)}
 
@@ -626,7 +636,7 @@
         }
 
         const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #000; background: #fff; line-height: 1.5;">
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
             ${printDocHeader(record, "Coroner's Removal Authority & Dispatch")}
             ${printRecordCard(record)}
 
@@ -672,7 +682,7 @@
         }
 
         const htmlContent = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #000; background: #fff; line-height: 1.4;">
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.4;">
             ${printDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)")}
             ${printRecordCard(record)}
 
@@ -749,24 +759,32 @@
         }
         let path = window.location.pathname || "/";
         const deepLinkUrl = `${origin}${path}?case=${record?.id}`;
-        const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
+        // High density QR code request size
+        const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
 
+        // Stacked high-contrast template perfectly proportioned to fit a 51mm x 51mm (2" x 2") square canvas
         const htmlContent = `
-          <div style="border: 3px solid #000; height: 100%; padding: 10px; box-sizing: border-box; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif;">
-            <div style="width: 55%; display: flex; flex-direction: column; justify-content: center; gap: 12px;">
-              <div style="font-size: 20px; font-weight: 900; text-transform: uppercase; line-height: 1.2; word-wrap: break-word;">${record?.title} ${record?.deceasedName || "Unnamed Case"}</div>
-              <div style="font-size: 14px; font-weight: bold; border-top: 2px solid #000; padding-top: 6px;">
-                <span style="font-size: 10px; text-transform: uppercase; color: #555; display: block; margin-bottom: 2px;">Date of Birth (D.O.B.)</span>
-                <span style="font-family: monospace; font-size: 15px;">${record?.dob || 'PENDING'}</span>
+          <div style="width: 51mm; height: 51mm; box-sizing: border-box; border: 2.5px solid #000000; padding: 3.5mm; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; text-align: center; overflow: hidden;">
+            <!-- Title/Name Block -->
+            <div style="width: 100%;">
+              <div style="font-size: 10px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 1mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                ${record?.title} ${record?.deceasedName || "Unnamed Case"}
               </div>
             </div>
-            <div style="width: 40%; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 100px; height: 100px; border: 1px solid #000; display: block;" />
-              <span style="font-size: 8px; font-weight: bold; margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase;">Scan for Care File</span>
+            
+            <!-- QR Block (Centered) -->
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 1mm 0;">
+              <img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 24mm; height: 25mm; border: 1.5px solid #000000; display: block; object-fit: contain;" />
+            </div>
+            
+            <!-- Footer / DOB Block -->
+            <div style="width: 100%; border-top: 1.5px solid #000000; padding-top: 1mm; margin-top: 0.5mm;">
+              <div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace;">D.O.B: ${record?.dob || 'PENDING'}</div>
+              <div style="font-size: 6px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; margin-top: 0.5mm;">Scan for Care File</div>
             </div>
           </div>
         `;
-        executeIframePrint(htmlContent);
+        executeIframePrint(htmlContent, true);
       };
 
       const dispatchEmailData = useMemo(() => {
@@ -1006,8 +1024,8 @@
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.AlertTriangle className="text-rose-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Clinical Protocols & Hazards</h3></div>
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-rose-400 block mb-1">Bio-Hazard Infection</label>
-                              <select value={selectedRecord?.infection || 'None'} onChange={(e) => handleFieldChange(selectedRecord.id, 'infection', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-rose-400 font-bold w-full focus:outline-none">
+                              <label className="text-[10px] font-bold uppercase text-rose-450 block mb-1">Bio-Hazard Infection</label>
+                              <select value={selectedRecord?.infection || 'None'} onChange={(e) => handleFieldChange(selectedRecord.id, 'infection', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-rose-450 font-bold w-full focus:outline-none">
                                 {infectionRisks.map(r => <option key={r} value={r}>{r}</option>)}
                               </select>
                             </div>
@@ -1263,7 +1281,7 @@
                         <button 
                           type="button" 
                           onClick={() => printWorkshopDocument(selectedRecord)}
-                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Hammer size={14} className="text-amber-400" />

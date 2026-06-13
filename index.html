@@ -96,7 +96,7 @@
       }
     }
 
-    const { useState, useMemo, useEffect } = React;
+    const { useState, useMemo, useEffect, useRef } = React;
 
     const Icons = {
       Users: ({ size = 16, className = "" }) => (
@@ -289,6 +289,10 @@
         return local ? JSON.parse(local) : initialCaseload;
       });
       const [selectedRowId, setSelectedRowId] = useState(null); 
+      
+      // Decoupled editing state to prevent real-time keystroke race conditions
+      const [formState, setFormState] = useState(null);
+
       const [activeTab, setActiveTab] = useState("care");
       const [activeBrand, setActiveBrand] = useState("joint");
       const [searchQuery, setSearchQuery] = useState("");
@@ -298,6 +302,7 @@
       const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
       const [dialog, setDialog] = useState({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       const [user, setUser] = useState(null);
+      const seededRef = useRef(false);
 
       // RULE 3 - Custom auth init FIRST, fallback to anonymous auth
       useEffect(() => {
@@ -340,8 +345,8 @@
         const unsubscribe = onSnapshot(
           colRef,
           (snapshot) => {
-            if (snapshot.empty) {
-              // Cloud collection is fresh! Let's auto-seed the cloud database with our current cache
+            if (snapshot.empty && !seededRef.current) {
+              seededRef.current = true; // Lock immediately to prevent recursive loop runs
               const localData = localStorage.getItem('norfolk_mortuary_cases');
               const currentCases = localData ? JSON.parse(localData) : initialCaseload;
               
@@ -416,18 +421,17 @@
         }
       };
 
-      // Handle deep-linking search query on page load
+      const selectedRecord = useMemo(() => {
+        if (!selectedRowId) return null;
+        return deceasedList.find(d => d.id === selectedRowId) || null;
+      }, [deceasedList, selectedRowId]);
+
+      // Load edited case record data into isolated local form state on selected row change
       useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const caseId = params.get('case');
-        if (caseId && deceasedList.length > 0) {
-          const record = deceasedList.find(d => d.id === caseId);
-          if (record) {
-            setSelectedRowId(caseId);
-            setActiveTab(record.isCoroner ? "pickup" : "care");
-          }
+        if (selectedRecord && (!formState || formState.id !== selectedRowId)) {
+          setFormState(JSON.parse(JSON.stringify(selectedRecord)));
         }
-      }, [deceasedList]);
+      }, [selectedRowId, selectedRecord]);
 
       const locations = useMemo(() => ["Cromer", "Fakenham"], []);
       const conditions = useMemo(() => ["Good", "Medium", "Poor"], []);
@@ -436,11 +440,6 @@
       const coffinsList = useMemo(() => ["Chiltern Oak", "Regent Oak", "New Ascot", "Simple Coffin", "Mendip Oak", "Cardboard", "Simple Pine", "None"], []);
       const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
       const vehicleOptions = useMemo(() => ["Vauxhall Vivaro CRM-1", "Vauxhall Vivaro FAK-2", "Ford Transit Group-1", "First Call Vehicle 3"], []);
-
-      const selectedRecord = useMemo(() => {
-        if (!selectedRowId) return null;
-        return deceasedList.find(d => d.id === selectedRowId) || null;
-      }, [deceasedList, selectedRowId]);
 
       const brandThemes = useMemo(() => ({
         joint: {
@@ -465,26 +464,381 @@
 
       const currentTheme = brandThemes[activeBrand];
 
-      const handleFieldChange = (id, fieldName, value) => {
-        const itemToUpdate = deceasedList.find(item => item.id === id);
-        if (itemToUpdate) {
-          const updatedRecord = { ...itemToUpdate, [fieldName]: value };
-          saveCaseToDb(updatedRecord);
+      // --- QR CODE GENERATOR HELPER ---
+      const getQrCodeUrl = (record, size = 200) => {
+        if (!record) return '';
+        let origin = window.location.origin;
+        if (!origin || origin === 'null' || origin.startsWith('file')) {
+          origin = "https://cromer-gowards-mortuary.web.app";
+        }
+        let path = window.location.pathname || "/";
+        const deepLinkUrl = `${origin}${path}?case=${record.id}`;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=f8fafc&color=0f172a`;
+      };
+
+      // --- PRINT LOGIC INFRASTRUCTURE ---
+      const executeIframePrint = (htmlContent, isSticker = false) => {
+        try {
+          const printWindow = window.open('about:blank', '_blank');
+          if (printWindow) {
+            const decoratedHtml = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <title>Mortuary Portal - Print</title>
+                  <style>
+                    body { 
+                      margin: 0; 
+                      padding: 0; 
+                      background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; 
+                      color: #000000; 
+                      font-family: 'Segoe UI', Arial, sans-serif; 
+                      -webkit-print-color-adjust: exact; 
+                      print-color-adjust: exact; 
+                    }
+                    .print-canvas { 
+                      background: #ffffff; 
+                      min-height: ${isSticker ? 'auto' : '100vh'}; 
+                      box-sizing: border-box; 
+                      padding: ${isSticker ? '0' : '40px'};
+                      ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''}
+                    }
+                    @media print {
+                      body { padding: 0 !important; margin: 0 !important; }
+                      .no-print { display: none !important; }
+                      .print-canvas { padding: 0 !important; background: transparent !important; }
+                      ${isSticker ? '@page { size: 51mm 51mm; margin: 0mm; }' : ''}
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="no-print" style="background: #0f172a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: sticky; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); -webkit-font-smoothing: antialiased;">
+                    <span style="color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">📄 Norfolk Mortuary Portal - ${isSticker ? 'Sticker Desk' : 'Print Desk'}</span>
+                    <div style="display: flex; gap: 8px;">
+                      <button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(234, 179, 8, 0.2); transition: background 0.2s;">
+                        🖨️ Tap to Print
+                      </button>
+                      <button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">
+                        Close Tab
+                      </button>
+                    </div>
+                  </div>
+                  <div class="print-canvas">
+                    ${htmlContent}
+                  </div>
+                  <script>
+                    window.onload = function() {
+                      setTimeout(() => {
+                        window.print();
+                      }, 500);
+                    };
+                  <\/script>
+                </body>
+              </html>
+            `;
+            
+            printWindow.document.open();
+            printWindow.document.write(decoratedHtml);
+            printWindow.document.close();
+          } else {
+            showNotification(
+              "Print Desk Blocked", 
+              "Your browser blocked the print window. Please click allow pop-ups for this mortuary portal.", 
+              "info"
+            );
+          }
+        } catch (error) {
+          console.error("Print execution failed:", error);
+          showNotification("Print Error", "An error occurred while generating the print template.", "info");
         }
       };
 
-      const handleStatusChange = (id, newStatus) => {
+      const printDocHeader = (record, docTitle) => {
+        let origin = window.location.origin;
+        if (!origin || origin === 'null' || origin.startsWith('file')) {
+          origin = "https://cromer-gowards-mortuary.web.app";
+        }
+        let path = window.location.pathname || "/";
+        const deepLinkUrl = `${origin}${path}?case=${record?.id}`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=ffffff&color=000000`;
+
+        return `
+          <div style="border-bottom: 3px double #000; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-family: 'Segoe UI', Arial, sans-serif;">
+            <div>
+              <h1 style="font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0; line-height: 1.2;">${currentTheme.brandName}</h1>
+              <h2 style="font-size: 13px; font-weight: bold; text-transform: uppercase; margin: 4px 0 0 0; color: #444;">${docTitle}</h2>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <div style="text-align: right;">
+                <span style="font-size: 12px; font-weight: bold; font-family: monospace; background: #e2e8f0; padding: 3px 8px; border: 1px solid #000; border-radius: 4px;">ARR: ${record?.ref}</span>
+                <div style="font-size: 9px; color: #555; margin-top: 5px;">Printed: ${getTimestamp().split(' ')[0]}</div>
+              </div>
+              <div style="border: 1px solid #000; padding: 2px; background: #fff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                <img src="${qrCodeUrl}" alt="QR Link" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+            </div>
+          </div>
+        `;
+      };
+
+      const printRecordCard = (record) => `
+        <div style="border: 1px solid #000; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; font-family: 'Segoe UI', Arial, sans-serif;">
+          <div><strong>Deceased:</strong> ${record?.title} ${record?.deceasedName || "Unnamed Admission"}</div>
+          <div><strong>Tray Assignment:</strong> ${record?.fridgeTray || 'PENDING'}</div>
+          <div><strong>Date of Birth:</strong> ${record?.dob || 'PENDING'}</div>
+          <div><strong>Date of Death:</strong> ${record?.dod || 'PENDING'}</div>
+          <div><strong>Branch Location:</strong> ${record?.location}</div>
+          <div><strong>Case Type:</strong> ${record?.isCoroner ? '⚖️ Coroner Mandate' : 'Standard Private'}</div>
+        </div>
+      `;
+
+      const printCareDocument = (record) => {
+        const htmlContent = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
+            ${printDocHeader(record, "Clinical Mortuary & Registration Record")}
+            ${printRecordCard(record)}
+            
+            ${record?.infection && record?.infection !== 'None' ? `
+              <div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px;">
+                🚨 BIO-HAZARD PROTOCOLS ACTIVE: ${record.infection.toUpperCase()}
+              </div>
+            ` : ''}
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Anatomical & Care Status</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Body Condition Score:</span> <strong>${record?.condition}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Implants/Defibrillators:</span> <strong>${record?.devicesDetails || 'None Registered'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Embalming Action:</span> <strong>${record?.embalmingDetails || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Key Milestone Date:</span> <strong>${record?.keyDate || 'Pending'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Sanitary Preparation & Grooming</div>
+              <div style="font-size: 13px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations only.'}</div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Valuables & Jewellery Custody Register</div>
+              <div style="font-size: 13px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No personal effects logged.'}</div>
+            </div>
+          </div>
+        `;
+        executeIframePrint(htmlContent);
+      };
+
+      const printWorkshopDocument = (record) => {
+        const htmlContent = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
+            ${printDocHeader(record, "Coffin Joinery & Workshop Specification")}
+            ${printRecordCard(record)}
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Timber Specification:</span> <strong>${record?.coffin}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Mountings & Linings:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Dimensions (Body Size):</span> <strong style="font-size: 16px; font-family: monospace;">${record?.bodySize || 'PENDING SPEC'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Engraved Name Plate Fixed:</span> <strong>${record?.plate || 'No'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">2. Dressing Attire & Verification</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Selected Apparel:</span> <strong>${record?.clothes || 'None Specified'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Apparel Received & Verified:</span> <strong>${record?.clothesChecked ? '✓ Yes (Verified)' : '✗ Pending Receipt'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">3. Viewing Milestones</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Family Viewing Request:</span> <strong>${record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Ready for Placement:</span> <strong>${record?.ready || 'No'}</strong></div>
+            </div>
+          </div>
+        `;
+        executeIframePrint(htmlContent);
+      };
+
+      const printCoronerDocument = (record) => {
+        if (!record?.isCoroner) return;
+        
+        let timelineHtml = '';
+        if (record?.pickupStatusTimestamps) {
+          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => {
+            timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
+          });
+        }
+
+        const htmlContent = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
+            ${printDocHeader(record, "Coroner's Removal Authority & Dispatch")}
+            ${printRecordCard(record)}
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>CAD Reference:</span> <strong>${record?.coronerRef || 'N/A'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Instructing Officer:</span> <strong>${record?.coronerOfficer || 'N/A'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Removal Logistics & Fleet</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Pickup Location:</span> <strong>${record?.pickupLocation || 'PENDING'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Destination:</span> <strong>${record?.pickupDestination || 'Cromer'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Scheduled Time:</span> <strong>${record?.pickupDateTime || 'PENDING'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Assigned Fleet Vehicle:</span> <strong>${record?.pickupVehicle || 'N/A'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew & Equipment Checks</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Crew Dispatched:</span> <strong>${(record?.pickupStaff || []).join(', ') || 'PENDING'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Mobilised Equipment:</span> <strong>${(record?.pickupEquipment || []).join(', ') || 'First Call Stretcher'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Current Mission Stage:</span> <strong style="text-transform: uppercase; color: #b45309;">${record?.pickupStatus}</strong></div>
+              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;">
+                <div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>
+                ${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}
+              </div>
+            </div>
+          </div>
+        `;
+        executeIframePrint(htmlContent);
+      };
+
+      const printCombinedMasterDocument = (record) => {
+        let timelineHtml = '';
+        if (record?.pickupStatusTimestamps) {
+          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => {
+            timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
+          });
+        }
+
+        const htmlContent = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.4;">
+            ${printDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)")}
+            ${printRecordCard(record)}
+
+            ${record?.infection && record?.infection !== 'None' ? `
+              <div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">
+                🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}
+              </div>
+            ` : ''}
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Body Condition:</span> <strong>${record?.condition}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Defibrillators/Pacemaker:</span> <strong>${record?.devicesDetails || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Green Form Filed:</span> <strong>${record?.greenCoroner || 'No'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Embalming Logs:</span> <strong>${record?.embalmingDetails || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Key Milestone Date:</span> <strong>${record?.keyDate || 'Pending'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div>
+              <div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div>
+              <div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div>
+            </div>
+
+            <div style="page-break-before: always; margin-top: 40px;"></div>
+
+            ${printDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2")}
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Linings & Accessories:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Joinery Dimensions:</span> <strong>${record?.bodySize || 'PENDING SPEC'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Engraved Plate Affixed:</span> <strong>${record?.plate || 'No'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Preparation Complete:</span> <strong>${record?.ready || 'No'}</strong></div>
+            </div>
+
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Dressing Apparel:</span> <strong>${record?.clothes || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Apparel Checked/Received:</span> <strong>${record?.clothesChecked ? 'Yes' : 'No'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Family Viewing Status:</span> <strong>${record?.viewing || 'Requested'}</strong></div>
+            </div>
+
+            ${record?.isCoroner ? `
+              <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>CAD Ref:</span> <strong>${record.coronerRef || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coroner Officer:</span> <strong>${record.coronerOfficer || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Pick-up Location:</span> <strong>${record.pickupLocation || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Scheduled Date:</span> <strong>${record.pickupDateTime || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Fleet Vehicle:</span> <strong>${record.pickupVehicle || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Stage Status:</span> <strong>${record.pickupStatus || 'N/A'}</strong></div>
+                
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
+                  <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
+                  ${timelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+        executeIframePrint(htmlContent);
+      };
+
+      const printStickerAndCheckBlocks = (record) => {
+        let origin = window.location.origin;
+        if (!origin || origin === 'null' || origin.startsWith('file')) {
+          origin = "https://cromer-gowards-mortuary.web.app";
+        }
+        let path = window.location.pathname || "/";
+        const deepLinkUrl = `${origin}${path}?case=${record?.id}`;
+        // High density QR code request size
+        const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
+
+        // Stacked high-contrast template perfectly proportioned to fit a 51mm x 51mm (2" x 2") square canvas
+        const htmlContent = `
+          <div style="width: 51mm; height: 51mm; box-sizing: border-box; border: 2.5px solid #000000; padding: 3.5mm; display: flex; flex-direction: column; justify-content: space-between; align-items: center; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; text-align: center; overflow: hidden;">
+            <!-- Title/Name Block -->
+            <div style="width: 100%;">
+              <div style="font-size: 10px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 1mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                ${record?.title} ${record?.deceasedName || "Unnamed Case"}
+              </div>
+            </div>
+            
+            <!-- QR Block (Centered) -->
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 1mm 0;">
+              <img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 24mm; height: 25mm; border: 1.5px solid #000000; display: block; object-fit: contain;" />
+            </div>
+            
+            <!-- Footer / DOB Block -->
+            <div style="width: 100%; border-top: 1.5px solid #000000; padding-top: 1mm; margin-top: 0.5mm;">
+              <div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace;">D.O.B: ${record?.dob || 'PENDING'}</div>
+              <div style="font-size: 6px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; margin-top: 0.5mm;">Scan for Care File</div>
+            </div>
+          </div>
+        `;
+        executeIframePrint(htmlContent, true);
+      };
+
+      const handleFieldChange = (fieldName, value) => {
+        if (!formState) return;
+        const updatedRecord = { ...formState, [fieldName]: value };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+      };
+
+      const handleStatusChange = (newStatus) => {
+        if (!formState) return;
         const timestamp = getTimestamp();
-        const currentTimestamps = selectedRecord?.pickupStatusTimestamps || {};
+        const currentTimestamps = formState.pickupStatusTimestamps || {};
         const updatedTimestamps = {
           ...currentTimestamps,
           [newStatus]: timestamp
         };
         const updatedRecord = {
-          ...selectedRecord,
+          ...formState,
           pickupStatus: newStatus,
           pickupStatusTimestamps: updatedTimestamps
         };
+        setFormState(updatedRecord);
         saveCaseToDb(updatedRecord);
       };
 
@@ -494,6 +848,9 @@
         const updatedArchiveState = !item.isArchived;
         const updatedRecord = { ...item, isArchived: updatedArchiveState };
         saveCaseToDb(updatedRecord);
+        if (selectedRowId === id && formState) {
+          setFormState(prev => ({ ...prev, isArchived: updatedArchiveState }));
+        }
         showNotification(
           updatedArchiveState ? "Record Archived" : "Record Restored",
           `The file for ${item.deceasedName || "Unnamed Admission"} was moved successfully.`,
@@ -502,8 +859,8 @@
       };
 
       const handleStaffToggle = (staffName, staffEmail) => {
-        if (!selectedRecord) return;
-        const currentStaff = selectedRecord.pickupStaff || [];
+        if (!formState) return;
+        const currentStaff = formState.pickupStaff || [];
         let updatedStaff = [...currentStaff];
         
         if (updatedStaff.includes(staffName)) {
@@ -514,10 +871,11 @@
         const selectedEmails = norfolkStaffList.filter(s => updatedStaff.includes(s.name)).map(s => s.email).join(', ');
         
         const updatedRecord = {
-          ...selectedRecord,
+          ...formState,
           pickupStaff: updatedStaff,
           pickupStaffEmails: selectedEmails
         };
+        setFormState(updatedRecord);
         saveCaseToDb(updatedRecord);
       };
 
@@ -573,9 +931,34 @@
         };
 
         saveCaseToDb(newCase);
+        setFormState(newCase);
         setSelectedRowId(nextId);
         setActiveTab(isCoronerCase ? "pickup" : "care");
       };
+
+      const dispatchEmailData = useMemo(() => {
+        if (!formState) return null;
+        const subject = `🚨 CORONER DISPATCH: Removal Call - ${(formState?.title || '')} ${(formState?.deceasedName || '')} (${(formState?.ref || '')})`;
+        const body = `CROMER & DISTRICT / GOWARDS FUNERAL SERVICES\n` +
+          `CORONER'S PICK-UP DISPATCH INSTRUCTION\n` +
+          `----------------------------------------\n\n` +
+          `ARR Ref: ${(formState?.ref || '')}\n` +
+          `Deceased Name: ${(formState?.title || '')} ${(formState?.deceasedName || 'Unnamed')}\n` +
+          `CAD: ${(formState?.coronerRef || 'N/A')}\n` +
+          `Coroner Officer: ${(formState?.coronerOfficer || 'N/A')}\n\n` +
+          `Pick-up Location: ${(formState?.pickupLocation || 'PENDING')}\n` +
+          `Target Destination: ${(formState?.pickupDestination || 'PENDING')}\n` +
+          `Scheduled Date/Time: ${(formState?.pickupDateTime || 'PENDING')}\n\n` +
+          `Vehicle Assigned: ${(formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1')}\n` +
+          `Staff Dispatched: ${(formState?.pickupStaff || []).join(', ') || 'PENDING'}\n` +
+          `Equipment Checklist: ${(formState?.pickupEquipment || []).join(', ') || 'First Call Stretcher'}\n\n` +
+          `SPECIAL INSTRUCTIONS:\n` +
+          `- ${(formState?.pickupInstructions || 'Standard pick-up procedures.')}\n` +
+          `----------------------------------------\n`;
+
+        const mailtoLink = `mailto:${encodeURIComponent(formState?.pickupStaffEmails || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        return { subject, body, mailtoLink };
+      }, [formState]);
 
       const filteredList = useMemo(() => {
         return deceasedList.filter(item => {
@@ -724,7 +1107,7 @@
                 </div>
               </div>
             </div>
-          ) : selectedRowId && !selectedRecord ? (
+          ) : selectedRowId && !formState ? (
             <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col justify-center items-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
               <p className="mt-4 text-xs font-bold text-slate-400">Loading Case File...</p>
@@ -733,7 +1116,7 @@
             // DETAILS VIEW
             <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 animate-fade-in">
               <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md">
-                <button onClick={() => setSelectedRowId(null)} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0">
+                <button onClick={() => { setSelectedRowId(null); setFormState(null); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0">
                   <Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard
                 </button>
                 <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
@@ -742,7 +1125,7 @@
                 <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
                   <Icons.Hammer size={14} className="text-indigo-400" /> 2. Coffin Workshop
                 </button>
-                {selectedRecord?.isCoroner && (
+                {formState?.isCoroner && (
                   <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
                     <Icons.Mail size={14} className="text-indigo-400" /> 3. Coroner's Dispatch
                   </button>
@@ -763,33 +1146,33 @@
                           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                             <div className="col-span-2 sm:col-span-2">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Title</label>
-                              <select value={selectedRecord?.title || 'Mr'} onChange={(e) => handleFieldChange(selectedRecord.id, 'title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 {titles.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
-                              <input type="text" value={selectedRecord?.deceasedName || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
+                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Branch</label>
-                              <select value={selectedRecord?.location || 'Cromer'} onChange={(e) => handleFieldChange(selectedRecord.id, 'location', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none">
+                              <select value={formState?.location || 'Cromer'} onChange={(e) => handleFieldChange('location', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none">
                                 {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                               </select>
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tray No.</label>
-                              <input type="text" value={selectedRecord?.fridgeTray || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'fridgeTray', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-black w-full focus:outline-none text-center" />
+                              <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-black w-full focus:outline-none text-center" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
-                              <input type="text" value={selectedRecord?.dob || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-450 block mb-1">D.O.B.</label>
+                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
-                              <input type="text" value={selectedRecord?.dod || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
                             </div>
                           </div>
                         </div>
@@ -799,13 +1182,13 @@
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-rose-455 block mb-1">Bio-Hazard Infection</label>
-                              <select value={selectedRecord?.infection || 'None'} onChange={(e) => handleFieldChange(selectedRecord.id, 'infection', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-rose-455 font-bold w-full focus:outline-none">
+                              <select value={formState?.infection || 'None'} onChange={(e) => handleFieldChange('infection', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-rose-455 font-bold w-full focus:outline-none">
                                 {infectionRisks.map(r => <option key={r} value={r}>{r}</option>)}
                               </select>
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Condition</label>
-                              <select value={selectedRecord?.condition || 'Good'} onChange={(e) => handleFieldChange(selectedRecord.id, 'condition', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.condition || 'Good'} onChange={(e) => handleFieldChange('condition', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 {conditions.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </div>
@@ -813,11 +1196,11 @@
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Implants/Devices</label>
-                              <input type="text" value={selectedRecord?.devicesDetails || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'devicesDetails', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none font-bold text-amber-400" />
+                              <input type="text" value={formState?.devicesDetails || ''} onChange={(e) => handleFieldChange('devicesDetails', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none font-bold text-amber-400" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Embalming Details</label>
-                              <input type="text" value={selectedRecord?.embalmingDetails || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'embalmingDetails', e.target.value)} placeholder="Completed: DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input type="text" value={formState?.embalmingDetails || ''} onChange={(e) => handleFieldChange('embalmingDetails', e.target.value)} placeholder="Completed: DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
                             </div>
                           </div>
                         </div>
@@ -827,16 +1210,16 @@
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Grooming & Sanitary</label>
-                              <textarea value={selectedRecord?.preparationsDetails || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'preparationsDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
+                              <textarea value={formState?.preparationsDetails || ''} onChange={(e) => handleFieldChange('preparationsDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Jewellery Custody</label>
-                              <textarea value={selectedRecord?.jewelleryDetails || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
+                              <textarea value={formState?.jewelleryDetails || ''} onChange={(e) => handleFieldChange('jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
                             </div>
                           </div>
                           <div>
                             <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Key Milestone Date</label>
-                            <input type="text" value={selectedRecord?.keyDate || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full max-w-xs focus:outline-none" />
+                            <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full max-w-xs focus:outline-none" />
                           </div>
                         </div>
                       </>
@@ -850,23 +1233,23 @@
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-amber-450 block mb-1">Selected Wood</label>
-                              <select value={selectedRecord?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange(selectedRecord.id, 'coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </div>
                             <div className="sm:col-span-2">
                               <label className="text-[10px] font-bold uppercase text-amber-455 block mb-1">Linings, Plates & Handles</label>
-                              <input type="text" value={selectedRecord?.coffinAccessories || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300" />
+                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300" />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Body Size Dimensions</label>
-                              <input type="text" value={selectedRecord?.bodySize || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold" />
+                              <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Engraved Name Plate</label>
-                              <select value={selectedRecord?.plate || 'No'} onChange={(e) => handleFieldChange(selectedRecord.id, 'plate', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold text-center">
+                              <select value={formState?.plate || 'No'} onChange={(e) => handleFieldChange('plate', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold text-center">
                                 {triStateOptions.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
                             </div>
@@ -878,11 +1261,11 @@
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Dressing Attire</label>
-                              <input type="text" value={selectedRecord?.clothes || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'clothes', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold" />
+                              <input type="text" value={formState?.clothes || ''} onChange={(e) => handleFieldChange('clothes', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Family Viewing</label>
-                              <select value={selectedRecord?.viewing || 'R'} onChange={(e) => handleFieldChange(selectedRecord.id, 'viewing', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.viewing || 'R'} onChange={(e) => handleFieldChange('viewing', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 <option value="Yes">✓ Viewing Confirmed</option><option value="No">✗ Viewing Declined</option><option value="R">R Viewing Requested</option>
                               </select>
                             </div>
@@ -892,7 +1275,7 @@
                     )}
 
                     {/* CORONER TAB FORM MODULES */}
-                    {activeTab === "pickup" && selectedRecord?.isCoroner && (
+                    {activeTab === "pickup" && formState?.isCoroner && (
                       <>
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Coroner Authority Details</h3></div>
@@ -900,35 +1283,35 @@
                           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                             <div className="col-span-2 sm:col-span-2">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Title</label>
-                              <select value={selectedRecord?.title || 'Mr'} onChange={(e) => handleFieldChange(selectedRecord.id, 'title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 {titles.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
-                              <input type="text" value={selectedRecord?.deceasedName || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
+                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
-                              <input type="text" value={selectedRecord?.dob || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
+                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
-                              <input type="text" value={selectedRecord?.dod || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">CAD</label>
-                              <input type="text" value={selectedRecord?.coronerRef || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold" />
+                              <input type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer / Contact</label>
-                              <input type="text" value={selectedRecord?.coronerOfficer || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
                             </div>
                           </div>
                         </div>
@@ -941,9 +1324,9 @@
                               <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Dispatch Stage:</label>
                               <div className="grid grid-cols-2 gap-2 mb-3">
                                 {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
-                                  const isCurrent = selectedRecord?.pickupStatus === st;
+                                  const isCurrent = formState?.pickupStatus === st;
                                   return (
-                                    <button key={st} type="button" onClick={() => handleStatusChange(selectedRecord.id, st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
+                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
                                   );
                                 })}
                               </div>
@@ -952,7 +1335,7 @@
                                 <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">Dispatch Milestone Log</span>
                                 <div className="space-y-1">
                                   {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
-                                    const ts = selectedRecord?.pickupStatusTimestamps?.[st];
+                                    const ts = formState?.pickupStatusTimestamps?.[st];
                                     return (
                                       <div key={st} className="flex justify-between items-center py-0.5 border-b border-slate-800/40 last:border-0">
                                         <span className="text-slate-400 font-semibold">{st}:</span>
@@ -966,13 +1349,13 @@
                             <div className="space-y-4">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
-                                <select value={selectedRecord?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange(selectedRecord.id, 'pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <select value={formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Scheduled Date & Time</label>
-                                <input type="text" value={selectedRecord?.pickupDateTime || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-500" />
+                                <input type="text" value={formState?.pickupDateTime || ''} onChange={(e) => handleFieldChange('pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-500" />
                               </div>
                             </div>
                           </div>
@@ -981,7 +1364,7 @@
                             <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Assigned Staff:</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                               {norfolkStaffList.map((staff) => {
-                                const isChecked = (selectedRecord?.pickupStaff || []).includes(staff.name);
+                                const isChecked = (formState?.pickupStaff || []).includes(staff.name);
                                 return (
                                   <div key={staff.id} onClick={() => handleStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-850'}`}>
                                     {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}
@@ -994,8 +1377,8 @@
                           
                           <div>
                             <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Pick-up Address & Notes</label>
-                            <textarea value={selectedRecord?.pickupLocation || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none mb-2" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
-                            <textarea value={selectedRecord?.pickupInstructions || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
+                            <textarea value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none mb-2" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
+                            <textarea value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
                           </div>
                         </div>
 
@@ -1007,7 +1390,7 @@
                               <span className="text-[10px] font-black tracking-widest uppercase">Dispatch Emailer</span>
                             </div>
                             <div className="space-y-2.5 bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono">
-                              <div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{selectedRecord?.pickupStaffEmails || 'None'}</span></div>
+                              <div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{formState?.pickupStaffEmails || 'None'}</span></div>
                             </div>
                             <div className="mt-4 grid grid-cols-2 gap-2">
                               <button type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 flex items-center justify-center gap-1">Preview</button>
@@ -1021,7 +1404,7 @@
                     {/* SAVE & RETURN BUTTON */}
                     <div className="flex justify-end pb-8 pt-4">
                       <button 
-                        onClick={() => setSelectedRowId(null)}
+                        onClick={() => { setSelectedRowId(null); setFormState(null); }}
                         className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 py-3.5 sm:py-3 rounded-2xl font-black text-sm tracking-wide shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition transform active:scale-95"
                       >
                         <Icons.Save size={18} /> Save & Return to Summary
@@ -1042,7 +1425,7 @@
                       <div className="mt-8 space-y-2.5 w-full">
                         <button 
                           type="button" 
-                          onClick={() => printCareDocument(selectedRecord)}
+                          onClick={() => printCareDocument(formState)}
                           className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                         >
                           <span className="flex items-center gap-2">
@@ -1054,7 +1437,7 @@
 
                         <button 
                           type="button" 
-                          onClick={() => printWorkshopDocument(selectedRecord)}
+                          onClick={() => printWorkshopDocument(formState)}
                           className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                         >
                           <span className="flex items-center gap-2">
@@ -1064,10 +1447,10 @@
                           <Icons.Printer size={12} className="text-slate-500" />
                         </button>
 
-                        {selectedRecord?.isCoroner && (
+                        {formState?.isCoroner && (
                           <button 
                             type="button" 
-                            onClick={() => printCoronerDocument(selectedRecord)}
+                            onClick={() => printCoronerDocument(formState)}
                             className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                           >
                             <span className="flex items-center gap-2">
@@ -1081,7 +1464,7 @@
                         <div className="pt-2 border-t border-slate-800/60">
                           <button 
                             type="button" 
-                            onClick={() => printCombinedMasterDocument(selectedRecord)}
+                            onClick={() => printCombinedMasterDocument(formState)}
                             className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-3 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-amber-500/10"
                           >
                             <Icons.FileText size={14} />
@@ -1095,13 +1478,13 @@
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
                       <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase">Tracking Pass</span></div>
                       <div className="mt-8 mb-4 bg-white p-3 rounded-xl shadow-inner">
-                        <img src={getQrCodeUrl(selectedRecord, 140)} alt="QR Tracking" className="w-32 h-32 object-contain" />
+                        <img src={getQrCodeUrl(formState, 140)} alt="QR Tracking" className="w-32 h-32 object-contain" />
                       </div>
                       <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 justify-center"><span>Live File Link</span></h4>
                       
                       <div className="mt-5 w-full grid grid-cols-2 gap-2">
                         <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 transition flex items-center justify-center gap-1.5"><Icons.Maximize2 size={12} /><span>Maximize</span></button>
-                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(selectedRecord); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15"><Icons.Printer size={12} /><span>Sticker</span></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15"><Icons.Printer size={12} /><span>Sticker</span></button>
                       </div>
                     </div>
 
@@ -1110,9 +1493,9 @@
                       <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
                         <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
                         <div className="my-6 p-4 bg-slate-900 rounded-full border border-slate-800/80 shadow-inner">
-                          <BodyConditionIcon fill opacity={0.1} condition={selectedRecord?.condition} size={64} />
+                          <BodyConditionIcon fill opacity={0.1} condition={formState?.condition} size={64} />
                         </div>
-                        <h4 className="text-sm font-black text-white uppercase">Status: {selectedRecord?.condition}</h4>
+                        <h4 className="text-sm font-black text-white uppercase">Status: {formState?.condition}</h4>
                       </div>
                     )}
 
@@ -1126,12 +1509,12 @@
                       <div className="mt-8 space-y-2.5 w-full">
                         <button 
                           type="button" 
-                          onClick={() => handleArchiveToggle(selectedRecord.id)}
+                          onClick={() => handleArchiveToggle(formState.id)}
                           className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.FolderOpen size={14} className="text-amber-400" />
-                            {selectedRecord?.isArchived ? "Restore Case" : "Archive Custody Profile"}
+                            {formState?.isArchived ? "Restore Case" : "Archive Custody Profile"}
                           </span>
                           <span className="text-[9px] text-slate-500 font-mono">STATUS</span>
                         </button>
@@ -1142,11 +1525,12 @@
                             setDialog({
                               isOpen: true,
                               title: "Confirm Case Removal",
-                              message: `Are you certain you want to remove the care profile for ${selectedRecord.deceasedName || "this case"}? This action deletes the record permanently.`,
+                              message: `Are you certain you want to remove the care profile for ${formState.deceasedName || "this case"}? This action deletes the record permanently.`,
                               type: "confirm",
                               onConfirm: () => {
-                                deleteCaseFromDb(selectedRecord.id);
+                                deleteCaseFromDb(formState.id);
                                 setSelectedRowId(null);
+                                setFormState(null);
                                 closeDialog();
                                 showNotification("Case Removed", "The deceased record was removed from active custody registers.", "info");
                               }
@@ -1170,17 +1554,17 @@
           )}
 
           {/* QR MAXIMIZE MODAL */}
-          {isQrModalOpen && selectedRecord && (
+          {isQrModalOpen && formState && (
             <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
               <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl animate-fade-in">
                 <button onClick={() => setIsQrModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
-                <h3 className="text-base font-black text-white mt-2">{selectedRecord?.title} {selectedRecord?.deceasedName || "Unnamed"}</h3>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Ref: {selectedRecord?.ref}</p>
+                <h3 className="text-base font-black text-white mt-2">{formState?.title} {formState?.deceasedName || "Unnamed"}</h3>
+                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Ref: {formState?.ref}</p>
                 <div className="bg-white p-4 rounded-2xl shadow-2xl inline-block my-4">
-                  <img src={getQrCodeUrl(selectedRecord, 220)} alt="High res QR" className="w-48 h-48 object-contain" />
+                  <img src={getQrCodeUrl(formState, 220)} alt="High res QR" className="w-48 h-48 object-contain" />
                 </div>
                 <div className="mt-5 flex gap-2">
-                  <button onClick={() => { printStickerAndCheckBlocks(selectedRecord); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 text-slate-950 text-xs font-black py-2.5 rounded-xl">Print Sticker</button>
+                  <button onClick={() => { printStickerAndCheckBlocks(formState); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 text-slate-950 text-xs font-black py-2.5 rounded-xl">Print Sticker</button>
                   <button onClick={() => setIsQrModalOpen(false)} className="bg-slate-800 text-slate-300 text-xs font-bold px-5 py-2.5 rounded-xl">Close</button>
                 </div>
               </div>
@@ -1188,13 +1572,13 @@
           )}
 
           {/* EMAIL PREVIEW LOGISTICS MODAL */}
-          {isEmailModalOpen && selectedRecord && dispatchEmailData && (
+          {isEmailModalOpen && formState && dispatchEmailData && (
             <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[9999]">
               <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-xl w-full p-6 relative shadow-2xl">
                 <button onClick={() => setIsEmailModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
                 <h3 className="text-base font-black text-white mb-4">Email Preview</h3>
                 <div className="space-y-2 bg-slate-900 p-4 rounded-2xl border border-slate-800 text-xs font-mono">
-                  <div className="border-b border-slate-800 pb-2 text-slate-400"><span className="font-bold text-white">To:</span> {selectedRecord?.pickupStaffEmails}</div>
+                  <div className="border-b border-slate-800 pb-2 text-slate-400"><span className="font-bold text-white">To:</span> {formState?.pickupStaffEmails}</div>
                   <div className="border-b border-slate-800 pb-2 text-slate-400"><span className="font-bold text-white">Subject:</span> {dispatchEmailData.subject}</div>
                   <div className="text-slate-300 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto pt-2">{dispatchEmailData.body}</div>
                 </div>

@@ -269,10 +269,8 @@
       // Live Firestore synchronisation listener (RULE 1 & RULE 2 compliant)
       useEffect(() => {
         if (!isFirebaseEnabled) {
-          try {
-            const local = localStorage.getItem('norfolk_mortuary_cases');
-            setDeceasedList(local ? JSON.parse(local) : initialCaseload);
-          } catch(e) {}
+          const local = localStorage.getItem('norfolk_mortuary_cases');
+          setDeceasedList(local ? JSON.parse(local) : initialCaseload);
           return;
         }
 
@@ -952,9 +950,10 @@
           
           {/* Brand Subheader */}
           <div className="bg-slate-950 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-30 font-medium">
-            <div className="flex items-center space-x-2 text-slate-400">
-              <Icons.Building2 size={13} className="text-amber-500" />
-              <span className="font-bold tracking-wide uppercase text-[10px]">Corporate Theme:</span>
+            <div className="flex items-center space-x-2">
+              <span className="font-bold tracking-wide uppercase text-[10px] text-teal-400">
+                ParlourCare &copy; <a href="https://www.offscriptlabs.co.uk" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-teal-300 transition-colors">Offscript Labs 2026</a>
+              </span>
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto justify-center">
               <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>⚜️ Joint Group</button>
@@ -1309,7 +1308,7 @@
                                 {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
                                   const isCurrent = formState?.pickupStatus === st;
                                   return (
-                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
+                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
                                   );
                                 })}
                               </div>

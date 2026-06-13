@@ -283,7 +283,7 @@
     };
 
     function App() {
-      // Load offline cache instantly on startup so user never views a blank workspace
+      // Hydrate local cache immediately on startup so user never views a blank dashboard while Firestore is connecting
       const [deceasedList, setDeceasedList] = useState(() => {
         const local = localStorage.getItem('norfolk_mortuary_cases');
         return local ? JSON.parse(local) : initialCaseload;
@@ -340,39 +340,40 @@
         const unsubscribe = onSnapshot(
           colRef,
           (snapshot) => {
-            const cases = [];
-            snapshot.forEach((doc) => {
-              cases.push({ id: doc.id, ...doc.data() });
-            });
-            
-            // Seed Firestore with initial records if the database collection is completely blank
             if (snapshot.empty) {
-              const seeded = localStorage.getItem('norfolk_mortuary_seeded_v1');
-              if (!seeded) {
-                initialCaseload.forEach((c) => {
+              // Cloud collection is fresh! Let's auto-seed the cloud database with our current cache
+              const localData = localStorage.getItem('norfolk_mortuary_cases');
+              const currentCases = localData ? JSON.parse(localData) : initialCaseload;
+              
+              if (currentCases.length > 0) {
+                currentCases.forEach((c) => {
                   const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'cases', c.id);
-                  setDoc(docRef, c).catch(e => console.error("Seeding failed:", e));
+                  setDoc(docRef, c).catch(e => console.error("Cloud database seeding failed:", e));
                 });
-                localStorage.setItem('norfolk_mortuary_seeded_v1', 'true');
-                return;
+                setDeceasedList(currentCases);
+                localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(currentCases));
               }
+            } else {
+              const cases = [];
+              snapshot.forEach((doc) => {
+                cases.push({ id: doc.id, ...doc.data() });
+              });
+              setDeceasedList(cases);
+              localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases));
             }
-
-            setDeceasedList(cases);
-            localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases));
           },
           (error) => {
             console.error("Firestore synchronisation error:", error);
-            showNotification("Live Sync Issue", "Unable to pull live case stream: " + error.message, "info");
+            showNotification("Sync Status", "Live cloud stream is temporarily offline. Working locally.", "info");
           }
         );
 
         return () => unsubscribe();
       }, [user]);
 
-      // Synchronised helper committing state changes locally instantly, then syncing to Cloud
+      // Synchronised write-helper updating local state immediately, then syncing to Firestore
       const saveCaseToDb = async (record) => {
-        // Optimistic UI Update: Render changes immediately so the interface is perfectly responsive
+        // Optimistic UI Update: Render changes immediately to prevent frozen spinners
         setDeceasedList(prev => {
           const index = prev.findIndex(item => item.id === record.id);
           let next;
@@ -391,7 +392,7 @@
             await setDoc(docRef, record);
           } catch (err) {
             console.error("Live save rejected:", err);
-            showNotification("Sync Alert", "Could not back up to cloud. Local offline database is saved.", "info");
+            showNotification("Sync Alert", "Local changes saved. Unable to backup to live cloud database.", "info");
           }
         }
       };
@@ -410,7 +411,7 @@
             await deleteDoc(docRef);
           } catch (err) {
             console.error("Live deletion rejected:", err);
-            showNotification("Sync Alert", "Could not delete from cloud. Local offline database updated.", "info");
+            showNotification("Sync Alert", "Record removed locally. Cloud backup remains intact.", "info");
           }
         }
       };
@@ -1237,7 +1238,7 @@
         return (
           <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-emerald-400">
             <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="4" className="opacity-30" />
-            <path d="M50 18C32.32 18 18 32.32 18 50C18 64.6 27.84 76.92 41.25 80.7C42.84 81.15 44 82.59 44 84.25V87C44 88.66 45.34 90 47 90H53C54.66 90 56 88.66 56 87V84.25C56 82.59 57.16 81.15 58.75 80.7C72.16 76.92 82 64.6 82 50+C82 32.32 67.68 18 50 18Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+            <path d="M50 18C32.32 18 18 32.32 18 50C18 64.6 27.84 76.92 41.25 80.7C42.84 81.15 44 82.59 44 84.25V87C44 88.66 45.34 90 47 90H53C54.66 90 56 88.66 56 87V84.25C56 82.59 57.16 81.15 58.75 80.7C72.16 76.92 82 64.6 82 50C82 32.32 67.68 18 50 18Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
             <path d="M32 46C35 49 41 49 44 46" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
             <path d="M56 46C59 49 65 49 68 46" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
             <path d="M42 66C45 68 55 68 58 66" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />

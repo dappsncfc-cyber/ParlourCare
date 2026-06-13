@@ -705,17 +705,15 @@
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Linings & Accessories:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Joinery Dimensions:</span> <strong>${record?.bodySize || 'PENDING SPEC'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Engraved Plate Affixed:</span> <strong>${record?.plate || 'No'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Engraved Plate Affixed:</span> <strong>${record?.plate || 'No'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Preparation Complete:</span> <strong>${record?.ready || 'No'}</strong></div>
             </div>
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>
-              <div style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; line-height: 1.4; color: #000;">
-                <div class="field-row"><span>Dressing Apparel:</span> <strong>${record?.clothes || 'None'}</strong></div>
-                <div class="field-row"><span>Apparel Checked/Received:</span> <strong>${record?.clothesChecked ? 'Yes' : 'No'}</strong></div>
-                <div class="field-row"><span>Family Viewing Status:</span> <strong>${record?.viewing || 'Requested'}</strong></div>
-              </div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Dressing Apparel:</span> <strong>${record?.clothes || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Apparel Checked/Received:</span> <strong>${record?.clothesChecked ? 'Yes' : 'No'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Family Viewing Status:</span> <strong>${record?.viewing || 'Requested'}</strong></div>
             </div>
 
             ${record?.isCoroner ? `
@@ -959,9 +957,9 @@
               </span>
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto justify-center">
-              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>⚜️ Joint Group</button>
-              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🏛️ Cromer</button>
-              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🌲 Gowards</button>
+              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🤝 Joint Group</button>
+              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🦀 Cromer</button>
+              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🦆 Gowards</button>
             </div>
           </div>
 
@@ -969,7 +967,7 @@
           <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg`}>
             <div className="flex items-center space-x-3.5">
               <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/60">
-                <span className="text-2xl">{activeBrand === "joint" ? "⚜️" : activeBrand === "cromer" ? "🏛️" : "🌲"}</span>
+                <span className="text-2xl">{activeBrand === "joint" ? "🤝" : activeBrand === "cromer" ? "🦀" : "🦆"}</span>
               </div>
               <div>
                 <h1 className="text-lg md:text-xl font-black text-white">{currentTheme.brandName}</h1>

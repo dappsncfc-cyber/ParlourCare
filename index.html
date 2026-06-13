@@ -304,6 +304,15 @@
       const [user, setUser] = useState(null);
       const seededRef = useRef(false);
 
+      // --- FATAL ERROR PREVENTION UTILITIES ---
+      const showNotification = (title, message, type = "info") => {
+        setDialog({ isOpen: true, title, message, type, onConfirm: null });
+      };
+
+      const closeDialog = () => {
+        setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
+      };
+
       // RULE 3 - Custom auth init FIRST, fallback to anonymous auth
       useEffect(() => {
         if (!isFirebaseEnabled) return;

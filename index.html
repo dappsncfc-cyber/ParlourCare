@@ -175,102 +175,7 @@
       { id: "staff-5", name: "Mark (Group Operations)", email: "mark@norfolkfuneralgroup.co.uk" }
     ];
 
-    const initialCaseload = [
-      {
-        id: "1",
-        ref: "26/C/015",
-        fridgeTray: "66A",
-        keyDate: "26/06/2026",
-        deceasedName: "Dennis Harrison",
-        title: "Mr",
-        dob: "14/10/1941",
-        dod: "06/06/2026",
-        arranger: "SCO",
-        location: "Cromer",
-        greenCoroner: "Yes",
-        encoffined: "Yes",
-        plate: "Yes",
-        bodySize: "5'8\" x 20\"",
-        condition: "Good",
-        infection: "None",
-        coffin: "Chiltern Oak",
-        clothes: "White Funeral Gown",
-        clothesChecked: true,
-        preparations: "Yes",
-        preparationsDetails: "Dignified presentation. Shave and hair parted to the left.",
-        jewellery: "Yes",
-        jewelleryDetails: "Gold wedding band to remain on left hand.",
-        devices: "No",
-        devicesDetails: "None",
-        embalming: "Yes",
-        embalmingDetails: "Completed on 08/06/2026",
-        coffinAccessories: "Brass Handles",
-        viewing: "Yes", 
-        ready: "Yes",
-        isCoroner: true,
-        coronerRef: "CR-2026-881",
-        coronerOfficer: "Officer J. Miller",
-        pickupLocation: "Norfolk & Norwich University Hospital (NNUH)",
-        pickupDestination: "Cromer Mortuary",
-        pickupDateTime: "27/06/2026 10:00",
-        pickupStaff: ["David (Cromer)", "Sarah (Cromer)"],
-        pickupStaffEmails: "david@cromerfunerals.co.uk, sarah@cromerfunerals.co.uk",
-        pickupVehicle: "Vauxhall Vivaro CRM-1",
-        pickupEquipment: ["First Call Stretcher", "Body Bag"],
-        pickupStatus: "Dispatched",
-        pickupStatusTimestamps: {
-          "Pending": "26/06/2026 09:15",
-          "Dispatched": "26/06/2026 10:00"
-        },
-        pickupInstructions: "Collect from Pathology entrance B. Bring identity collar tag.",
-        isArchived: false
-      },
-      {
-        id: "7",
-        ref: "26/C/005",
-        fridgeTray: "1A",
-        keyDate: "01/07/2026",
-        deceasedName: "Elaine Bailey",
-        title: "Mrs",
-        dob: "08/07/1955",
-        dod: "31/05/2026",
-        arranger: "NEC",
-        location: "Fakenham",
-        greenCoroner: "No",
-        encoffined: "No",
-        plate: "No",
-        bodySize: "5'6\" x 30\"",
-        condition: "Poor",
-        infection: "Blood borne",
-        coffin: "Chiltern Oak",
-        clothes: "Shroud Only",
-        clothesChecked: false,
-        preparations: "Yes",
-        preparationsDetails: "Universal infection precautions strictly applied.",
-        jewellery: "Yes",
-        jewelleryDetails: "To be returned to family prior to cremation.",
-        devices: "Yes",
-        devicesDetails: "Pacemaker - requires removal",
-        embalming: "No",
-        embalmingDetails: "Declined due to infectious risks.",
-        coffinAccessories: "Simple Coffin lining",
-        viewing: "No", 
-        ready: "No",
-        isCoroner: false,
-        coronerRef: "",
-        coronerOfficer: "",
-        pickupLocation: "",
-        pickupDestination: "",
-        pickupDateTime: "",
-        pickupStaff: [],
-        pickupStaffEmails: "",
-        pickupVehicle: "",
-        pickupEquipment: [],
-        pickupStatus: "Pending",
-        pickupInstructions: "",
-        isArchived: false
-      }
-    ];
+    const initialCaseload = [];
 
     const getTimestamp = () => {
       const now = new Date();
@@ -366,6 +271,9 @@
                 });
                 setDeceasedList(currentCases);
                 localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(currentCases));
+              } else {
+                setDeceasedList([]);
+                localStorage.setItem('norfolk_mortuary_cases', JSON.stringify([]));
               }
             } else {
               const cases = [];
@@ -943,6 +851,24 @@
         setFormState(newCase);
         setSelectedRowId(nextId);
         setActiveTab(isCoronerCase ? "pickup" : "care");
+      };
+
+      const confirmCaseDeletion = (id, name) => {
+        setDialog({
+          isOpen: true,
+          title: "Confirm Case Removal",
+          message: `Are you certain you want to remove the care profile for ${name || "this case"}? This action deletes the record permanently.`,
+          type: "confirm",
+          onConfirm: () => {
+            deleteCaseFromDb(id);
+            if (selectedRowId === id) {
+              setSelectedRowId(null);
+              setFormState(null);
+            }
+            closeDialog();
+            showNotification("Case Removed", "The deceased record was removed from active custody registers.", "info");
+          }
+        });
       };
 
       const dispatchEmailData = useMemo(() => {

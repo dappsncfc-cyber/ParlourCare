@@ -404,6 +404,7 @@
       const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
       const vehicleOptions = useMemo(() => ["Vauxhall Vivaro CRM-1", "Vauxhall Vivaro FAK-2", "Ford Transit Group-1", "First Call Vehicle 3"], []);
 
+      // Unified brand themes using the premium Joint Group indigo/purple palette
       const brandThemes = useMemo(() => ({
         joint: {
           bannerGradient: 'from-slate-900 via-indigo-950 to-slate-900',
@@ -412,16 +413,16 @@
           activeTabStyle: 'border-amber-500 text-amber-400 bg-amber-950/30'
         },
         cromer: {
-          bannerGradient: 'from-rose-900 via-slate-950 to-rose-900',
+          bannerGradient: 'from-slate-900 via-indigo-950 to-slate-900',
           brandName: 'Cromer & District Funeral Services',
-          primaryBtn: 'bg-rose-600 hover:bg-rose-500 text-white font-bold',
-          activeTabStyle: 'border-rose-500 text-rose-400 bg-rose-950/30'
+          primaryBtn: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
+          activeTabStyle: 'border-amber-500 text-amber-400 bg-amber-950/30'
         },
         gowards: {
-          bannerGradient: 'from-emerald-900 via-slate-950 to-emerald-900',
+          bannerGradient: 'from-slate-900 via-indigo-950 to-slate-900',
           brandName: 'Gowards Funeral Services',
-          primaryBtn: 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold',
-          activeTabStyle: 'border-emerald-500 text-emerald-400 bg-emerald-950/30'
+          primaryBtn: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
+          activeTabStyle: 'border-amber-500 text-amber-400 bg-amber-950/30'
         }
       }), []);
 
@@ -710,9 +711,11 @@
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Dressing Apparel:</span> <strong>${record?.clothes || 'None'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Apparel Checked/Received:</span> <strong>${record?.clothesChecked ? 'Yes' : 'No'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Family Viewing Status:</span> <strong>${record?.viewing || 'Requested'}</strong></div>
+              <div style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; line-height: 1.4; color: #000;">
+                <div class="field-row"><span>Dressing Apparel:</span> <strong>${record?.clothes || 'None'}</strong></div>
+                <div class="field-row"><span>Apparel Checked/Received:</span> <strong>${record?.clothesChecked ? 'Yes' : 'No'}</strong></div>
+                <div class="field-row"><span>Family Viewing Status:</span> <strong>${record?.viewing || 'Requested'}</strong></div>
+              </div>
             </div>
 
             ${record?.isCoroner ? `
@@ -957,8 +960,8 @@
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto justify-center">
               <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>⚜️ Joint Group</button>
-              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "cromer" ? "bg-rose-600 text-white shadow-md shadow-rose-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🏛️ Cromer</button>
-              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "gowards" ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🌲 Gowards</button>
+              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🏛️ Cromer</button>
+              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🌲 Gowards</button>
             </div>
           </div>
 
@@ -1214,7 +1217,7 @@
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-450 block mb-1">Selected Wood</label>
+                              <label className="text-[10px] font-bold uppercase text-amber-455 block mb-1">Selected Wood</label>
                               <select value={formState?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
@@ -1563,7 +1566,7 @@
           {/* EMAIL PREVIEW LOGISTICS MODAL */}
           {isEmailModalOpen && formState && dispatchEmailData && (
             <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[9999]">
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-xl w-full p-6 relative shadow-2xl">
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full p-6 relative shadow-2xl">
                 <button onClick={() => setIsEmailModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
                 <h3 className="text-base font-black text-white mb-4">Email Preview</h3>
                 <div className="space-y-2 bg-slate-900 p-4 rounded-2xl border border-slate-800 text-xs font-mono">

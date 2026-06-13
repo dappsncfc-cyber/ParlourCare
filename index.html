@@ -187,6 +187,15 @@
       return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
     };
 
+    // --- BASE URL HELPER FOR QR & PRINTING ---
+    const getBaseUrl = () => {
+      const origin = window.location.origin;
+      if (!origin || origin === 'null' || origin.includes('file://')) {
+        return "https://dappsncfc-cyber.github.io/ParlourCare/";
+      }
+      return origin + window.location.pathname;
+    };
+
     function App() {
       // Hydrate local cache immediately on startup so user never views a blank dashboard while Firestore is connecting
       const [deceasedList, setDeceasedList] = useState(() => {
@@ -197,6 +206,9 @@
       
       // Decoupled editing state to prevent real-time keystroke race conditions
       const [formState, setFormState] = useState(null);
+
+      // Deep linking state buffer to hold URL parameters until database finishes loading
+      const [pendingDeepLink, setPendingDeepLink] = useState(null);
 
       const [activeTab, setActiveTab] = useState("care");
       const [activeBrand, setActiveBrand] = useState("joint");
@@ -350,6 +362,35 @@
         }
       }, [selectedRowId, selectedRecord]);
 
+      // --- DEEP LINKING PARSING ENGINE ---
+      
+      // 1. Extract intended case from browser URL strictly once on startup
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const caseId = params.get('case');
+        if (caseId) {
+          setPendingDeepLink(caseId);
+        }
+      }, []);
+
+      // 2. Wait patiently for the database connection to supply the record before opening
+      useEffect(() => {
+        if (pendingDeepLink && deceasedList.length > 0) {
+          const record = deceasedList.find(d => d.id === pendingDeepLink);
+          if (record) {
+            setSelectedRowId(pendingDeepLink);
+            setActiveTab(record.isCoroner ? "pickup" : "care");
+            
+            // Consume the pending link so it doesn't trigger again
+            setPendingDeepLink(null);
+
+            // Self-clean the URL parameter so the user doesn't get trapped when returning to the dashboard
+            const cleanUrl = getBaseUrl();
+            window.history.replaceState({}, document.title, cleanUrl);
+          }
+        }
+      }, [pendingDeepLink, deceasedList]);
+
       const locations = useMemo(() => ["Cromer", "Fakenham"], []);
       const conditions = useMemo(() => ["Good", "Medium", "Poor"], []);
       const infectionRisks = useMemo(() => ["None", "Blood borne", "Sepsis", "CJD", "Other"], []);
@@ -380,18 +421,6 @@
       }), []);
 
       const currentTheme = brandThemes[activeBrand];
-
-      // --- QR CODE GENERATOR HELPER ---
-      const getQrCodeUrl = (record, size = 200) => {
-        if (!record) return '';
-        let origin = window.location.origin;
-        if (!origin || origin === 'null' || origin.startsWith('file')) {
-          origin = "https://cromer-gowards-mortuary.web.app";
-        }
-        let path = window.location.pathname || "/";
-        const deepLinkUrl = `${origin}${path}?case=${record.id}`;
-        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=f8fafc&color=0f172a`;
-      };
 
       // --- PRINT LOGIC INFRASTRUCTURE ---
       const executeIframePrint = (htmlContent, isSticker = false) => {
@@ -471,12 +500,7 @@
       };
 
       const printDocHeader = (record, docTitle) => {
-        let origin = window.location.origin;
-        if (!origin || origin === 'null' || origin.startsWith('file')) {
-          origin = "https://cromer-gowards-mortuary.web.app";
-        }
-        let path = window.location.pathname || "/";
-        const deepLinkUrl = `${origin}${path}?case=${record?.id}`;
+        const deepLinkUrl = `${getBaseUrl()}?case=${record?.id}`;
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=ffffff&color=000000`;
 
         return `
@@ -701,12 +725,7 @@
       };
 
       const printStickerAndCheckBlocks = (record) => {
-        let origin = window.location.origin;
-        if (!origin || origin === 'null' || origin.startsWith('file')) {
-          origin = "https://cromer-gowards-mortuary.web.app";
-        }
-        let path = window.location.pathname || "/";
-        const deepLinkUrl = `${origin}${path}?case=${record?.id}`;
+        const deepLinkUrl = `${getBaseUrl()}?case=${record?.id}`;
         // High density QR code request size
         const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
 

@@ -189,26 +189,36 @@
 
     // --- BASE URL HELPER FOR QR & PRINTING ---
     const getBaseUrl = () => {
-      const origin = window.location.origin;
-      if (!origin || origin === 'null' || origin.includes('file://')) {
+      try {
+        const href = window.location.href;
+        if (!href || href === 'about:blank' || href === 'about:srcdoc' || href.startsWith('file://')) {
+          return "https://dappsncfc-cyber.github.io/ParlourCare/";
+        }
+        return href.split('?')[0];
+      } catch (e) {
         return "https://dappsncfc-cyber.github.io/ParlourCare/";
       }
-      return origin + window.location.pathname;
     };
 
     function App() {
       // Hydrate local cache immediately on startup so user never views a blank dashboard while Firestore is connecting
       const [deceasedList, setDeceasedList] = useState(() => {
-        const local = localStorage.getItem('norfolk_mortuary_cases');
-        return local ? JSON.parse(local) : initialCaseload;
+        try {
+          const local = localStorage.getItem('norfolk_mortuary_cases');
+          return local ? JSON.parse(local) : initialCaseload;
+        } catch(e) { return initialCaseload; }
       });
       const [selectedRowId, setSelectedRowId] = useState(null); 
       
       // Decoupled editing state to prevent real-time keystroke race conditions
       const [formState, setFormState] = useState(null);
 
-      // Deep linking state buffer to hold URL parameters until database finishes loading
-      const [pendingDeepLink, setPendingDeepLink] = useState(null);
+      // Deep linking buffer
+      const [pendingDeepLink, setPendingDeepLink] = useState(() => {
+        try {
+          return new URLSearchParams(window.location.search).get('case');
+        } catch(e) { return null; }
+      });
 
       const [activeTab, setActiveTab] = useState("care");
       const [activeBrand, setActiveBrand] = useState("joint");
@@ -259,8 +269,10 @@
       // Live Firestore synchronisation listener (RULE 1 & RULE 2 compliant)
       useEffect(() => {
         if (!isFirebaseEnabled) {
-          const local = localStorage.getItem('norfolk_mortuary_cases');
-          setDeceasedList(local ? JSON.parse(local) : initialCaseload);
+          try {
+            const local = localStorage.getItem('norfolk_mortuary_cases');
+            setDeceasedList(local ? JSON.parse(local) : initialCaseload);
+          } catch(e) {}
           return;
         }
 
@@ -273,8 +285,11 @@
           (snapshot) => {
             if (snapshot.empty && !seededRef.current) {
               seededRef.current = true; // Lock immediately to prevent recursive loop runs
-              const localData = localStorage.getItem('norfolk_mortuary_cases');
-              const currentCases = localData ? JSON.parse(localData) : initialCaseload;
+              let currentCases = initialCaseload;
+              try {
+                const localData = localStorage.getItem('norfolk_mortuary_cases');
+                if (localData) currentCases = JSON.parse(localData);
+              } catch(e) {}
               
               if (currentCases.length > 0) {
                 currentCases.forEach((c) => {
@@ -282,10 +297,10 @@
                   setDoc(docRef, c).catch(e => console.error("Cloud database seeding failed:", e));
                 });
                 setDeceasedList(currentCases);
-                localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(currentCases));
+                try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(currentCases)); } catch(e){}
               } else {
                 setDeceasedList([]);
-                localStorage.setItem('norfolk_mortuary_cases', JSON.stringify([]));
+                try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify([])); } catch(e){}
               }
             } else {
               const cases = [];
@@ -293,7 +308,7 @@
                 cases.push({ id: doc.id, ...doc.data() });
               });
               setDeceasedList(cases);
-              localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases));
+              try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases)); } catch(e){}
             }
           },
           (error) => {
@@ -316,7 +331,7 @@
           } else {
             next = [...prev, record];
           }
-          localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next));
+          try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
 
@@ -326,7 +341,6 @@
             await setDoc(docRef, record);
           } catch (err) {
             console.error("Live save rejected:", err);
-            showNotification("Sync Alert", "Local changes saved. Unable to backup to live cloud database.", "info");
           }
         }
       };
@@ -335,7 +349,7 @@
         // Optimistic UI Update: Remove card instantly
         setDeceasedList(prev => {
           const next = prev.filter(item => item.id !== id);
-          localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next));
+          try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
 
@@ -362,17 +376,6 @@
         }
       }, [selectedRowId, selectedRecord]);
 
-      // --- DEEP LINKING PARSING ENGINE ---
-      
-      // 1. Extract intended case from browser URL strictly once on startup
-      useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const caseId = params.get('case');
-        if (caseId) {
-          setPendingDeepLink(caseId);
-        }
-      }, []);
-
       // 2. Wait patiently for the database connection to supply the record before opening
       useEffect(() => {
         if (pendingDeepLink && deceasedList.length > 0) {
@@ -384,9 +387,13 @@
             // Consume the pending link so it doesn't trigger again
             setPendingDeepLink(null);
 
-            // Self-clean the URL parameter so the user doesn't get trapped when returning to the dashboard
-            const cleanUrl = getBaseUrl();
-            window.history.replaceState({}, document.title, cleanUrl);
+            // Self-clean the URL parameter smoothly
+            try {
+              const cleanUrl = getBaseUrl();
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch(e) {
+              console.warn("History replaceState blocked in sandbox environment", e);
+            }
           }
         }
       }, [pendingDeepLink, deceasedList]);
@@ -421,6 +428,13 @@
       }), []);
 
       const currentTheme = brandThemes[activeBrand];
+
+      // --- QR CODE GENERATOR HELPER ---
+      const getQrCodeUrl = (record, size = 200) => {
+        if (!record) return '';
+        const deepLinkUrl = `${getBaseUrl()}?case=${record.id}`;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=f8fafc&color=0f172a`;
+      };
 
       // --- PRINT LOGIC INFRASTRUCTURE ---
       const executeIframePrint = (htmlContent, isSticker = false) => {

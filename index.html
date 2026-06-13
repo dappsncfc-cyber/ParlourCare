@@ -58,10 +58,24 @@
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Setup global environments fallback safely
+    // ==========================================================
+    // 1. PASTE YOUR copied FIREBASE CONFIGURATION OBJECT HERE:
+    // ==========================================================
+    const myFirebaseConfig = {
+      apiKey: "YOUR_API_KEY_HERE",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // ==========================================================
+    // 2. LIVE CONFIG ROUTER (Do not modify this block)
+    // ==========================================================
     const firebaseConfig = typeof __firebase_config !== 'undefined' 
       ? JSON.parse(__firebase_config) 
-      : { apiKey: "MOCK_API_KEY" }; // Fallback triggers LocalStorage sandbox automatically
+      : (myFirebaseConfig.apiKey !== "YOUR_API_KEY_HERE" ? myFirebaseConfig : { apiKey: "MOCK_API_KEY" });
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -1196,7 +1210,7 @@
                               </select>
                             </div>
                             <div className="sm:col-span-2">
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Linings, Plates & Handles</label>
+                              <label className="text-[10px] font-bold uppercase text-amber-450 block mb-1">Linings, Plates & Handles</label>
                               <input type="text" value={selectedRecord?.coffinAccessories || ''} onChange={(e) => handleFieldChange(selectedRecord.id, 'coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300" />
                             </div>
                           </div>
@@ -1384,7 +1398,7 @@
                         <button 
                           type="button" 
                           onClick={() => printCareDocument(selectedRecord)}
-                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Users size={14} className="text-amber-400" />

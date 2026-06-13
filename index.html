@@ -1316,6 +1316,13 @@
                             </div>
                             <div className="space-y-4">
                               <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Target Destination</label>
+                                <select value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                  <option value="Cromer Mortuary">Cromer Mortuary</option>
+                                  <option value="Fakenham Mortuary">Fakenham Mortuary</option>
+                                </select>
+                              </div>
+                              <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
                                 <select value={formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}

@@ -140,6 +140,9 @@
           <path d="M11 3c0 2-2 4-2 6c0 2 7 3 8 8c0.7 2-1 3-3 3c-1.5 0-2.5-1-3-2c-1.5 1-3.5 1-3.5-0.5" />
         </svg>
       ),
+      Bell: ({ size = 16, className = "" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      ),
       QrCode: ({ size = 16, className = "" }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="7" y1="17" x2="7" y2="17.01"/><line x1="17" y1="17" x2="17" y2="17.01"/><line x1="17" y1="7" x2="17" y2="7.01"/><line x1="7" y1="7" x2="7" y2="7.01"/></svg>
       ),
@@ -175,7 +178,6 @@
     const norfolkStaffList = [
       { id: "staff-1", name: "David (Cromer)", email: "david@cromerfunerals.co.uk" },
       { id: "staff-2", name: "Barrie (Cromer)", email: "sarah@cromerfunerals.co.uk" },
-      { id: "staff-2", name: "Michael (Cromer)", email: "sarah@cromerfunerals.co.uk" },
       { id: "staff-3", name: "Paul (Fakenham)", email: "paul@gowardsindependentfunerals.com" },
       { id: "staff-4", name: "Peter (Fakenham)", email: "luke@gowardsfunerals.co.uk" },
       { id: "staff-5", name: "Adrian (Group Operations)", email: "adrian@cromeranddistrictfunerals.co.uk" }
@@ -237,6 +239,13 @@
       const [user, setUser] = useState(null);
       const seededRef = useRef(false);
 
+      // --- NOTIFICATION STATE SYSTEM ---
+      const [notifications, setNotifications] = useState([]);
+      const [unreadCount, setUnreadCount] = useState(0);
+      const [isNotificationTrayOpen, setIsNotificationTrayOpen] = useState(false);
+      const prevListRef = useRef([]);
+      const isFirstLoadRef = useRef(true);
+
       // --- FATAL ERROR PREVENTION UTILITIES ---
       const showNotification = (title, message, type = "info") => {
         setDialog({ isOpen: true, title, message, type, onConfirm: null });
@@ -275,8 +284,12 @@
       // Live Firestore synchronisation listener (RULE 1 & RULE 2 compliant)
       useEffect(() => {
         if (!isFirebaseEnabled) {
-          const local = localStorage.getItem('norfolk_mortuary_cases');
-          setDeceasedList(local ? JSON.parse(local) : initialCaseload);
+          try {
+            const local = localStorage.getItem('norfolk_mortuary_cases');
+            const parsedLocal = local ? JSON.parse(local) : initialCaseload;
+            setDeceasedList(parsedLocal);
+            prevListRef.current = parsedLocal;
+          } catch(e) {}
           return;
         }
 
@@ -301,9 +314,11 @@
                   setDoc(docRef, c).catch(e => console.error("Cloud database seeding failed:", e));
                 });
                 setDeceasedList(currentCases);
+                prevListRef.current = currentCases;
                 try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(currentCases)); } catch(e){}
               } else {
                 setDeceasedList([]);
+                prevListRef.current = [];
                 try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify([])); } catch(e){}
               }
             } else {
@@ -311,6 +326,68 @@
               snapshot.forEach((doc) => {
                 cases.push({ id: doc.id, ...doc.data() });
               });
+
+              // Detect real-time updates for activity notifier bell
+              if (isFirstLoadRef.current) {
+                prevListRef.current = cases;
+                isFirstLoadRef.current = false;
+              } else {
+                const newNotifications = [];
+                const prevMap = new Map(prevListRef.current.map(c => [c.id, c]));
+                const currentMap = new Map(cases.map(c => [c.id, c]));
+
+                // Check additions and modifications
+                cases.forEach(curr => {
+                  const prev = prevMap.get(curr.id);
+                  if (!prev) {
+                    newNotifications.push({
+                      id: String(Date.now()) + Math.random(),
+                      type: 'addition',
+                      title: 'Case Added',
+                      message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) was registered.`,
+                      timestamp: getTimestamp()
+                    });
+                  } else {
+                    let isChanged = false;
+                    const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency'];
+                    for (let f of fieldsToCheck) {
+                      if (JSON.stringify(curr[f]) !== JSON.stringify(prev[f])) {
+                        isChanged = true;
+                        break;
+                      }
+                    }
+                    if (isChanged) {
+                      newNotifications.push({
+                        id: String(Date.now()) + Math.random(),
+                        type: 'update',
+                        title: 'Case Updated',
+                        message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) was modified.`,
+                        timestamp: getTimestamp()
+                      });
+                    }
+                  }
+                });
+
+                // Check deletions
+                prevListRef.current.forEach(oldItem => {
+                  if (!currentMap.has(oldItem.id)) {
+                    newNotifications.push({
+                      id: String(Date.now()) + Math.random(),
+                      type: 'deletion',
+                      title: 'Case Removed',
+                      message: `${oldItem.title} ${oldItem.deceasedName || 'Unnamed Case'} (${oldItem.ref}) was deleted.`,
+                      timestamp: getTimestamp()
+                    });
+                  }
+                });
+
+                if (newNotifications.length > 0) {
+                  setNotifications(prev => [...newNotifications, ...prev].slice(0, 20));
+                  setUnreadCount(prev => prev + newNotifications.length);
+                }
+                prevListRef.current = cases;
+              }
+
               setDeceasedList(cases);
               try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases)); } catch(e){}
             }
@@ -669,7 +746,7 @@
         let timelineHtml = '';
         if (record?.pickupStatusTimestamps) {
           Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => {
-            timelineHtml += `<div class="timeline-item"><strong>${status}:</strong> <span>${time}</span></div>`;
+            timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
           });
         }
 
@@ -808,7 +885,7 @@
           setFormState(prev => ({ ...prev, isArchived: updatedArchiveState }));
         }
         showNotification(
-          "Record Archived",
+          updatedArchiveState ? "Record Archived" : "Record Restored",
           `The file for ${item.deceasedName || "Unnamed Admission"} was moved successfully.`,
           "info"
         );
@@ -842,6 +919,8 @@
           ref: `26/C/${String(deceasedList.length + 1).padStart(3, '0')}`,
           fridgeTray: "",
           keyDate: "",
+          keyMilestoneName: "",
+          keyMilestoneUrgency: "None",
           deceasedName: "", 
           title: "Mr",
           dob: "", 
@@ -935,7 +1014,8 @@
       }, [formState]);
 
       const filteredList = useMemo(() => {
-        return deceasedList.filter(item => {
+        const urgencyOrder = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
+        const result = deceasedList.filter(item => {
           const matchSearch = item.deceasedName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               item.ref.toLowerCase().includes(searchQuery.toLowerCase());
           
@@ -950,6 +1030,13 @@
 
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           return matchSearch && matchLoc && matchStatus;
+        });
+
+        // Sort by urgency, most urgent first
+        return result.sort((a, b) => {
+          const uA = urgencyOrder[a.keyMilestoneUrgency] || 0;
+          const uB = urgencyOrder[b.keyMilestoneUrgency] || 0;
+          return uB - uA;
         });
       }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand]);
 
@@ -992,7 +1079,68 @@
                 </div>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto">
+            
+            {/* Header Action Row & Notifier Dropdown */}
+            <div className="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto items-stretch sm:items-center">
+              
+              {/* Notifier Bell Widget */}
+              <div className="relative">
+                <button 
+                  onClick={() => {
+                    setIsNotificationTrayOpen(!isNotificationTrayOpen);
+                    setUnreadCount(0);
+                  }} 
+                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-350 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition relative"
+                >
+                  <Icons.Bell size={18} />
+                  <span className="sm:hidden font-black">View Activity Log</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 sm:-top-1 right-2 sm:-right-1 bg-rose-600 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center animate-bounce shadow-md">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                
+                {isNotificationTrayOpen && (
+                  <div className="absolute right-0 mt-3.5 w-80 bg-slate-950 border border-slate-800/80 rounded-2xl shadow-2xl p-4.5 z-50 animate-fade-in">
+                    <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
+                      <span className="text-xs font-black uppercase text-slate-200 tracking-wider">Live Activity Log</span>
+                      {notifications.length > 0 && (
+                        <button 
+                          onClick={() => setNotifications([])} 
+                          className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors"
+                        >
+                          Clear Feed
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-60 overflow-y-auto scrollbar-none space-y-2.5">
+                      {notifications.length === 0 ? (
+                        <div className="text-center py-6 text-slate-500 text-xs italic font-semibold">
+                          No recent cases modified.
+                        </div>
+                      ) : (
+                        notifications.map(notif => (
+                          <div key={notif.id} className="p-3 bg-slate-900 border border-slate-800/40 rounded-xl text-left">
+                            <div className="flex justify-between items-center mb-1.5">
+                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider border ${
+                                notif.type === 'addition' ? 'bg-emerald-950/50 text-emerald-400 border-emerald-900/30' : 
+                                notif.type === 'deletion' ? 'bg-rose-950/50 text-rose-400 border-rose-900/30' : 
+                                'bg-indigo-950/50 text-indigo-400 border-indigo-900/30'
+                              }`}>
+                                {notif.title}
+                              </span>
+                              <span className="text-[9px] text-slate-500 font-mono font-bold">{notif.timestamp.split(' ')[1]}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-300 leading-normal font-medium">{notif.message}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button onClick={() => createAdmission(true)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-rose-500/50 shadow-lg shadow-rose-600/20 transition transform active:scale-95">
                 <Icons.AlertTriangle size={16} /> Record a Coroner's
               </button>
@@ -1039,9 +1187,18 @@
                       className={`bg-slate-950 border border-slate-800/80 rounded-2xl p-4.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md ${item.isCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}
                     >
                       <div className="flex justify-between items-start mb-3">
-                        <div>
+                        <div className="flex flex-wrap gap-1.5 items-center">
                           <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
-                          {item.isCoroner && <span className="ml-2 text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
+                          {item.isCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
+                          {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
+                              item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-400 border-rose-900' :
+                              item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-400 border-amber-900' :
+                              'bg-emerald-950/60 text-emerald-400 border-emerald-900'
+                            }`}>
+                              Urgency: {item.keyMilestoneUrgency}
+                            </span>
+                          )}
                         </div>
                         
                         <div className="flex items-center space-x-1.5">
@@ -1207,9 +1364,25 @@
                               <textarea value={formState?.jewelleryDetails || ''} onChange={(e) => handleFieldChange('jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
                             </div>
                           </div>
-                          <div>
-                            <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Key Milestone Date</label>
-                            <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full max-w-xs focus:outline-none" />
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Key Milestone Date</label>
+                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full focus:outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Action</label>
+                              <input type="text" value={formState?.keyMilestoneName || ''} onChange={(e) => handleFieldChange('keyMilestoneName', e.target.value)} placeholder="e.g. Family Viewing" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold" />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Urgency</label>
+                              <select value={formState?.keyMilestoneUrgency || 'None'} onChange={(e) => handleFieldChange('keyMilestoneUrgency', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                                <option value="None">None</option>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                              </select>
+                            </div>
                           </div>
                         </div>
                       </>
@@ -1255,7 +1428,7 @@
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Family Viewing</label>
-                              <select value={formState?.viewing || 'R'} onChange={(e) => handleFieldChange('viewing', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold font-bold">
+                              <select value={formState?.viewing || 'R'} onChange={(e) => handleFieldChange('viewing', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 <option value="Yes">✓ Viewing Confirmed</option><option value="No">✗ Viewing Declined</option><option value="R">R Viewing Requested</option>
                               </select>
                             </div>

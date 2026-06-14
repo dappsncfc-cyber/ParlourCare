@@ -1047,6 +1047,22 @@
         });
       }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand]);
 
+      const hudStats = useMemo(() => {
+        const activeDashboardCases = deceasedList.filter(item => {
+          if (item.isArchived) return false;
+          if (activeBrand === "cromer") return item.location === "Cromer";
+          if (activeBrand === "gowards") return item.location === "Fakenham";
+          return true; // joint
+        });
+
+        return {
+          active: activeDashboardCases.length,
+          coroner: activeDashboardCases.filter(c => c.isCoroner).length,
+          workshop: activeDashboardCases.filter(c => c.ready === 'Yes').length,
+          urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
+        };
+      }, [deceasedList, activeBrand]);
+
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
           
@@ -1182,6 +1198,30 @@
                 <div className="relative w-full md:w-64">
                   <Icons.Search className="absolute left-3 top-3 md:top-2 text-slate-400" size={16} />
                   <input type="text" placeholder="Search case roster..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-200 w-full focus:outline-none focus:border-indigo-500" />
+                </div>
+              </div>
+
+              {/* HUD Command Centre */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0 animate-fade-in">
+                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-3xl font-black text-indigo-400 relative z-10">{hudStats.active}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Active Cases</span>
+                </div>
+                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-rose-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-3xl font-black text-rose-400 relative z-10">{hudStats.coroner}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Coroner Cases</span>
+                </div>
+                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-emerald-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-3xl font-black text-emerald-400 relative z-10">{hudStats.workshop}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Workshop Ready</span>
+                </div>
+                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-amber-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-3xl font-black text-amber-400 relative z-10">{hudStats.urgent}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">High Urgency</span>
                 </div>
               </div>
 

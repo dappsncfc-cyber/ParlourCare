@@ -12,12 +12,17 @@
       theme: {
         extend: {
           animation: {
-            'fade-in': 'fadeIn 0.25s ease-out forwards',
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s ease-out forwards',
           },
           keyframes: {
             fadeIn: {
-              '0%': { opacity: '0', transform: 'scale(0.97)' },
+              '0%': { opacity: '0', transform: 'scale(0.98)' },
               '100%': { opacity: '1', transform: 'scale(1)' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
             }
           }
         }
@@ -41,13 +46,17 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    /* Smooth scrolling globally */
+    html {
+      scroll-behavior: smooth;
+    }
     @media print {
       .no-print { display: none !important; }
       body { background: white !important; color: black !important; }
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
+<body class="bg-slate-900 text-slate-100 min-h-screen selection:bg-indigo-500/30">
 
   <div id="root"></div>
 
@@ -497,22 +506,22 @@
       // Unified brand themes using the premium Joint Group indigo/purple palette
       const brandThemes = useMemo(() => ({
         joint: {
-          bannerGradient: 'from-slate-900 via-indigo-950 to-slate-900',
+          bannerGradient: 'from-slate-900 via-indigo-950/80 to-slate-900',
           brandName: 'Cromer & District & Gowards Group',
           primaryBtn: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
-          activeTabStyle: 'border-amber-500 text-amber-400 bg-amber-950/30'
+          activeTabStyle: 'border-indigo-400 text-indigo-300 bg-indigo-950/40 shadow-inner'
         },
         cromer: {
-          bannerGradient: 'from-slate-900 via-indigo-950 to-slate-900',
+          bannerGradient: 'from-slate-900 via-indigo-950/80 to-slate-900',
           brandName: 'Cromer & District Funeral Services',
           primaryBtn: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
-          activeTabStyle: 'border-amber-500 text-amber-400 bg-amber-950/30'
+          activeTabStyle: 'border-indigo-400 text-indigo-300 bg-indigo-950/40 shadow-inner'
         },
         gowards: {
-          bannerGradient: 'from-slate-900 via-indigo-950 to-slate-900',
+          bannerGradient: 'from-slate-900 via-indigo-950/80 to-slate-900',
           brandName: 'Gowards Funeral Services',
           primaryBtn: 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold',
-          activeTabStyle: 'border-amber-500 text-amber-400 bg-amber-950/30'
+          activeTabStyle: 'border-indigo-400 text-indigo-300 bg-indigo-950/40 shadow-inner'
         }
       }), []);
 
@@ -1067,35 +1076,35 @@
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
           
           {/* Brand Subheader */}
-          <div className="bg-slate-950 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-30 font-medium">
+          <div className="bg-slate-950/90 backdrop-blur-md sticky top-0 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-50 font-medium shadow-sm transition-all">
             <div className="flex items-center space-x-2">
               <span className="font-bold tracking-wide uppercase text-[10px] text-teal-400">
                 ParlourCare &copy; <a href="https://www.offscriptlabs.co.uk" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-teal-300 transition-colors">Offscript Labs 2026</a>
               </span>
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto justify-center">
-              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🤝 Joint Group</button>
-              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦀 Cromer</button>
-              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦆 Gowards</button>
+              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all text-[11px] font-bold shadow-sm active:scale-95 ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-indigo-500/20" : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700/50"}`}>🤝 Joint Group</button>
+              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all text-[11px] font-bold shadow-sm active:scale-95 ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-indigo-500/20" : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700/50"}`}>🦀 Cromer</button>
+              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all text-[11px] font-bold shadow-sm active:scale-95 ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-indigo-500/20" : "bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700/50"}`}>🦆 Gowards</button>
             </div>
           </div>
 
           {/* Main Header */}
-          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg`}>
-            <div className="flex items-center space-x-3.5">
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/60">
+          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-5 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg relative overflow-hidden`}>
+            <div className="flex items-center space-x-3.5 relative z-10">
+              <div className="bg-slate-950/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700/50 shadow-inner">
                 <span className="text-2xl">{activeBrand === "joint" ? "🤝" : activeBrand === "cromer" ? "🦀" : "🦆"}</span>
               </div>
               <div>
-                <h1 className="text-lg md:text-xl font-black text-white">{currentTheme.brandName}</h1>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="bg-slate-950 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-800 uppercase tracking-wider">Mortuary Management</span>
+                <h1 className="text-xl md:text-2xl font-black text-white tracking-tight">{currentTheme.brandName}</h1>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="bg-slate-950/60 backdrop-blur-sm text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-700/50 uppercase tracking-wider shadow-sm">Mortuary Management</span>
                   {isFirebaseEnabled ? (
-                    <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-0.5 rounded-full animate-pulse">
+                    <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-0.5 rounded-full animate-pulse shadow-sm">
                       🟢 Live Cloud Sync Active
                     </span>
                   ) : (
-                    <span className="text-[10px] text-amber-400 font-extrabold flex items-center gap-1.5 bg-amber-950/40 border border-amber-900/50 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[10px] text-amber-400 font-extrabold flex items-center gap-1.5 bg-amber-950/40 border border-amber-900/50 px-2.5 py-0.5 rounded-full shadow-sm">
                       💾 Offline Local Storage Active
                     </span>
                   )}
@@ -1104,7 +1113,7 @@
             </div>
             
             {/* Header Action Row & Notifier Dropdown */}
-            <div className="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto items-stretch sm:items-center">
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-stretch sm:items-center relative z-10">
               
               {/* Notifier Bell Widget */}
               <div className="relative">
@@ -1113,25 +1122,25 @@
                     setIsNotificationTrayOpen(!isNotificationTrayOpen);
                     setUnreadCount(0);
                   }} 
-                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-350 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition relative"
+                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-350 hover:text-white bg-slate-950/80 backdrop-blur-sm border border-slate-700/50 hover:bg-slate-900 hover:shadow-lg hover:-translate-y-0.5 transition-all relative group"
                 >
-                  <Icons.Bell size={18} />
+                  <Icons.Bell size={18} className="group-hover:rotate-12 transition-transform duration-300" />
                   <span className="sm:hidden font-black">View Activity Log</span>
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 sm:-top-1 right-2 sm:-right-1 bg-rose-600 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center animate-bounce shadow-md">
+                    <span className="absolute top-1 sm:-top-1 right-2 sm:-right-1 bg-rose-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center animate-bounce shadow-md border border-rose-400/50">
                       {unreadCount}
                     </span>
                   )}
                 </button>
                 
                 {isNotificationTrayOpen && (
-                  <div className="absolute right-0 mt-3.5 w-80 bg-slate-950 border border-slate-800/80 rounded-2xl shadow-2xl p-4.5 z-50 animate-fade-in">
-                    <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
+                  <div className="absolute right-0 mt-3.5 w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-4.5 z-50 animate-slide-up">
+                    <div className="flex justify-between items-center border-b border-slate-800/80 pb-3 mb-3">
                       <span className="text-xs font-black uppercase text-slate-200 tracking-wider">Live Activity Log</span>
                       {notifications.length > 0 && (
                         <button 
                           onClick={() => setNotifications([])} 
-                          className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors"
+                          className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors bg-indigo-500/10 px-2 py-1 rounded-lg"
                         >
                           Clear Feed
                         </button>
@@ -1144,18 +1153,18 @@
                         </div>
                       ) : (
                         notifications.map(notif => (
-                          <div key={notif.id} className="p-3 bg-slate-900 border border-slate-800/40 rounded-xl text-left">
+                          <div key={notif.id} className="p-3 bg-slate-950/50 border border-slate-800/60 rounded-xl text-left hover:border-slate-700/50 transition-colors">
                             <div className="flex justify-between items-center mb-1.5">
-                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider border ${
-                                notif.type === 'addition' ? 'bg-emerald-950/50 text-emerald-400 border-emerald-900/30' : 
-                                notif.type === 'deletion' ? 'bg-rose-950/50 text-rose-400 border-rose-900/30' : 
-                                'bg-indigo-950/50 text-indigo-400 border-indigo-900/30'
+                              <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider border shadow-sm ${
+                                notif.type === 'addition' ? 'bg-emerald-950/50 text-emerald-400 border-emerald-900/50' : 
+                                notif.type === 'deletion' ? 'bg-rose-950/50 text-rose-400 border-rose-900/50' : 
+                                'bg-indigo-950/50 text-indigo-400 border-indigo-900/50'
                               }`}>
                                 {notif.title}
                               </span>
-                              <span className="text-[9px] text-slate-500 font-mono font-bold">{notif.timestamp.split(' ')[1]}</span>
+                              <span className="text-[9px] text-slate-400 font-mono font-bold">{notif.timestamp.split(' ')[1]}</span>
                             </div>
-                            <p className="text-[11px] text-slate-300 leading-normal font-medium">{notif.message}</p>
+                            <p className="text-[11px] text-slate-300 leading-relaxed font-medium">{notif.message}</p>
                           </div>
                         ))
                       )}
@@ -1164,10 +1173,10 @@
                 )}
               </div>
 
-              <button onClick={() => createAdmission(true)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-rose-500/50 shadow-lg shadow-rose-600/20 transition transform active:scale-95">
+              <button onClick={() => createAdmission(true)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-rose-500/50 shadow-lg shadow-rose-600/20 transition-all hover:-translate-y-0.5 active:scale-95">
                 <Icons.AlertTriangle size={16} /> Record a Coroner's
               </button>
-              <button onClick={() => createAdmission(false)} className={`w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black ${currentTheme.primaryBtn} border border-slate-700/50 shadow-lg transition transform active:scale-95`}>
+              <button onClick={() => createAdmission(false)} className={`w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black ${currentTheme.primaryBtn} border border-slate-700/50 shadow-lg transition-all hover:-translate-y-0.5 active:scale-95`}>
                 <Icons.Plus size={16} /> Quick Add Admission
               </button>
             </div>
@@ -1176,124 +1185,124 @@
           {/* Main Content Area */}
           {!selectedRowId ? (
             // DASHBOARD VIEW
-            <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in">
-              <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
-                <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in bg-slate-900">
+              <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-800/60 shadow-lg transition-all">
+                <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-base md:text-lg font-black text-white mr-2">Active Case Dashboard</h2>
                   {activeBrand === "joint" ? (
-                    <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
+                    <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900/80 border border-slate-700/50 text-xs text-slate-200 font-bold p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all flex-1 sm:flex-none shadow-inner">
                       <option value="All">All Branches</option>
                       {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                     </select>
                   ) : (
-                    <span className="bg-slate-900 border border-slate-800 text-xs text-amber-400 font-extrabold px-3 py-1.5 rounded-lg flex-1 sm:flex-none">
+                    <span className="bg-slate-900/80 border border-slate-700/50 text-xs text-amber-400 font-extrabold px-4 py-2.5 rounded-xl flex-1 sm:flex-none shadow-inner">
                       📍 {activeBrand === "cromer" ? "Cromer Branch" : "Fakenham Branch"} Only
                     </span>
                   )}
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-900/80 border border-slate-700/50 text-xs text-slate-200 font-bold p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all flex-1 sm:flex-none shadow-inner">
                     <option value="Active">📁 Active Custody ({deceasedList.filter(d => !d.isArchived).length})</option>
                     <option value="Archived">🗃️ Archived Files ({deceasedList.filter(d => d.isArchived).length})</option>
                   </select>
                 </div>
-                <div className="relative w-full md:w-64">
-                  <Icons.Search className="absolute left-3 top-3 md:top-2 text-slate-400" size={16} />
-                  <input type="text" placeholder="Search case roster..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-200 w-full focus:outline-none focus:border-indigo-500" />
+                <div className="relative w-full md:w-72">
+                  <Icons.Search className="absolute left-3.5 top-3 text-slate-400" size={16} />
+                  <input type="text" placeholder="Search case roster..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner font-medium" />
                 </div>
               </div>
 
               {/* HUD Command Centre */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0 animate-fade-in">
-                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="text-3xl font-black text-indigo-400 relative z-10">{hudStats.active}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Active Cases</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 flex-shrink-0 animate-slide-up">
+                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-indigo-500/30 transition-all">
+                  <div className="absolute inset-0 bg-indigo-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-4xl font-black text-indigo-400 relative z-10 drop-shadow-md">{hudStats.active}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Active Cases</span>
                 </div>
-                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-rose-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="text-3xl font-black text-rose-400 relative z-10">{hudStats.coroner}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Coroner Cases</span>
+                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-rose-500/30 transition-all">
+                  <div className="absolute inset-0 bg-rose-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-4xl font-black text-rose-400 relative z-10 drop-shadow-md">{hudStats.coroner}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Coroner Cases</span>
                 </div>
-                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-emerald-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="text-3xl font-black text-emerald-400 relative z-10">{hudStats.workshop}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Workshop Ready</span>
+                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+                  <div className="absolute inset-0 bg-emerald-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-4xl font-black text-emerald-400 relative z-10 drop-shadow-md">{hudStats.workshop}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Workshop Ready</span>
                 </div>
-                <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-amber-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="text-3xl font-black text-amber-400 relative z-10">{hudStats.urgent}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">High Urgency</span>
+                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-amber-500/30 transition-all">
+                  <div className="absolute inset-0 bg-amber-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                  <span className="text-4xl font-black text-amber-400 relative z-10 drop-shadow-md">{hudStats.urgent}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">High Urgency</span>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto pr-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="flex-1 overflow-y-auto pr-2 pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredList.map((item) => (
                     <div 
                       key={item.id}
                       onClick={() => { setSelectedRowId(item.id); setActiveTab(item.isCoroner ? "pickup" : "care"); }}
-                      className={`bg-slate-950 border border-slate-800/80 rounded-2xl p-4.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md ${item.isCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}
+                      className={`bg-slate-950/60 backdrop-blur-sm border rounded-2xl p-5 cursor-pointer hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ease-out flex flex-col relative animate-fade-in group ${item.isCoroner ? 'border-l-4 border-l-rose-500 border-slate-800/60 hover:border-rose-500/50' : 'border-l-4 border-l-amber-500 border-slate-800/60 hover:border-amber-500/50'}`}
                     >
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
-                          {item.isCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <span className="text-[10px] font-mono font-bold text-indigo-300 bg-indigo-950/50 px-2.5 py-1 rounded-md border border-indigo-900/60 shadow-sm">{item.ref}</span>
+                          {item.isCoroner && <span className="text-[9px] font-black text-rose-300 bg-rose-950/60 px-2.5 py-1 rounded-md border border-rose-900 uppercase shadow-sm">Coroner</span>}
                           {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
-                            <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
-                              item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-400 border-rose-900' :
-                              item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-400 border-amber-900' :
-                              'bg-emerald-950/60 text-emerald-400 border-emerald-900'
+                            <span className={`text-[9px] font-black px-2.5 py-1 rounded-md border uppercase tracking-wider shadow-sm ${
+                              item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
+                              item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
+                              'bg-emerald-950/60 text-emerald-300 border-emerald-900'
                             }`}>
                               Urgency: {item.keyMilestoneUrgency}
                             </span>
                           )}
                         </div>
                         
-                        <div className="flex items-center space-x-1.5">
-                          <div className="flex items-center space-x-1 bg-slate-900 px-1 py-0.5 rounded-lg border border-slate-800">
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1 bg-slate-900/80 px-1.5 py-1 rounded-lg border border-slate-700/50 shadow-inner opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <button 
                               title={item.isArchived ? "Restore File" : "Archive File"}
                               onClick={(e) => { e.stopPropagation(); handleArchiveToggle(item.id); }} 
-                              className="p-1 rounded-md text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition"
+                              className="p-1 rounded-md text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors"
                             >
-                              <Icons.FolderOpen size={13} />
+                              <Icons.FolderOpen size={14} />
                             </button>
                             <button 
                               title="Delete File"
                               onClick={(e) => { e.stopPropagation(); confirmCaseDeletion(item.id, item.deceasedName); }} 
-                              className="p-1 rounded-md text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
+                              className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
                             >
-                              <Icons.Trash2 size={13} />
+                              <Icons.Trash2 size={14} />
                             </button>
                           </div>
-                          <div className="bg-slate-900 p-1.5 w-8 h-8 rounded-full border border-slate-800 flex items-center justify-center text-base select-none">
+                          <div className="bg-slate-900/80 p-2 w-9 h-9 rounded-full border border-slate-700/50 flex items-center justify-center text-lg select-none shadow-inner group-hover:scale-110 transition-transform duration-300">
                             {item.condition === 'Poor' ? '🤮' : item.condition === 'Medium' ? '🤢' : '😊'}
                           </div>
                         </div>
                       </div>
                       
-                      <h3 className="text-base font-black text-white mb-1">{item.title} {item.deceasedName || "Unnamed Admission"}</h3>
-                      <p className="text-xs text-slate-400 mb-4">{item.location} • Tray {item.fridgeTray || 'Pending'}</p>
+                      <h3 className="text-lg font-black text-white mb-1.5 tracking-tight">{item.title} {item.deceasedName || "Unnamed Admission"}</h3>
+                      <p className="text-xs text-slate-400 mb-5 font-medium">{item.location} • Tray {item.fridgeTray || 'Pending'}</p>
                       
                       {item.isCoroner && (
-                        <div className="mt-auto pt-3 border-t border-slate-800/60">
-                          <div className="flex justify-between text-[10px] font-bold uppercase mb-1">
-                            <span className="text-slate-500">Dispatch Stage:</span>
+                        <div className="mt-auto pt-4 border-t border-slate-700/50">
+                          <div className="flex justify-between text-[10px] font-bold uppercase mb-2">
+                            <span className="text-slate-400">Dispatch Stage:</span>
                             <span className="text-amber-400 font-extrabold">{item.pickupStatus}</span>
                           </div>
-                          <div className="w-full bg-slate-900 rounded-full h-1.5 border border-slate-800/60 overflow-hidden mb-1">
-                            <div className="bg-gradient-to-r from-rose-500 to-amber-500 h-full transition-all duration-300" style={{ width: item.pickupStatus === 'Pending' ? '25%' : item.pickupStatus === 'Dispatched' ? '50%' : item.pickupStatus === 'On Scene' ? '75%' : '100%' }}></div>
+                          <div className="w-full bg-slate-900 rounded-full h-2 border border-slate-800 overflow-hidden mb-2 shadow-inner">
+                            <div className="bg-gradient-to-r from-rose-500 to-amber-500 h-full transition-all duration-500 ease-out" style={{ width: item.pickupStatus === 'Pending' ? '25%' : item.pickupStatus === 'Dispatched' ? '50%' : item.pickupStatus === 'On Scene' ? '75%' : '100%' }}></div>
                           </div>
                           {item.pickupStatusTimestamps?.[item.pickupStatus] && (
-                            <div className="text-[9px] text-slate-400 text-right font-mono font-bold">
+                            <div className="text-[9px] text-slate-500 text-right font-mono font-medium">
                               Logged: {item.pickupStatusTimestamps[item.pickupStatus]}
                             </div>
                           )}
                         </div>
                       )}
                       {!item.isCoroner && (
-                        <div className="mt-auto pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                          <span>Coffin: <span className="text-slate-300">{item.coffin}</span></span>
-                          {item.infection !== "None" && <span className="text-rose-400 bg-rose-950/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}
+                        <div className="mt-auto pt-4 border-t border-slate-700/50 flex items-center justify-between text-[11px] font-bold text-slate-400">
+                          <span>Coffin: <span className="text-slate-200">{item.coffin}</span></span>
+                          {item.infection !== "None" && <span className="text-rose-300 bg-rose-950/50 border border-rose-900/50 px-2 py-1 rounded-md shadow-sm">⚠️ {item.infection}</span>}
                         </div>
                       )}
                     </div>
@@ -1303,127 +1312,127 @@
             </div>
           ) : selectedRowId && !formState ? (
             <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
-              <p className="mt-4 text-xs font-bold text-slate-400">Loading Case File...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+              <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading Case File...</p>
             </div>
           ) : (
             // DETAILS VIEW
             <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 animate-fade-in">
-              <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md">
-                <button onClick={() => { setSelectedRowId(null); setFormState(null); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0">
+              <div className="bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md z-20">
+                <button onClick={() => { setSelectedRowId(null); setFormState(null); }} className="px-4 py-4 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
                   <Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard
                 </button>
-                <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
-                  <Icons.Users size={14} className="text-indigo-400" /> 1. Deceased Care
+                <button onClick={() => setActiveTab("care")} className={`px-5 py-4 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all duration-300 ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-900/50'}`}>
+                  <Icons.Users size={14} className={activeTab === "care" ? "text-indigo-300" : "text-slate-500"} /> 1. Deceased Care
                 </button>
-                <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
-                  <Icons.Hammer size={14} className="text-indigo-400" /> 2. Coffin Workshop
+                <button onClick={() => setActiveTab("workshop")} className={`px-5 py-4 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all duration-300 ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-900/50'}`}>
+                  <Icons.Hammer size={14} className={activeTab === "workshop" ? "text-indigo-300" : "text-slate-500"} /> 2. Coffin Workshop
                 </button>
                 {formState?.isCoroner && (
-                  <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
-                    <Icons.Mail size={14} className="text-indigo-400" /> 3. Coroner's Dispatch
+                  <button onClick={() => setActiveTab("pickup")} className={`px-5 py-4 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all duration-300 ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-900/50'}`}>
+                    <Icons.Mail size={14} className={activeTab === "pickup" ? "text-indigo-300" : "text-slate-500"} /> 3. Coroner's Dispatch
                   </button>
                 )}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
                   
                   {/* LEFT COLUMN: EDITING CARDS */}
-                  <div className="lg:col-span-2 space-y-6">
+                  <div className="lg:col-span-2 space-y-8 animate-slide-up">
                     
                     {/* CARE TAB FORM MODULES */}
                     {activeTab === "care" && (
                       <>
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Layers className="text-indigo-400" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-250">Core Admission Details</h3></div>
-                          <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5"><Icons.Layers className="text-indigo-400" size={18} /><h3 className="text-sm font-black uppercase tracking-widest text-white">Core Admission Details</h3></div>
+                          <div className="grid grid-cols-2 sm:grid-cols-6 gap-5 mb-5">
                             <div className="col-span-2 sm:col-span-2">
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Title</label>
-                              <select value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Title</label>
+                              <select value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner font-medium">
                                 {titles.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
-                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Deceased Name</label>
+                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-white w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner font-bold" />
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Branch</label>
-                              <select value={formState?.location || 'Cromer'} onChange={(e) => handleFieldChange('location', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Branch</label>
+                              <select value={formState?.location || 'Cromer'} onChange={(e) => handleFieldChange('location', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner font-medium">
                                 {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                               </select>
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tray No.</label>
-                              <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-black w-full focus:outline-none text-center" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Tray No.</label>
+                              <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-amber-400 font-black w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner text-center tracking-wider" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-450 block mb-1">D.O.B.</label>
-                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">D.O.B.</label>
+                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-indigo-300 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
-                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">D.O.D.</label>
+                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.AlertTriangle className="text-rose-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Clinical Protocols & Hazards</h3></div>
-                          <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5"><Icons.AlertTriangle className="text-rose-500" size={18} /><h3 className="text-sm font-black uppercase tracking-widest text-white">Clinical Protocols & Hazards</h3></div>
+                          <div className="grid grid-cols-2 gap-5 mb-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-rose-455 block mb-1">Bio-Hazard Infection</label>
-                              <select value={formState?.infection || 'None'} onChange={(e) => handleFieldChange('infection', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-rose-455 font-bold w-full focus:outline-none">
+                              <label className="text-[10px] font-bold uppercase text-rose-400 block mb-1.5 ml-1">Bio-Hazard Infection</label>
+                              <select value={formState?.infection || 'None'} onChange={(e) => handleFieldChange('infection', e.target.value)} className="bg-slate-900/80 border border-rose-900/30 rounded-xl text-xs p-3 text-rose-400 font-bold w-full focus:outline-none focus:ring-2 focus:ring-rose-500/40 transition-all shadow-inner">
                                 {infectionRisks.map(r => <option key={r} value={r}>{r}</option>)}
                               </select>
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Condition</label>
-                              <select value={formState?.condition || 'Good'} onChange={(e) => handleFieldChange('condition', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Condition</label>
+                              <select value={formState?.condition || 'Good'} onChange={(e) => handleFieldChange('condition', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                 {conditions.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Implants/Devices</label>
-                              <input type="text" value={formState?.devicesDetails || ''} onChange={(e) => handleFieldChange('devicesDetails', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none font-bold text-amber-400" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Implants/Devices</label>
+                              <input type="text" value={formState?.devicesDetails || ''} onChange={(e) => handleFieldChange('devicesDetails', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 w-full focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all shadow-inner font-bold text-amber-400" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Embalming Details</label>
-                              <input type="text" value={formState?.embalmingDetails || ''} onChange={(e) => handleFieldChange('embalmingDetails', e.target.value)} placeholder="Completed: DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Embalming Details</label>
+                              <input type="text" value={formState?.embalmingDetails || ''} onChange={(e) => handleFieldChange('embalmingDetails', e.target.value)} placeholder="Completed: DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Heart className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Sanitary preparations</h3></div>
-                          <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5"><Icons.Heart className="text-amber-500" size={18} /><h3 className="text-sm font-black uppercase tracking-widest text-white">Sanitary preparations</h3></div>
+                          <div className="grid grid-cols-2 gap-5 mb-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Grooming & Sanitary</label>
-                              <textarea value={formState?.preparationsDetails || ''} onChange={(e) => handleFieldChange('preparationsDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Grooming & Sanitary</label>
+                              <textarea value={formState?.preparationsDetails || ''} onChange={(e) => handleFieldChange('preparationsDetails', e.target.value)} rows={3} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner resize-none leading-relaxed" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Jewellery Custody</label>
-                              <textarea value={formState?.jewelleryDetails || ''} onChange={(e) => handleFieldChange('jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Jewellery Custody</label>
+                              <textarea value={formState?.jewelleryDetails || ''} onChange={(e) => handleFieldChange('jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner resize-none leading-relaxed" />
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Key Milestone Date</label>
-                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Key Milestone Date</label>
+                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-amber-400 font-bold w-full focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all shadow-inner" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Action</label>
-                              <input type="text" value={formState?.keyMilestoneName || ''} onChange={(e) => handleFieldChange('keyMilestoneName', e.target.value)} placeholder="e.g. Family Viewing" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Milestone Action</label>
+                              <input type="text" value={formState?.keyMilestoneName || ''} onChange={(e) => handleFieldChange('keyMilestoneName', e.target.value)} placeholder="e.g. Family Viewing" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Urgency</label>
-                              <select value={formState?.keyMilestoneUrgency || 'None'} onChange={(e) => handleFieldChange('keyMilestoneUrgency', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Milestone Urgency</label>
+                              <select value={formState?.keyMilestoneUrgency || 'None'} onChange={(e) => handleFieldChange('keyMilestoneUrgency', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                 <option value="None">None</option>
                                 <option value="Low">Low</option>
                                 <option value="Medium">Medium</option>
@@ -1438,44 +1447,44 @@
                     {/* WORKSHOP TAB FORM MODULES */}
                     {activeTab === "workshop" && (
                       <>
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5"><Icons.Hammer className="text-amber-500" size={18} /><h3 className="text-sm font-black uppercase tracking-widest text-white">Construction Specifications</h3></div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-455 block mb-1">Selected Wood</label>
-                              <select value={formState?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Selected Wood</label>
+                              <select value={formState?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                 {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </div>
                             <div className="sm:col-span-2">
-                              <label className="text-[10px] font-bold uppercase text-amber-455 block mb-1">Linings, Plates & Handles</label>
-                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Linings, Plates & Handles</label>
+                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-amber-300 font-bold w-full focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all shadow-inner" />
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Body Size Dimensions</label>
-                              <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Body Size Dimensions</label>
+                              <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-white font-mono text-center font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner tracking-wider" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Engraved Name Plate</label>
-                              <select value={formState?.plate || 'No'} onChange={(e) => handleFieldChange('plate', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold text-center">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Engraved Name Plate</label>
+                              <select value={formState?.plate || 'No'} onChange={(e) => handleFieldChange('plate', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-semibold text-center w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                 {triStateOptions.map(o => <option key={o} value={o}>{o}</option>)}
                               </select>
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Users size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Dressing & Viewings</h3></div>
-                          <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5"><Icons.Users className="text-amber-500" size={18} /><h3 className="text-sm font-black uppercase tracking-widest text-white">Dressing & Viewings</h3></div>
+                          <div className="grid grid-cols-2 gap-5 mb-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Dressing Attire</label>
-                              <input type="text" value={formState?.clothes || ''} onChange={(e) => handleFieldChange('clothes', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Dressing Attire</label>
+                              <input type="text" value={formState?.clothes || ''} onChange={(e) => handleFieldChange('clothes', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Family Viewing</label>
-                              <select value={formState?.viewing || 'R'} onChange={(e) => handleFieldChange('viewing', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Family Viewing</label>
+                              <select value={formState?.viewing || 'R'} onChange={(e) => handleFieldChange('viewing', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                 <option value="Yes">✓ Viewing Confirmed</option><option value="No">✗ Viewing Declined</option><option value="R">R Viewing Requested</option>
                               </select>
                             </div>
@@ -1487,67 +1496,67 @@
                     {/* CORONER TAB FORM MODULES */}
                     {activeTab === "pickup" && formState?.isCoroner && (
                       <>
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Coroner Authority Details</h3></div>
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5"><Icons.Building2 className="text-amber-500" size={18} /><h3 className="text-sm font-black uppercase tracking-widest text-white">Coroner Authority Details</h3></div>
                           
-                          <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-6 gap-5 mb-5">
                             <div className="col-span-2 sm:col-span-2">
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Title</label>
-                              <select value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Title</label>
+                              <select value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                 {titles.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
-                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Deceased Name</label>
+                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-white font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="grid grid-cols-2 gap-5 mb-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
-                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">D.O.B.</label>
+                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-amber-400 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
-                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">D.O.D.</label>
+                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-5">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">CAD</label>
-                              <input type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">CAD</label>
+                              <input type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-white font-mono font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner tracking-wider" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer / Contact</label>
-                              <input type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Officer / Contact</label>
+                              <input type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Truck className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Logistics & Dispatch</h3></div>
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5"><Icons.Truck className="text-amber-500" size={18} /><h3 className="text-sm font-black uppercase tracking-widest text-white">Logistics & Dispatch</h3></div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
-                              <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Dispatch Stage:</label>
-                              <div className="grid grid-cols-2 gap-2 mb-3">
+                              <label className="text-[10px] font-black uppercase text-slate-400 block mb-2.5 ml-1">Live Dispatch Stage:</label>
+                              <div className="grid grid-cols-2 gap-2 mb-4">
                                 {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
                                   const isCurrent = formState?.pickupStatus === st;
                                   return (
-                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
+                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-3 md:py-2 px-2 rounded-xl text-xs font-black transition-all duration-300 text-center uppercase tracking-wider shadow-sm active:scale-95 ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md ring-2 ring-amber-500/30' : 'bg-slate-900/80 border border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:text-white'}`}>{st}</button>
                                   );
                                 })}
                               </div>
                               
-                              <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner">
-                                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">Dispatch Milestone Log</span>
-                                <div className="space-y-1">
+                              <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 text-[11px] font-sans shadow-inner">
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-2">Dispatch Milestone Log</span>
+                                <div className="space-y-1.5">
                                   {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
                                     const ts = formState?.pickupStatusTimestamps?.[st];
                                     return (
-                                      <div key={st} className="flex justify-between items-center py-0.5 border-b border-slate-800/40 last:border-0">
+                                      <div key={st} className="flex justify-between items-center py-1 border-b border-slate-800/60 last:border-0">
                                         <span className="text-slate-400 font-semibold">{st}:</span>
                                         <span className="font-mono text-amber-400 font-bold">{ts || <span className="text-slate-600 font-sans italic font-normal">Not yet logged</span>}</span>
                                       </div>
@@ -1556,35 +1565,35 @@
                                 </div>
                               </div>
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                               <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Target Destination</label>
-                                <select value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-1.5 ml-1">Target Destination</label>
+                                <select value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-semibold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                   <option value="Cromer Mortuary">Cromer Mortuary</option>
                                   <option value="Fakenham Mortuary">Fakenham Mortuary</option>
                                 </select>
                               </div>
                               <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
-                                <select value={formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-1.5 ml-1">Vehicle Assigned</label>
+                                <select value={formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-semibold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
                                 </select>
                               </div>
                               <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Scheduled Date & Time</label>
-                                <input type="text" value={formState?.pickupDateTime || ''} onChange={(e) => handleFieldChange('pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-500" />
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-1.5 ml-1">Scheduled Date & Time</label>
+                                <input type="text" value={formState?.pickupDateTime || ''} onChange={(e) => handleFieldChange('pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all shadow-inner text-amber-400 tracking-wide" />
                               </div>
                             </div>
                           </div>
                           
-                          <div className="mb-5">
-                            <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Assigned Staff:</label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                          <div className="mb-6">
+                            <label className="text-[10px] font-black uppercase text-slate-400 block mb-2.5 ml-1">Assigned Staff:</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                               {norfolkStaffList.map((staff) => {
                                 const isChecked = (formState?.pickupStaff || []).includes(staff.name);
                                 return (
-                                  <div key={staff.id} onClick={() => handleStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-850'}`}>
-                                    {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}
+                                  <div key={staff.id} onClick={() => handleStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer select-none transition-all duration-200 hover:-translate-y-0.5 shadow-sm active:scale-95 ${isChecked ? 'bg-amber-500/10 border-amber-500/50 text-white shadow-amber-500/5' : 'bg-slate-900/80 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600'}`}>
+                                    {isChecked ? <Icons.CheckSquare size={18} className="text-amber-400" /> : <Icons.Square size={18} className="text-slate-500" />}
                                     <div className="text-xs font-bold">{staff.name}</div>
                                   </div>
                                 );
@@ -1592,26 +1601,31 @@
                             </div>
                           </div>
                           
-                          <div>
-                            <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Pick-up Address & Notes</label>
-                            <textarea value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none mb-2" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
-                            <textarea value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">Pick-up Address & Notes</label>
+                              <textarea value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner resize-none leading-relaxed" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
+                            </div>
+                            <div>
+                              <textarea value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-medium w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner resize-none leading-relaxed" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
+                            </div>
                           </div>
                         </div>
 
                         {/* Dispatch Emailer positioned above save button inside Tab 3 */}
                         {dispatchEmailData && (
-                          <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                            <div className="flex items-center space-x-1.5 text-slate-400 mb-3 border-b border-slate-800 pb-3">
-                              <Icons.Mail size={14} className="text-indigo-400" />
-                              <span className="text-[10px] font-black tracking-widest uppercase">Dispatch Emailer</span>
+                          <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all mt-6">
+                            <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-4">
+                              <Icons.Mail size={18} className="text-indigo-400" />
+                              <span className="text-xs font-black tracking-widest uppercase text-white">Dispatch Emailer</span>
                             </div>
-                            <div className="space-y-2.5 bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono">
-                              <div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{formState?.pickupStaffEmails || 'None'}</span></div>
+                            <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/50 text-xs font-mono shadow-inner mb-5">
+                              <div className="text-slate-400 font-bold mb-1">To:</div>
+                              <div className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950/50 p-2 rounded-lg border border-slate-800">{formState?.pickupStaffEmails || 'None'}</div>
                             </div>
-                            <div className="mt-4 grid grid-cols-2 gap-2">
-                              <button type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 flex items-center justify-center gap-1">Preview</button>
-                              <a href={dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl flex items-center justify-center gap-1 text-center font-bold shadow-md shadow-amber-500/10">Send</a>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold py-3 rounded-xl border border-slate-600 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-95 shadow-md">Preview</button>
+                              <a href={dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-3 rounded-xl flex items-center justify-center gap-2 text-center shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-0.5 active:scale-95">Send Dispatch</a>
                             </div>
                           </div>
                         )}
@@ -1619,72 +1633,72 @@
                     )}
 
                     {/* SAVE & RETURN BUTTON */}
-                    <div className="flex justify-end pb-8 pt-4">
+                    <div className="flex justify-end pb-12 pt-6">
                       <button 
                         onClick={() => { setSelectedRowId(null); setFormState(null); }}
-                        className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 py-3.5 sm:py-3 rounded-2xl font-black text-sm tracking-wide shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition transform active:scale-95"
+                        className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-10 py-4 sm:py-3.5 rounded-2xl font-black text-sm tracking-wide shadow-xl shadow-emerald-900/30 flex items-center justify-center gap-2.5 transition-all hover:-translate-y-0.5 active:scale-95"
                       >
-                        <Icons.Save size={18} /> Save & Return to Summary
+                        <Icons.Save size={18} className="animate-pulse" /> Save & Return to Summary
                       </button>
                     </div>
                   </div>
 
                   {/* RIGHT COLUMN: UTILITY WIDGETS */}
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                     
                     {/* DOCUMENT PRINT STATION */}
-                    <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
-                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400">
-                        <Icons.Printer size={13} className="text-indigo-455" />
-                        <span className="text-[9px] font-bold tracking-widest uppercase">Document Print Station</span>
+                    <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all relative">
+                      <div className="absolute top-4 left-5 flex items-center space-x-2 text-slate-400">
+                        <Icons.Printer size={14} className="text-indigo-400" />
+                        <span className="text-[10px] font-black tracking-widest uppercase">Document Print Station</span>
                       </div>
                       
-                      <div className="mt-8 space-y-2.5 w-full">
+                      <div className="mt-10 space-y-3 w-full">
                         <button 
                           type="button" 
                           onClick={() => printCareDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700/50 text-xs font-semibold py-3 px-4 rounded-xl transition-all hover:-translate-y-0.5 shadow-sm flex items-center justify-between group"
                         >
-                          <span className="flex items-center gap-2">
-                            <Icons.Users size={14} className="text-amber-400" />
+                          <span className="flex items-center gap-2.5">
+                            <Icons.Users size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
                             Print Care Form (Tab 1)
                           </span>
-                          <Icons.Printer size={12} className="text-slate-500" />
+                          <Icons.Printer size={14} className="text-slate-500 group-hover:text-white transition-colors" />
                         </button>
 
                         <button 
                           type="button" 
                           onClick={() => printWorkshopDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700/50 text-xs font-semibold py-3 px-4 rounded-xl transition-all hover:-translate-y-0.5 shadow-sm flex items-center justify-between group"
                         >
-                          <span className="flex items-center gap-2">
-                            <Icons.Hammer size={14} className="text-amber-400" />
+                          <span className="flex items-center gap-2.5">
+                            <Icons.Hammer size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
                             Print Workshop Spec (Tab 2)
                           </span>
-                          <Icons.Printer size={12} className="text-slate-500" />
+                          <Icons.Printer size={14} className="text-slate-500 group-hover:text-white transition-colors" />
                         </button>
 
                         {formState?.isCoroner && (
                           <button 
                             type="button" 
                             onClick={() => printCoronerDocument(formState)}
-                            className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                            className="w-full bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700/50 text-xs font-semibold py-3 px-4 rounded-xl transition-all hover:-translate-y-0.5 shadow-sm flex items-center justify-between group"
                           >
-                            <span className="flex items-center gap-2">
-                              <Icons.Truck size={14} className="text-rose-455" />
+                            <span className="flex items-center gap-2.5">
+                              <Icons.Truck size={16} className="text-rose-400 group-hover:scale-110 transition-transform" />
                               Print Coroner Dispatch (Tab 3)
                             </span>
-                            <Icons.Printer size={12} className="text-slate-500" />
+                            <Icons.Printer size={14} className="text-slate-500 group-hover:text-white transition-colors" />
                           </button>
                         )}
 
-                        <div className="pt-2 border-t border-slate-800/60">
+                        <div className="pt-3 border-t border-slate-800/60 mt-2">
                           <button 
                             type="button" 
                             onClick={() => printCombinedMasterDocument(formState)}
-                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-3 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-amber-500/10"
+                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-3.5 px-4 rounded-xl transition-all hover:-translate-y-0.5 shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 active:scale-95"
                           >
-                            <Icons.FileText size={14} />
+                            <Icons.FileText size={16} />
                             Print Combined Master Record
                           </button>
                         </div>
@@ -1692,48 +1706,53 @@
                     </div>
 
                     {/* QR WIDGET */}
-                    <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
-                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase">Tracking Pass</span></div>
-                      <div className="mt-8 mb-4 bg-white p-3 rounded-xl shadow-inner">
-                        <img src={getQrCodeUrl(formState, 140)} alt="QR Tracking" className="w-32 h-32 object-contain" />
+                    <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl flex flex-col items-center text-center relative group transition-all">
+                      <div className="absolute top-4 left-5 flex items-center space-x-2 text-slate-400">
+                        <Icons.QrCode size={14} className="text-amber-500" />
+                        <span className="text-[10px] font-black tracking-widest uppercase">Tracking Pass</span>
                       </div>
-                      <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 justify-center"><span>Live File Link</span></h4>
+                      <div className="mt-10 mb-5 bg-white p-3.5 rounded-2xl shadow-xl transform group-hover:scale-105 transition-transform duration-300">
+                        <img src={getQrCodeUrl(formState, 140)} alt="QR Tracking" className="w-32 h-32 object-contain rounded-lg" />
+                      </div>
+                      <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 justify-center tracking-wider"><span>Live File Link</span></h4>
                       
-                      <div className="mt-5 w-full grid grid-cols-2 gap-2">
-                        <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 transition flex items-center justify-center gap-1.5"><Icons.Maximize2 size={12} /><span>Maximize</span></button>
-                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15"><Icons.Printer size={12} /><span>Sticker</span></button>
+                      <div className="mt-6 w-full grid grid-cols-2 gap-3">
+                        <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-[11px] font-bold py-2.5 rounded-xl border border-slate-700/50 transition-all hover:-translate-y-0.5 shadow-sm flex items-center justify-center gap-2 active:scale-95"><Icons.Maximize2 size={14} /><span>Maximize</span></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[11px] font-black py-2.5 rounded-xl transition-all hover:-translate-y-0.5 shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 active:scale-95"><Icons.Printer size={14} /><span>Sticker</span></button>
                       </div>
                     </div>
 
                     {/* ANATOMICAL SKULL CONDITION METRIC WIDGET */}
                     {activeTab === "care" && (
-                      <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
-                        <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
-                        <div className="my-6 p-4 bg-slate-900 rounded-full border border-slate-800/80 shadow-inner">
-                          <BodyConditionIcon fill opacity={0.1} condition={formState?.condition} size={64} />
+                      <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl flex flex-col items-center text-center relative transition-all">
+                        <div className="absolute top-4 left-5 flex items-center space-x-2 text-slate-400">
+                          <span className="text-[10px] font-black uppercase tracking-widest">Condition Metric</span>
                         </div>
-                        <h4 className="text-sm font-black text-white uppercase">Status: {formState?.condition}</h4>
+                        <div className="my-8 p-5 bg-slate-900/80 rounded-full border border-slate-700/50 shadow-inner transform transition-transform hover:scale-110 duration-300">
+                          <BodyConditionIcon fill opacity={0.1} condition={formState?.condition} size={72} />
+                        </div>
+                        <h4 className="text-sm font-black text-white uppercase tracking-wider">Status: <span className={formState?.condition === 'Poor' ? 'text-rose-400' : formState?.condition === 'Medium' ? 'text-amber-400' : 'text-emerald-400'}>{formState?.condition}</span></h4>
                       </div>
                     )}
 
                     {/* FILE ADMINISTRATION CARD */}
-                    <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
-                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400">
-                        <Icons.FolderOpen size={13} className="text-indigo-455" />
-                        <span className="text-[9px] font-bold tracking-widest uppercase">File Administration</span>
+                    <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl relative transition-all">
+                      <div className="absolute top-4 left-5 flex items-center space-x-2 text-slate-400">
+                        <Icons.FolderOpen size={14} className="text-indigo-400" />
+                        <span className="text-[10px] font-black tracking-widest uppercase">File Administration</span>
                       </div>
                       
-                      <div className="mt-8 space-y-2.5 w-full">
+                      <div className="mt-10 space-y-3 w-full">
                         <button 
                           type="button" 
                           onClick={() => handleArchiveToggle(formState.id)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700/50 text-xs font-semibold py-3 px-4 rounded-xl transition-all hover:-translate-y-0.5 shadow-sm flex items-center justify-between group active:scale-95"
                         >
-                          <span className="flex items-center gap-2">
-                            <Icons.FolderOpen size={14} className="text-amber-400" />
+                          <span className="flex items-center gap-2.5">
+                            <Icons.FolderOpen size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
                             {formState?.isArchived ? "Restore Case" : "Archive Custody Profile"}
                           </span>
-                          <span className="text-[9px] text-slate-500 font-mono">STATUS</span>
+                          <span className="text-[9px] text-slate-500 font-mono font-bold">STATUS</span>
                         </button>
 
                         <button 
@@ -1753,13 +1772,13 @@
                               }
                             });
                           }}
-                          className="w-full bg-red-950/20 hover:bg-red-950/40 text-red-200 border border-red-900/40 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-red-950/30 hover:bg-red-900/50 text-red-200 border border-red-900/50 text-xs font-semibold py-3 px-4 rounded-xl transition-all hover:-translate-y-0.5 shadow-sm flex items-center justify-between group active:scale-95"
                         >
-                          <span className="flex items-center gap-2">
-                            <Icons.Trash2 size={14} className="text-red-400" />
+                          <span className="flex items-center gap-2.5">
+                            <Icons.Trash2 size={16} className="text-red-400 group-hover:scale-110 transition-transform" />
                             Delete Case Record
                           </span>
-                          <span className="text-[9px] text-red-500 font-mono font-bold">DELETE</span>
+                          <span className="text-[9px] text-red-400 font-mono font-black">DELETE</span>
                         </button>
                       </div>
                     </div>
@@ -1772,17 +1791,17 @@
 
           {/* QR MAXIMIZE MODAL */}
           {isQrModalOpen && formState && (
-            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl animate-fade-in">
-                <button onClick={() => setIsQrModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
-                <h3 className="text-base font-black text-white mt-2">{formState?.title} {formState?.deceasedName || "Unnamed"}</h3>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Ref: {formState?.ref}</p>
-                <div className="bg-white p-4 rounded-2xl shadow-2xl inline-block my-4">
-                  <img src={getQrCodeUrl(formState, 220)} alt="High res QR" className="w-48 h-48 object-contain" />
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[9999] animate-fade-in">
+              <div className="bg-slate-900 border border-slate-700/50 rounded-3xl max-w-sm w-full p-8 text-center relative shadow-2xl transform transition-all animate-slide-up">
+                <button onClick={() => setIsQrModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 bg-slate-800/50 rounded-full transition-colors"><Icons.X size={18} /></button>
+                <h3 className="text-lg font-black text-white mt-2 tracking-tight">{formState?.title} {formState?.deceasedName || "Unnamed"}</h3>
+                <p className="text-[11px] text-slate-400 font-mono mt-1 font-medium">Ref: {formState?.ref}</p>
+                <div className="bg-white p-5 rounded-2xl shadow-inner inline-block my-6 border-4 border-slate-800">
+                  <img src={getQrCodeUrl(formState, 240)} alt="High res QR" className="w-56 h-56 object-contain rounded-xl" />
                 </div>
-                <div className="mt-5 flex gap-2">
-                  <button onClick={() => { printStickerAndCheckBlocks(formState); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 text-slate-950 text-xs font-black py-2.5 rounded-xl">Print Sticker</button>
-                  <button onClick={() => setIsQrModalOpen(false)} className="bg-slate-800 text-slate-300 text-xs font-bold px-5 py-2.5 rounded-xl">Close</button>
+                <div className="mt-2 flex gap-3">
+                  <button onClick={() => { printStickerAndCheckBlocks(formState); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-black py-3 rounded-xl transition-colors shadow-lg active:scale-95">Print Sticker</button>
+                  <button onClick={() => setIsQrModalOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-bold px-6 py-3 rounded-xl transition-colors shadow-sm active:scale-95">Close</button>
                 </div>
               </div>
             </div>
@@ -1790,18 +1809,18 @@
 
           {/* EMAIL PREVIEW LOGISTICS MODAL */}
           {isEmailModalOpen && formState && dispatchEmailData && (
-            <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[9999]">
-              <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full p-6 relative shadow-2xl">
-                <button onClick={() => setIsEmailModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
-                <h3 className="text-base font-black text-white mb-4">Email Preview</h3>
-                <div className="space-y-2 bg-slate-900 p-4 rounded-2xl border border-slate-800 text-xs font-mono">
-                  <div className="border-b border-slate-800 pb-2 text-slate-400"><span className="font-bold text-white">To:</span> {formState?.pickupStaffEmails}</div>
-                  <div className="border-b border-slate-800 pb-2 text-slate-400"><span className="font-bold text-white">Subject:</span> {dispatchEmailData.subject}</div>
-                  <div className="text-slate-300 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto pt-2">{dispatchEmailData.body}</div>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[9999] animate-fade-in">
+              <div className="bg-slate-900 border border-slate-700/50 rounded-3xl max-w-xl w-full p-8 relative shadow-2xl transform transition-all animate-slide-up">
+                <button onClick={() => setIsEmailModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 bg-slate-800/50 rounded-full transition-colors"><Icons.X size={18} /></button>
+                <h3 className="text-xl font-black text-white mb-5 flex items-center gap-2"><Icons.Mail className="text-indigo-400"/> Email Preview</h3>
+                <div className="space-y-3 bg-slate-950/50 p-5 rounded-2xl border border-slate-800 text-xs font-mono shadow-inner">
+                  <div className="border-b border-slate-800 pb-3 text-slate-400"><span className="font-bold text-white mr-2 uppercase tracking-wider text-[10px]">To:</span> {formState?.pickupStaffEmails}</div>
+                  <div className="border-b border-slate-800 pb-3 text-slate-400"><span className="font-bold text-white mr-2 uppercase tracking-wider text-[10px]">Subject:</span> {dispatchEmailData.subject}</div>
+                  <div className="text-slate-300 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto pt-3 scrollbar-none font-medium">{dispatchEmailData.body}</div>
                 </div>
-                <div className="mt-5 flex gap-2 justify-end">
-                  <button onClick={() => setIsEmailModalOpen(false)} className="bg-slate-800 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl">Cancel</button>
-                  <a href={dispatchEmailData.mailtoLink} onClick={() => setIsEmailModalOpen(false)} className="bg-amber-500 text-slate-950 text-xs font-black px-5 py-2 rounded-xl">Launch Client</a>
+                <div className="mt-6 flex gap-3 justify-end">
+                  <button onClick={() => setIsEmailModalOpen(false)} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-6 py-3 rounded-xl transition-colors active:scale-95">Cancel</button>
+                  <a href={dispatchEmailData.mailtoLink} onClick={() => setIsEmailModalOpen(false)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-amber-500/20 active:scale-95 flex items-center gap-2"><Icons.Mail size={14}/> Launch Client</a>
                 </div>
               </div>
             </div>
@@ -1809,21 +1828,23 @@
 
           {/* SYSTEM CONFIRMATION MODAL */}
           {dialog.isOpen && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
-              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
-                <div className="flex items-center space-x-3 text-amber-500">
-                  <Icons.AlertTriangle className="flex-shrink-0 animate-bounce" size={24} />
-                  <h4 className="text-base font-black uppercase tracking-wider text-white">{dialog.title}</h4>
+            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[9999] animate-fade-in">
+              <div className="bg-slate-900 border border-slate-700/50 rounded-3xl p-8 max-w-sm w-full shadow-2xl space-y-5 transform transition-all animate-slide-up">
+                <div className="flex items-center space-x-3 text-amber-500 border-b border-slate-800/60 pb-4">
+                  <div className="bg-amber-500/10 p-2 rounded-full">
+                    <Icons.AlertTriangle className="flex-shrink-0 animate-pulse" size={28} />
+                  </div>
+                  <h4 className="text-lg font-black uppercase tracking-wider text-white">{dialog.title}</h4>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">{dialog.message}</p>
-                <div className="flex items-center justify-end space-x-2 pt-2">
+                <p className="text-sm text-slate-300 leading-relaxed font-medium">{dialog.message}</p>
+                <div className="flex items-center justify-end space-x-3 pt-3">
                   {dialog.type === "confirm" ? (
                     <>
-                      <button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition">Cancel</button>
-                      <button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-lg shadow-red-600/10">Confirm & Delete</button>
+                      <button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-5 py-2.5 rounded-xl transition-colors active:scale-95">Cancel</button>
+                      <button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors shadow-lg shadow-red-600/20 active:scale-95">Confirm & Delete</button>
                     </>
                   ) : (
-                    <button onClick={closeDialog} className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-5 py-2 rounded-xl transition shadow-lg">Ok</button>
+                    <button onClick={closeDialog} className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-6 py-2.5 rounded-xl transition-colors shadow-lg active:scale-95">Ok</button>
                   )}
                 </div>
               </div>
@@ -1837,23 +1858,23 @@
     function BodyConditionIcon({ condition, size = 32 }) {
       if (condition === 'Good') {
         return (
-          <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-emerald-400">
+          <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-emerald-400 transition-colors duration-300">
             <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="4" className="opacity-30" />
             <path d="M50 18C32.32 18 18 32.32 18 50C18 64.6 27.84 76.92 41.25 80.7C42.84 81.15 44 82.59 44 84.25V87C44 88.66 45.34 90 47 90H53C54.66 90 56 88.66 56 87V84.25C56 82.59 57.16 81.15 58.75 80.7C72.16 76.92 82 64.6 82 50C82 32.32 67.68 18 50 18Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
             <path d="M32 46C35 49 41 49 44 46" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
             <path d="M56 46C59 49 65 49 68 46" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
             <path d="M42 66C45 68 55 68 58 66" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-            <circle cx="28" cy="56" r="3" fill="currentColor" fillOpacity="0.3" />
-            <circle cx="72" cy="56" r="3" fill="currentColor" fillOpacity="0.3" />
+            <circle cx="28" cy="56" r="3" fill="currentColor" fillOpacity="0.4" />
+            <circle cx="72" cy="56" r="3" fill="currentColor" fillOpacity="0.4" />
           </svg>
         );
       } else if (condition === 'Medium') {
         return (
-          <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-amber-400">
+          <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-amber-400 transition-colors duration-300">
             <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="4" className="opacity-30" />
             <path d="M50 18C34 18 20 32 20 48C20 60 26 70 34 75.5C36 76.8 38 78 38 80.5V85C38 86.6 39.4 88 41 88H59C60.6 88 62 86.6 62 85V80.5C62 78 64 76.8 66 75.5C74 70 80 60 80 48C80 32 66 18 50 18Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-            <path d="M28 44C28 41 38 41 38 44C38 47 28 47 28 44Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="currentColor" fillOpacity="0.1" />
-            <path d="M62 44C62 41 72 41 72 44C72 47 62 47 62 44Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="currentColor" fillOpacity="0.1" />
+            <path d="M28 44C28 41 38 41 38 44C38 47 28 47 28 44Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="currentColor" fillOpacity="0.2" />
+            <path d="M62 44C62 41 72 41 72 44C72 47 62 47 62 44Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="currentColor" fillOpacity="0.2" />
             <line x1="30" y1="44" x2="36" y2="44" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
             <line x1="64" y1="44" x2="70" y2="44" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
             <line x1="44" y1="64" x2="56" y2="64" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
@@ -1863,11 +1884,11 @@
         );
       } else {
         return (
-          <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-500">
+          <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-rose-500 transition-colors duration-300">
             <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="4" className="opacity-30" />
             <path d="M50 14C28 14 22 28 22 48C22 55.5 25.5 60.5 29 63.5C31.5 66.5 33 67 33 71V79C33 83.5 36.5 86 41 86H59C63.5 86 67 83.5 67 79V71C67 67 68.5 66.5 71 63.5C74.5 60.5 78 55.5 78 48C78 28 72 14 50 14Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-            <circle cx="36" cy="45" r="10" stroke="currentColor" strokeWidth="4" fill="currentColor" fillOpacity="0.3" />
-            <circle cx="64" cy="45" r="10" stroke="currentColor" strokeWidth="4" fill="currentColor" fillOpacity="0.3" />
+            <circle cx="36" cy="45" r="10" stroke="currentColor" strokeWidth="4" fill="currentColor" fillOpacity="0.2" />
+            <circle cx="64" cy="45" r="10" stroke="currentColor" strokeWidth="4" fill="currentColor" fillOpacity="0.2" />
             <path d="M50 52L46 60H54L50 52Z" stroke="currentColor" strokeWidth="3.5" fill="currentColor" />
             <path d="M37 75H63" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
             <line x1="43" y1="71" x2="43" y2="79" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />

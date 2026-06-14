@@ -1090,7 +1090,7 @@
           </div>
 
           {/* Main Header */}
-          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-5 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg relative overflow-hidden`}>
+          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-5 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-40 shadow-lg relative`}>
             <div className="flex items-center space-x-3.5 relative z-10">
               <div className="bg-slate-950/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700/50 shadow-inner">
                 <span className="text-2xl">{activeBrand === "joint" ? "🤝" : activeBrand === "cromer" ? "🦀" : "🦆"}</span>
@@ -1370,7 +1370,7 @@
                               <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-amber-400 font-black w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner text-center tracking-wider" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">D.O.B.</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-450 block mb-1.5 ml-1">D.O.B.</label>
                               <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-indigo-300 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                             <div>

@@ -224,7 +224,7 @@
       // Deep linking buffer
       const [pendingDeepLink, setPendingDeepLink] = useState(() => {
         try {
-          return new URLSearchParams(window.location.search).get('case');
+          return newSearchParams(window.location.search).get('case');
         } catch(e) { return null; }
       });
 
@@ -336,6 +336,15 @@
                 const prevMap = new Map(prevListRef.current.map(c => [c.id, c]));
                 const currentMap = new Map(cases.map(c => [c.id, c]));
 
+                // User friendly field mapping
+                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency'];
+                const fieldLabels = {
+                  deceasedName: 'Name', title: 'Title', fridgeTray: 'Tray No.', location: 'Branch',
+                  condition: 'Condition', coffin: 'Coffin', pickupStatus: 'Dispatch Stage',
+                  isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action',
+                  keyMilestoneUrgency: 'Milestone Urgency'
+                };
+
                 // Check additions and modifications
                 cases.forEach(curr => {
                   const prev = prevMap.get(curr.id);
@@ -348,20 +357,18 @@
                       timestamp: getTimestamp()
                     });
                   } else {
-                    let isChanged = false;
-                    const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency'];
+                    const changedFields = [];
                     for (let f of fieldsToCheck) {
                       if (JSON.stringify(curr[f]) !== JSON.stringify(prev[f])) {
-                        isChanged = true;
-                        break;
+                        changedFields.push(fieldLabels[f] || f);
                       }
                     }
-                    if (isChanged) {
+                    if (changedFields.length > 0) {
                       newNotifications.push({
                         id: String(Date.now()) + Math.random(),
                         type: 'update',
                         title: 'Case Updated',
-                        message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) was modified.`,
+                        message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) had updates to: ${changedFields.join(', ')}.`,
                         timestamp: getTimestamp()
                       });
                     }

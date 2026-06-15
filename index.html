@@ -1127,7 +1127,7 @@
         return {
           active: activeDashboardCases.length,
           coroner: activeDashboardCases.filter(c => c.isCoroner).length,
-          workshop: activeDashboardCases.filter(c => c.ready === 'Yes').length,
+          transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && c.transferStatus !== 'Completed').length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
       }, [deceasedList, activeBrand]);
@@ -1284,8 +1284,8 @@
                 </div>
                 <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-all">
                   <div className="absolute inset-0 bg-emerald-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="text-4xl font-black text-emerald-400 relative z-10 drop-shadow-md">{hudStats.workshop}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Workshop Ready</span>
+                  <span className="text-4xl font-black text-emerald-400 relative z-10 drop-shadow-md">{hudStats.transfers}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Transfers</span>
                 </div>
                 <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-amber-500/30 transition-all">
                   <div className="absolute inset-0 bg-amber-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>

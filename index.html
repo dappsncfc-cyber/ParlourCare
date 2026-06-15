@@ -346,12 +346,14 @@
                 const currentMap = new Map(cases.map(c => [c.id, c]));
 
                 // User friendly field mapping
-                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency'];
+                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
                 const fieldLabels = {
                   deceasedName: 'Name', title: 'Title', fridgeTray: 'Tray No.', location: 'Branch',
                   condition: 'Condition', coffin: 'Coffin', pickupStatus: 'Dispatch Stage',
                   isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action',
-                  keyMilestoneUrgency: 'Milestone Urgency'
+                  keyMilestoneUrgency: 'Milestone Urgency',
+                  transferDateTime: 'Transfer Date & Time', transferHospital: 'Transfer Hospital',
+                  transferType: 'Transfer Type', transferVehicle: 'Transfer Vehicle', transferStaff: 'Transfer Staff'
                 };
 
                 // Check additions and modifications
@@ -502,6 +504,16 @@
       const coffinsList = useMemo(() => ["Chiltern Oak", "Regent Oak", "New Ascot", "Simple Coffin", "Mendip Oak", "Cardboard", "Simple Pine", "None"], []);
       const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
       const vehicleOptions = useMemo(() => ["Vauxhall Vivaro CRM-1", "Vauxhall Vivaro FAK-2", "Ford Transit Group-1", "First Call Vehicle 3"], []);
+      
+      const norfolkHospitals = useMemo(() => [
+        "Norfolk & Norwich University Hospital (NNUH)",
+        "Queen Elizabeth Hospital King's Lynn (QEH)",
+        "James Paget University Hospital (JPUH)",
+        "Cromer Hospital",
+        "Hellesdon Hospital",
+        "North Walsham War Memorial Hospital",
+        "Kelling Hospital"
+      ], []);
 
       // Unified brand themes using the premium Joint Group indigo/purple palette
       const brandThemes = useMemo(() => ({
@@ -928,6 +940,27 @@
         saveCaseToDb(updatedRecord);
       };
 
+      const handleTransferStaffToggle = (staffName, staffEmail) => {
+        if (!formState) return;
+        const currentStaff = formState.transferStaff || [];
+        let updatedStaff = [...currentStaff];
+        
+        if (updatedStaff.includes(staffName)) {
+          updatedStaff = updatedStaff.filter(s => s !== staffName);
+        } else {
+          updatedStaff.push(staffName);
+        }
+        const selectedEmails = norfolkStaffList.filter(s => updatedStaff.includes(s.name)).map(s => s.email).join(', ');
+        
+        const updatedRecord = {
+          ...formState,
+          transferStaff: updatedStaff,
+          transferStaffEmails: selectedEmails
+        };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+      };
+
       const createAdmission = (isCoronerCase) => {
         const nextId = String(Date.now());
         const newCase = {
@@ -978,6 +1011,12 @@
             "Pending": getTimestamp()
           },
           pickupInstructions: "",
+          transferDateTime: "",
+          transferHospital: "Norfolk & Norwich University Hospital (NNUH)",
+          transferType: "Pick up",
+          transferVehicle: "Vauxhall Vivaro CRM-1",
+          transferStaff: [],
+          transferStaffEmails: "",
           isArchived: false
         };
 
@@ -1305,6 +1344,26 @@
                         </div>
                       )}
 
+                      {/* HOSPITAL TRANSFER BLOCK */}
+                      {item.isCoroner && item.transferDateTime && (
+                        <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
+                          <div className="flex items-center gap-1.5 mb-2.5">
+                            <Icons.Building2 size={12} className="text-indigo-400" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Hospital Transfer</span>
+                          </div>
+                          <div className="mb-2 flex items-start gap-1.5">
+                            <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">{item.transferType}:</span>
+                            <span className="text-xs font-bold text-white leading-tight">{item.transferHospital}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold">Scheduled:</span>
+                              <span className="text-[11px] font-mono font-bold text-amber-400">{item.transferDateTime}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {item.isCoroner && (
                         <div className="mt-auto pt-4 border-t border-slate-700/50">
                           <div className="flex justify-between text-[10px] font-bold uppercase mb-2">
@@ -1353,6 +1412,11 @@
                 {formState?.isCoroner && (
                   <button onClick={() => setActiveTab("pickup")} className={`px-5 py-4 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all duration-300 ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-900/50'}`}>
                     <Icons.Mail size={14} className={activeTab === "pickup" ? "text-indigo-300" : "text-slate-500"} /> 3. Coroner's Dispatch
+                  </button>
+                )}
+                {formState?.isCoroner && (
+                  <button onClick={() => setActiveTab("hospital")} className={`px-5 py-4 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all duration-300 ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-900/50'}`}>
+                    <Icons.Building2 size={14} className={activeTab === "hospital" ? "text-indigo-300" : "text-slate-500"} /> 4. Hospital Transfer
                   </button>
                 )}
               </div>
@@ -1651,6 +1715,63 @@
                             </div>
                           </div>
                         )}
+                      </>
+                    )}
+
+                    {/* HOSPITAL TRANSFER TAB FORM MODULES */}
+                    {activeTab === "hospital" && formState?.isCoroner && (
+                      <>
+                        <div className="bg-slate-950/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 shadow-2xl transition-all">
+                          <div className="flex items-center space-x-2 border-b border-slate-700/50 pb-4 mb-5">
+                            <Icons.Building2 className="text-amber-500" size={18} />
+                            <h3 className="text-sm font-black uppercase tracking-widest text-white">Hospital Transfer Details</h3>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div className="space-y-5">
+                              <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-1.5 ml-1">Transfer Type</label>
+                                <select value={formState?.transferType || 'Pick up'} onChange={(e) => handleFieldChange('transferType', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-semibold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
+                                  <option value="Pick up">Pick up</option>
+                                  <option value="Drop off">Drop off</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-1.5 ml-1">Hospital</label>
+                                <select value={formState?.transferHospital || 'Norfolk & Norwich University Hospital (NNUH)'} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-semibold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
+                                  {norfolkHospitals.map(hosp => <option key={hosp} value={hosp}>{hosp}</option>)}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="space-y-5">
+                              <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-1.5 ml-1">Vehicle Assigned</label>
+                                <select value={formState?.transferVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('transferVehicle', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-semibold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner">
+                                  {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-1.5 ml-1">Scheduled Date & Time</label>
+                                <input type="text" value={formState?.transferDateTime || ''} onChange={(e) => handleFieldChange('transferDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-slate-200 font-bold w-full focus:outline-none focus:ring-2 focus:ring-amber-500/40 transition-all shadow-inner text-amber-400 tracking-wide" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mb-6">
+                            <label className="text-[10px] font-black uppercase text-slate-400 block mb-2.5 ml-1">Assigned Staff:</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {norfolkStaffList.map((staff) => {
+                                const isChecked = (formState?.transferStaff || []).includes(staff.name);
+                                return (
+                                  <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-3 p-3 rounded-xl border cursor-pointer select-none transition-all duration-200 hover:-translate-y-0.5 shadow-sm active:scale-95 ${isChecked ? 'bg-amber-500/10 border-amber-500/50 text-white shadow-amber-500/5' : 'bg-slate-900/80 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600'}`}>
+                                    {isChecked ? <Icons.CheckSquare size={18} className="text-amber-400" /> : <Icons.Square size={18} className="text-slate-500" />}
+                                    <div className="text-xs font-bold">{staff.name}</div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
                       </>
                     )}
 

@@ -242,6 +242,7 @@
       const [searchQuery, setSearchQuery] = useState("");
       const [locationFilter, setLocationFilter] = useState("All");
       const [statusFilter, setStatusFilter] = useState("Active"); 
+      const [hudFilter, setHudFilter] = useState("All");
       const [isQrModalOpen, setIsQrModalOpen] = useState(false);
       const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
       const [dialog, setDialog] = useState({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
@@ -1105,7 +1106,13 @@
           }
 
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
-          return matchSearch && matchLoc && matchStatus;
+          
+          let matchHud = true;
+          if (hudFilter === "Coroner") matchHud = item.isCoroner;
+          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && item.transferStatus !== 'Completed';
+          if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
+
+          return matchSearch && matchLoc && matchStatus && matchHud;
         });
 
         // Sort by urgency, most urgent first
@@ -1114,7 +1121,7 @@
           const uB = urgencyOrder[b.keyMilestoneUrgency] || 0;
           return uB - uA;
         });
-      }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand]);
+      }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand, hudFilter]);
 
       const hudStats = useMemo(() => {
         const activeDashboardCases = deceasedList.filter(item => {
@@ -1194,7 +1201,7 @@
                 </button>
                 
                 {isNotificationTrayOpen && (
-                  <div className="absolute right-0 mt-3.5 w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-4.5 z-50 animate-slide-up">
+                  <div className="absolute right-0 mt-3.5 w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-4.5 z-[100] animate-slide-up">
                     <div className="flex justify-between items-center border-b border-slate-800/80 pb-3 mb-3">
                       <span className="text-xs font-black uppercase text-slate-200 tracking-wider">Live Activity Log</span>
                       {notifications.length > 0 && (
@@ -1272,22 +1279,22 @@
 
               {/* HUD Command Centre */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 flex-shrink-0 animate-slide-up">
-                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-indigo-500/30 transition-all">
+                <div onClick={() => setHudFilter("All")} className={`bg-slate-950/60 backdrop-blur-md border rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group transition-all cursor-pointer ${hudFilter === 'All' ? 'border-indigo-500/60 bg-indigo-500/5 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-slate-800/60 hover:border-indigo-500/30'}`}>
                   <div className="absolute inset-0 bg-indigo-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                   <span className="text-4xl font-black text-indigo-400 relative z-10 drop-shadow-md">{hudStats.active}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Active Cases</span>
                 </div>
-                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-rose-500/30 transition-all">
+                <div onClick={() => setHudFilter(prev => prev === "Coroner" ? "All" : "Coroner")} className={`bg-slate-950/60 backdrop-blur-md border rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group transition-all cursor-pointer ${hudFilter === 'Coroner' ? 'border-rose-500/60 bg-rose-500/5 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'border-slate-800/60 hover:border-rose-500/30'}`}>
                   <div className="absolute inset-0 bg-rose-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                   <span className="text-4xl font-black text-rose-400 relative z-10 drop-shadow-md">{hudStats.coroner}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Coroner Cases</span>
                 </div>
-                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+                <div onClick={() => setHudFilter(prev => prev === "Transfers" ? "All" : "Transfers")} className={`bg-slate-950/60 backdrop-blur-md border rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group transition-all cursor-pointer ${hudFilter === 'Transfers' ? 'border-emerald-500/60 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-800/60 hover:border-emerald-500/30'}`}>
                   <div className="absolute inset-0 bg-emerald-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                   <span className="text-4xl font-black text-emerald-400 relative z-10 drop-shadow-md">{hudStats.transfers}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">Transfers</span>
                 </div>
-                <div className="bg-slate-950/60 backdrop-blur-md border border-slate-800/60 rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group hover:border-amber-500/30 transition-all">
+                <div onClick={() => setHudFilter(prev => prev === "Urgent" ? "All" : "Urgent")} className={`bg-slate-950/60 backdrop-blur-md border rounded-2xl p-5 flex flex-col justify-center items-center shadow-xl relative overflow-hidden group transition-all cursor-pointer ${hudFilter === 'Urgent' ? 'border-amber-500/60 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-slate-800/60 hover:border-amber-500/30'}`}>
                   <div className="absolute inset-0 bg-amber-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                   <span className="text-4xl font-black text-amber-400 relative z-10 drop-shadow-md">{hudStats.urgent}</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1.5 relative z-10">High Urgency</span>

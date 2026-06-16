@@ -1090,7 +1090,7 @@
           </div>
 
           {/* Main Header */}
-          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-5 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg relative overflow-hidden`}>
+          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-5 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-40 shadow-lg relative`}>
             <div className="flex items-center space-x-3.5 relative z-10">
               <div className="bg-slate-950/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700/50 shadow-inner">
                 <span className="text-2xl">{activeBrand === "joint" ? "🤝" : activeBrand === "cromer" ? "🦀" : "🦆"}</span>
@@ -1246,15 +1246,6 @@
                         <div className="flex flex-wrap gap-2 items-center">
                           <span className="text-[10px] font-mono font-bold text-indigo-300 bg-indigo-950/50 px-2.5 py-1 rounded-md border border-indigo-900/60 shadow-sm">{item.ref}</span>
                           {item.isCoroner && <span className="text-[9px] font-black text-rose-300 bg-rose-950/60 px-2.5 py-1 rounded-md border border-rose-900 uppercase shadow-sm">Coroner</span>}
-                          {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
-                            <span className={`text-[9px] font-black px-2.5 py-1 rounded-md border uppercase tracking-wider shadow-sm ${
-                              item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
-                              item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
-                              'bg-emerald-950/60 text-emerald-300 border-emerald-900'
-                            }`}>
-                              Urgency: {item.keyMilestoneUrgency}
-                            </span>
-                          )}
                         </div>
                         
                         <div className="flex items-center space-x-2">
@@ -1281,8 +1272,39 @@
                       </div>
                       
                       <h3 className="text-lg font-black text-white mb-1.5 tracking-tight">{item.title} {item.deceasedName || "Unnamed Admission"}</h3>
-                      <p className="text-xs text-slate-400 mb-5 font-medium">{item.location} • Tray {item.fridgeTray || 'Pending'}</p>
+                      <p className="text-xs text-slate-400 mb-3 font-medium">{item.location} • Tray {item.fridgeTray || 'Pending'}</p>
                       
+                      {/* ACTIVE MILESTONE BLOCK */}
+                      {(item.keyDate || item.keyMilestoneName || (item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None')) && (
+                        <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
+                          <div className="flex items-center gap-1.5 mb-2.5">
+                            <Icons.Layers size={12} className="text-indigo-400" />
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Active Milestone</span>
+                          </div>
+                          {item.keyMilestoneName && (
+                            <div className="mb-2 flex items-start gap-1.5">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">Action:</span>
+                              <span className="text-sm font-bold text-white leading-tight">{item.keyMilestoneName}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-500 uppercase font-bold">Date:</span>
+                              <span className="text-[11px] font-mono font-bold text-amber-400">{item.keyDate || 'No Date Logged'}</span>
+                            </div>
+                            {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
+                              <span className={`text-[9px] font-black px-2 py-1 rounded-md border uppercase tracking-wider shadow-sm ${
+                                item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
+                                item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
+                                'bg-emerald-950/60 text-emerald-300 border-emerald-900'
+                              }`}>
+                                Urgency: {item.keyMilestoneUrgency}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {item.isCoroner && (
                         <div className="mt-auto pt-4 border-t border-slate-700/50">
                           <div className="flex justify-between text-[10px] font-bold uppercase mb-2">
@@ -1370,7 +1392,7 @@
                               <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-amber-400 font-black w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner text-center tracking-wider" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1.5 ml-1">D.O.B.</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-450 block mb-1.5 ml-1">D.O.B.</label>
                               <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900/80 border border-slate-700/50 rounded-xl text-xs p-3 text-indigo-300 font-bold w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all shadow-inner" />
                             </div>
                             <div>

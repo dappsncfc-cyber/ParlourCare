@@ -305,7 +305,8 @@
 
         if (!user) return;
 
-        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'cases');
+        const safeAppId = String(appId);
+        const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
 
         const unsubscribe = onSnapshot(
           colRef,
@@ -320,7 +321,7 @@
               
               if (currentCases.length > 0) {
                 currentCases.forEach((c) => {
-                  const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'cases', c.id);
+                  const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', String(c.id));
                   setDoc(docRef, c).catch(e => console.error("Cloud database seeding failed:", e));
                 });
                 setDeceasedList(currentCases);
@@ -435,12 +436,19 @@
           return next;
         });
 
-        if (isFirebaseEnabled && user) {
+        if (isFirebaseEnabled) {
+          if (!user) {
+            console.warn("Attempting to write, but Firebase Auth is still resolving. Write skipped for cloud.");
+            return;
+          }
           try {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'cases', record.id);
+            const safeAppId = String(appId);
+            const safeRecordId = String(record.id);
+            const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
             await setDoc(docRef, record);
           } catch (err) {
             console.error("Live save rejected:", err);
+            showNotification("Cloud Error", "Data saved locally, but cloud write rejected: " + err.message, "error");
           }
         }
       };
@@ -455,7 +463,8 @@
 
         if (isFirebaseEnabled && user) {
           try {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'cases', id);
+            const safeAppId = String(appId);
+            const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', String(id));
             await deleteDoc(docRef);
           } catch (err) {
             console.error("Live deletion rejected:", err);
@@ -1168,7 +1177,7 @@
                   <span className="bg-slate-950 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-800 uppercase tracking-wider">Mortuary Management</span>
                   {isFirebaseEnabled ? (
                     <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-0.5 rounded-full animate-pulse">
-                      🟢 Live Cloud Sync Active
+                      {user ? "🟢 Live Cloud Sync Active" : "🟠 Authenticating Cloud..."}
                     </span>
                   ) : (
                     <span className="text-[10px] text-amber-400 font-extrabold flex items-center gap-1.5 bg-amber-950/40 border border-amber-900/50 px-2.5 py-0.5 rounded-full">

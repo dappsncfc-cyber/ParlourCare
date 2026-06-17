@@ -321,8 +321,10 @@
               
               if (currentCases.length > 0) {
                 currentCases.forEach((c) => {
-                  const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', String(c.id));
-                  setDoc(docRef, c).catch(e => console.error("Cloud database seeding failed:", e));
+                  const safeRecordId = String(c.id);
+                  const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
+                  const cleanRecord = JSON.parse(JSON.stringify(c));
+                  setDoc(docRef, cleanRecord).catch(e => console.error("Cloud database seeding failed:", e));
                 });
                 setDeceasedList(currentCases);
                 prevListRef.current = currentCases;
@@ -437,18 +439,29 @@
         });
 
         if (isFirebaseEnabled) {
-          if (!user) {
-            console.warn("Attempting to write, but Firebase Auth is still resolving. Write skipped for cloud.");
+          if (!auth.currentUser) {
+            console.warn("Write skipped: Firebase Auth has not completed yet.");
             return;
           }
           try {
             const safeAppId = String(appId);
             const safeRecordId = String(record.id);
             const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
-            await setDoc(docRef, record);
+            
+            // Clean undefined values to prevent silent Firestore crashes
+            const cleanRecord = JSON.parse(JSON.stringify(record));
+            
+            await setDoc(docRef, cleanRecord);
+            console.log(`[Firebase] Data saved to path: /artifacts/${safeAppId}/public/data/cases/${safeRecordId}`);
           } catch (err) {
             console.error("Live save rejected:", err);
-            showNotification("Cloud Error", "Data saved locally, but cloud write rejected: " + err.message, "error");
+            if (err.code === 'permission-denied') {
+              showNotification(
+                "Firebase Permission Error", 
+                `Firestore rules blocked the save. Please update your rules to allow writes to: /artifacts/${String(appId)}/public/data/cases`, 
+                "info"
+              );
+            }
           }
         }
       };
@@ -464,11 +477,18 @@
         if (isFirebaseEnabled && user) {
           try {
             const safeAppId = String(appId);
-            const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', String(id));
+            const safeRecordId = String(id);
+            const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
             await deleteDoc(docRef);
           } catch (err) {
             console.error("Live deletion rejected:", err);
-            showNotification("Sync Alert", "Record removed locally. Cloud backup remains intact.", "info");
+            if (err.code === 'permission-denied') {
+              showNotification(
+                "Firebase Permission Error", 
+                `Firestore rules blocked deletion. Path needed: /artifacts/${String(appId)}/public/data/cases`, 
+                "info"
+              );
+            }
           }
         }
       };
@@ -990,9 +1010,20 @@
 
       const createAdmission = (isCoronerCase) => {
         const nextId = String(Date.now());
+        
+        // Dynamically assign branch defaults based on the active tab/brand
+        const locationName = activeBrand === "gowards" ? "Fakenham" : "Cromer";
+        const locationPrefix = activeBrand === "gowards" ? "F" : "C";
+        const arrangerCode = activeBrand === "gowards" ? "FAK" : "CRM";
+        const defaultVehicle = activeBrand === "gowards" ? "Vauxhall Vivaro FAK-2" : "Vauxhall Vivaro CRM-1";
+        const defaultMortuary = activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary";
+        
+        // Calculate the sequential case number specifically for this branch
+        const locationCount = deceasedList.filter(d => d.location === locationName).length;
+
         const newCase = {
           id: nextId,
-          ref: `26/C/${String(deceasedList.length + 1).padStart(3, '0')}`,
+          ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
           fridgeTray: "",
           keyDate: "",
           keyMilestoneName: "",
@@ -1001,8 +1032,8 @@
           title: "Mr",
           dob: "", 
           dod: "", 
-          arranger: "CRM",
-          location: activeBrand === "gowards" ? "Fakenham" : "Cromer",
+          arranger: arrangerCode,
+          location: locationName,
           greenCoroner: "No",
           encoffined: "No",
           plate: "No",
@@ -1027,11 +1058,11 @@
           coronerRef: "", 
           coronerOfficer: "",
           pickupLocation: "",
-          pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary",
+          pickupDestination: defaultMortuary,
           pickupDateTime: "",
           pickupStaff: [],
           pickupStaffEmails: "",
-          pickupVehicle: "Vauxhall Vivaro CRM-1",
+          pickupVehicle: defaultVehicle,
           pickupEquipment: ["First Call Stretcher"],
           pickupStatus: "Pending",
           pickupStatusTimestamps: {
@@ -1045,7 +1076,7 @@
           transferDateTime: "",
           transferHospital: "Norfolk & Norwich University Hospital (NNUH)",
           transferType: "Pick up",
-          transferVehicle: "Vauxhall Vivaro CRM-1",
+          transferVehicle: defaultVehicle,
           transferStaff: [],
           transferStaffEmails: "",
           isArchived: false

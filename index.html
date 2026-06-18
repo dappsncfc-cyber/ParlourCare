@@ -223,6 +223,34 @@
     };
 
     function App() {
+      // --- ADDED LOGIN STATE ---
+      const [isAuthenticated, setIsAuthenticated] = useState(() => {
+        try { return localStorage.getItem('parlourcare_auth') === 'true'; } catch(e) { return false; }
+      });
+      const [loginError, setLoginError] = useState("");
+      const [username, setUsername] = useState("");
+      const [password, setPassword] = useState("");
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        const validUsers = ["adrian", "paul"];
+        if (validUsers.includes(username.toLowerCase().trim()) && password === "daniscool2026") {
+          setIsAuthenticated(true);
+          try { localStorage.setItem('parlourcare_auth', 'true'); } catch(e) {}
+          setLoginError("");
+        } else {
+          setLoginError("Invalid username or password.");
+        }
+      };
+
+      const handleLogout = () => {
+        setIsAuthenticated(false);
+        try { localStorage.removeItem('parlourcare_auth'); } catch(e) {}
+        setUsername("");
+        setPassword("");
+      };
+      // -------------------------
+
       const [deceasedList, setDeceasedList] = useState(() => {
         try {
           const local = localStorage.getItem('norfolk_mortuary_cases');
@@ -1428,6 +1456,70 @@
         saveStockToDb(updated);
       };
 
+      if (!isAuthenticated) {
+        return (
+          <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 antialiased select-none">
+            <div className="bg-slate-950 p-8 rounded-3xl border border-slate-800 shadow-2xl max-w-md w-full animate-fade-in relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500"></div>
+              <div className="text-center mb-8 mt-2">
+                <div className="bg-slate-900 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-800 shadow-inner">
+                  <span className="text-3xl">🤝</span>
+                </div>
+                <h1 className="text-2xl font-black text-white tracking-tight">ParlourCare Portal</h1>
+                <p className="text-xs text-slate-400 mt-2 font-medium">Authorised Personnel Only</p>
+              </div>
+              
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Username</label>
+                  <div className="relative">
+                    <Icons.Users className="absolute left-3 top-3 text-slate-500" size={16} />
+                    <input 
+                      type="text" 
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700/80 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors font-bold"
+                      placeholder="Adrian or Paul"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Password</label>
+                  <div className="relative">
+                    <Icons.AlertTriangle className="absolute left-3 top-3 text-slate-500" size={16} />
+                    <input 
+                      type="password" 
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700/80 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors font-bold"
+                      placeholder="••••••••••••"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {loginError && (
+                  <div className="bg-rose-950/50 border border-rose-900/50 text-rose-400 text-xs font-bold p-3 rounded-xl text-center animate-fade-in">
+                    {loginError}
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm py-3 rounded-xl transition transform active:scale-95 shadow-lg shadow-indigo-500/20 mt-2"
+                >
+                  Secure Login
+                </button>
+              </form>
+              <div className="mt-8 text-center border-t border-slate-800/60 pt-4">
+                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">&copy; 2026 Offscript Labs</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
           
@@ -1442,6 +1534,7 @@
               <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🤝 Joint Group</button>
               <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦀 Cromer</button>
               <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦆 Gowards</button>
+              <button onClick={handleLogout} className="flex-1 sm:flex-initial ml-2 px-3 py-1.5 rounded-lg transition-all duration-150 text-[10px] font-black uppercase text-rose-400 border border-rose-900/50 hover:bg-rose-950/30 active:scale-95">Logout</button>
             </div>
           </div>
 

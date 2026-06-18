@@ -180,7 +180,8 @@
       { id: "staff-2", name: "Barrie (Cromer)", email: "sarah@cromerfunerals.co.uk" },
       { id: "staff-3", name: "Paul (Fakenham)", email: "paul@gowardsindependentfunerals.com" },
       { id: "staff-4", name: "Peter (Fakenham)", email: "luke@gowardsfunerals.co.uk" },
-      { id: "staff-5", name: "Adrian (Group Operations)", email: "adrian@cromeranddistrictfunerals.co.uk" }
+      { id: "staff-5", name: "Adrian (Group Operations)", email: "adrian@cromeranddistrictfunerals.co.uk" },
+      { id: "staff-6", name: "Michael (Cromer)", email: "" }
     ];
 
     const initialCaseload = [];
@@ -532,10 +533,34 @@
       const conditions = useMemo(() => ["Good", "Medium", "Poor"], []);
       const infectionRisks = useMemo(() => ["None", "Blood borne", "Sepsis", "CJD", "Other"], []);
       const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
-      const coffinsList = useMemo(() => ["Chiltern Oak", "Regent Oak", "New Ascot", "Simple Coffin", "Mendip Oak", "Cardboard", "Simple Pine", "None"], []);
+      const coffinsList = useMemo(() => [
+        "Oak",
+        "Elm",
+        "Oak Dark Stained",
+        "Knotty Oak",
+        "Sapele",
+        "Cardboard",
+        "Seagrass",
+        "Bamboo",
+        "Wicker",
+        "Willow Cromer",
+        "Willow Pod",
+        "Brinkley Oak",
+        "Chiltern Oak",
+        "Windsor Oak Triple",
+        "Cavendish Oak",
+        "Solid Pine",
+        "Walnut",
+        "Rockwood Elm",
+        "Lamboard Oak",
+        "Contemporary Coffin",
+        "Painted Named Coffin",
+        "Picture Coffin",
+        "None"
+      ], []);
       const handlesList = useMemo(() => ["Bar Handles", "Ring Handles", "None"], []);
       const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
-      const vehicleOptions = useMemo(() => ["Vauxhall Vivaro CRM-1", "Vauxhall Vivaro FAK-2", "Ford Transit Group-1", "First Call Vehicle 3"], []);
+      const vehicleOptions = useMemo(() => ["C17 DFS", "C22 DFS", "C25 GFS"], []);
       
       const norfolkHospitals = useMemo(() => [
         "Norfolk & Norwich University Hospital (NNUH)",
@@ -741,7 +766,6 @@
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">2. Dressing Attire & Verification</div>
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">2. Dressing Attire & Verification</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Selected Apparel:</span> <strong>${record?.clothes || 'None Specified'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Apparel Received & Verified:</span> <strong>${record?.clothesChecked ? '✓ Yes (Verified)' : '✗ Pending Receipt'}</strong></div>
             </div>
@@ -897,8 +921,7 @@
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'PENDING'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Handles Selected:</span> <strong>${record?.coffinHandles || 'PENDING'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Linings & Accessories:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coffin Size:</span> <strong>${record?.bodySize || 'PENDING SPEC'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Engraved Plate Affixed:</span> <strong>${record?.plate || 'No'}</strong></div>
@@ -1049,7 +1072,13 @@
         } else {
           updatedStaff.push(staffName);
         }
-        const selectedEmails = norfolkStaffList.filter(s => updatedStaff.includes(s.name)).map(s => s.email).join(', ');
+        
+        // Filter compiled dispatch emails strictly to Adrian or Paul
+        const selectedEmails = norfolkStaffList
+          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Adrian") || s.name.includes("Paul")))
+          .map(s => s.email)
+          .filter(Boolean)
+          .join(', ');
         
         const updatedRecord = {
           ...formState,
@@ -1070,7 +1099,13 @@
         } else {
           updatedStaff.push(staffName);
         }
-        const selectedEmails = norfolkStaffList.filter(s => updatedStaff.includes(s.name)).map(s => s.email).join(', ');
+        
+        // Filter compiled transfer emails strictly to Adrian or Paul
+        const selectedEmails = norfolkStaffList
+          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Adrian") || s.name.includes("Paul")))
+          .map(s => s.email)
+          .filter(Boolean)
+          .join(', ');
         
         const updatedRecord = {
           ...formState,
@@ -1088,7 +1123,7 @@
         const locationName = activeBrand === "gowards" ? "Fakenham" : "Cromer";
         const locationPrefix = activeBrand === "gowards" ? "F" : "C";
         const arrangerCode = activeBrand === "gowards" ? "FAK" : "CRM";
-        const defaultVehicle = activeBrand === "gowards" ? "Vauxhall Vivaro FAK-2" : "Vauxhall Vivaro CRM-1";
+        const defaultVehicle = activeBrand === "gowards" ? "C25 GFS" : "C17 DFS";
         const defaultMortuary = activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary";
         
         // Calculate the sequential case number specifically for this branch
@@ -1194,7 +1229,7 @@
           `Pick-up Location: ${(formState?.pickupLocation || 'PENDING')}\n` +
           `Target Destination: ${(formState?.pickupDestination || 'PENDING')}\n` +
           `Scheduled Date/Time: ${(formState?.pickupDateTime || 'PENDING')}\n\n` +
-          `Vehicle Assigned: ${(formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1')}\n` +
+          `Vehicle Assigned: ${(formState?.pickupVehicle || 'C17 DFS')}\n` +
           `Staff Dispatched: ${(formState?.pickupStaff || []).join(', ') || 'PENDING'}\n` +
           `Equipment Checklist: ${(formState?.pickupEquipment || []).join(', ') || 'First Call Stretcher'}\n\n` +
           `SPECIAL INSTRUCTIONS:\n` +

@@ -32,8 +32,6 @@
   <!-- Babel Standalone CDN to compile JSX on-the-fly with module support -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
-    // FIX: Safely force Babel to use the Classic JSX runtime (React.createElement).
-    // This entirely prevents the "react/jsx-runtime" module import crash in the browser.
     Babel.registerPreset('react-classic', {
       presets: [
         [Babel.availablePresets['react'], { runtime: 'classic' }]
@@ -60,11 +58,12 @@
 
   <div id="root"></div>
 
-  <!-- React Application Source (runs as ES Module to support gstatic imports) -->
+  <!-- React Application Source -->
   <script type="text/babel" data-type="module" data-presets="react-classic">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
 
     // ==========================================================
     // 1. YOUR LIVE FIREBASE CONFIGURATION OBJECT:
@@ -92,7 +91,6 @@
     let app, auth, db;
     let isFirebaseEnabled = false;
 
-    // Verify if genuine Firebase variables are provided by the environment
     if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "MOCK_API_KEY") {
       try {
         app = initializeApp(firebaseConfig);
@@ -186,6 +184,19 @@
 
     const initialCaseload = [];
 
+    // Default stock levels for initialization (10 units per Coffin / 30 units per Handleset)
+    const initialInventory = {
+      coffins: {
+        "Oak": 12, "Elm": 12, "Oak Dark Stained": 8, "Knotty Oak": 6, "Sapele": 10,
+        "Cardboard": 15, "Seagrass": 8, "Bamboo": 8, "Wicker": 8, "Willow Cromer": 4, "Willow Pod": 4,
+        "Brinkley Oak": 10, "Chiltern Oak": 14, "Windsor Oak Triple": 5, "Cavendish Oak": 5, "Solid Pine": 8,
+        "Walnut": 8, "Rockwood Elm": 8, "Lamboard Oak": 8, "Contemporary Coffin": 6, "Painted Named Coffin": 6, "Picture Coffin": 6, "None": 999
+      },
+      handles: {
+        "Bar Handles": 45, "Ring Handles": 40, "None": 999
+      }
+    };
+
     const getTimestamp = () => {
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
@@ -209,8 +220,9 @@
       }
     };
 
+
     function App() {
-      // Hydrate local cache immediately on startup so user never views a blank dashboard while Firestore is connecting
+      // Hydrate local cache immediately on startup
       const [deceasedList, setDeceasedList] = useState(() => {
         try {
           const local = localStorage.getItem('norfolk_mortuary_cases');
@@ -218,9 +230,18 @@
         } catch(e) { return initialCaseload; }
       });
       const [selectedRowId, setSelectedRowId] = useState(null); 
-      
-      // Decoupled editing state to prevent real-time keystroke race conditions
       const [formState, setFormState] = useState(null);
+      
+      // Stock room view states
+      const [viewMode, setViewMode] = useState("cases"); // "cases" or "stock"
+      const [stockSearchQuery, setStockSearchQuery] = useState("");
+      
+      const [stockLevels, setStockLevels] = useState(() => {
+        try {
+          const localStock = localStorage.getItem('norfolk_mortuary_stock');
+          return localStock ? JSON.parse(localStock) : initialInventory;
+        } catch(e) { return initialInventory; }
+      });
 
       // Deep linking buffer
       const [pendingDeepLink, setPendingDeepLink] = useState(() => {
@@ -248,8 +269,6 @@
       const prevListRef = useRef([]);
       const isFirstLoadRef = useRef(true);
 
-      // --- EDITING LOCK ASSESSOR ---
-      // Evaluates if the coroner record is officially archived and locked from further inputs due to completed transfer
       const isLogisticsLocked = useMemo(() => {
         return formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
       }, [formState]);
@@ -263,7 +282,24 @@
         setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       };
 
-      // RULE 3 - Custom auth init FIRST, fallback to anonymous auth
+      // --- STATE WRITE & SNAPSHOT UTILITIES ---
+      const saveStockToDb = async (newStock) => {
+        try {
+          localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock));
+        } catch(e){}
+
+        if (isFirebaseEnabled && auth.currentUser) {
+          try {
+            const safeAppId = String(appId);
+            const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
+            await setDoc(stockDocRef, JSON.parse(JSON.stringify(newStock)));
+          } catch(err) {
+            console.error("Live stock save rejected:", err);
+          }
+        }
+      };
+
+
       useEffect(() => {
         if (!isFirebaseEnabled) return;
 
@@ -291,7 +327,7 @@
         };
       }, []);
 
-      // Live Firestore synchronisation listener (RULE 1 & RULE 2 compliant)
+      // Live Firestore synchronisation listener for stock & cases
       useEffect(() => {
         if (!isFirebaseEnabled) {
           try {
@@ -307,12 +343,25 @@
 
         const safeAppId = String(appId);
         const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
+        const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
+
+        // Fetch Live Stock Levels
+        getDoc(stockDocRef).then((snap) => {
+          if (snap.exists()) {
+            const remoteStock = snap.data();
+            setStockLevels(remoteStock);
+            try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
+          } else {
+            // Seed stock room immediately if vacant
+            setDoc(stockDocRef, initialInventory).catch(e => console.error("Database inventory seeding failed:", e));
+          }
+        });
 
         const unsubscribe = onSnapshot(
           colRef,
           (snapshot) => {
             if (snapshot.empty && !seededRef.current) {
-              seededRef.current = true; // Lock immediately to prevent recursive loop runs
+              seededRef.current = true;
               let currentCases = initialCaseload;
               try {
                 const localData = localStorage.getItem('norfolk_mortuary_cases');
@@ -323,8 +372,7 @@
                 currentCases.forEach((c) => {
                   const safeRecordId = String(c.id);
                   const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
-                  const cleanRecord = JSON.parse(JSON.stringify(c));
-                  setDoc(docRef, cleanRecord).catch(e => console.error("Cloud database seeding failed:", e));
+                  setDoc(docRef, JSON.parse(JSON.stringify(c)));
                 });
                 setDeceasedList(currentCases);
                 prevListRef.current = currentCases;
@@ -332,7 +380,6 @@
               } else {
                 setDeceasedList([]);
                 prevListRef.current = [];
-                try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify([])); } catch(e){}
               }
             } else {
               const cases = [];
@@ -340,7 +387,6 @@
                 cases.push({ id: doc.id, ...doc.data() });
               });
 
-              // Detect real-time updates for activity notifier bell
               if (isFirstLoadRef.current) {
                 prevListRef.current = cases;
                 isFirstLoadRef.current = false;
@@ -349,18 +395,13 @@
                 const prevMap = new Map((prevListRef.current || []).map(c => [c.id, c]));
                 const currentMap = new Map(cases.map(c => [c.id, c]));
 
-                // User friendly field mapping
                 const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
                 const fieldLabels = {
                   deceasedName: 'Name', title: 'Title', fridgeTray: 'Tray No.', location: 'Branch',
                   condition: 'Condition', coffin: 'Coffin', coffinHandles: 'Handles Type', pickupStatus: 'Dispatch Stage', transferStatus: 'Transfer Stage',
-                  isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action',
-                  keyMilestoneUrgency: 'Milestone Urgency',
-                  transferDateTime: 'Transfer Date & Time', transferHospital: 'Transfer Hospital',
-                  transferType: 'Transfer Type', transferVehicle: 'Transfer Vehicle', transferStaff: 'Transfer Staff'
+                  isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action', keyMilestoneUrgency: 'Milestone Urgency'
                 };
 
-                // Check additions and modifications
                 cases.forEach(curr => {
                   const prev = prevMap.get(curr.id);
                   if (!prev) {
@@ -390,7 +431,6 @@
                   }
                 });
 
-                // Check deletions
                 (prevListRef.current || []).forEach(oldItem => {
                   if (!currentMap.has(oldItem.id)) {
                     newNotifications.push({
@@ -427,7 +467,6 @@
 
       // Synchronised write-helper updating local state immediately, then syncing to Firestore
       const saveCaseToDb = async (record) => {
-        // Optimistic UI Update: Render changes immediately to prevent frozen spinners
         setDeceasedList(prev => {
           const index = prev.findIndex(item => item.id === record.id);
           let next;
@@ -440,36 +479,39 @@
           return next;
         });
 
-        if (isFirebaseEnabled) {
-          if (!auth.currentUser) {
-            console.warn("Write skipped: Firebase Auth has not completed yet.");
-            return;
-          }
+        if (isFirebaseEnabled && auth.currentUser) {
           try {
             const safeAppId = String(appId);
             const safeRecordId = String(record.id);
             const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
-            
-            // Clean undefined values to prevent silent Firestore crashes
-            const cleanRecord = JSON.parse(JSON.stringify(record));
-            
-            await setDoc(docRef, cleanRecord);
-            console.log(`[Firebase] Data saved to path: /artifacts/${safeAppId}/public/data/cases/${safeRecordId}`);
+            await setDoc(docRef, JSON.parse(JSON.stringify(record)));
           } catch (err) {
             console.error("Live save rejected:", err);
-            if (err.code === 'permission-denied') {
-              showNotification(
-                "Firebase Permission Error", 
-                `Firestore rules blocked the save. Please update your rules to allow writes to: /artifacts/${String(appId)}/public/data/cases`, 
-                "info"
-              );
-            }
           }
         }
       };
 
       const deleteCaseFromDb = async (id) => {
-        // Optimistic UI Update: Remove card instantly
+        const deletedCase = deceasedList.find(item => item.id === id);
+        
+        // Optimistically return stock on deletion
+        if (deletedCase) {
+          let updatedStock = { ...stockLevels };
+          let changed = false;
+          if (deletedCase.coffin && deletedCase.coffin !== "None" && updatedStock.coffins[deletedCase.coffin] !== undefined) {
+            updatedStock.coffins[deletedCase.coffin] += 1;
+            changed = true;
+          }
+          if (deletedCase.coffinHandles && deletedCase.coffinHandles !== "None" && updatedStock.handles[deletedCase.coffinHandles] !== undefined) {
+            updatedStock.handles[deletedCase.coffinHandles] += 1;
+            changed = true;
+          }
+          if (changed) {
+            setStockLevels(updatedStock);
+            saveStockToDb(updatedStock);
+          }
+        }
+
         setDeceasedList(prev => {
           const next = prev.filter(item => item.id !== id);
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
@@ -484,13 +526,6 @@
             await deleteDoc(docRef);
           } catch (err) {
             console.error("Live deletion rejected:", err);
-            if (err.code === 'permission-denied') {
-              showNotification(
-                "Firebase Permission Error", 
-                `Firestore rules blocked deletion. Path needed: /artifacts/${String(appId)}/public/data/cases`, 
-                "info"
-              );
-            }
           }
         }
       };
@@ -500,31 +535,23 @@
         return deceasedList.find(d => d.id === selectedRowId) || null;
       }, [deceasedList, selectedRowId]);
 
-      // Load edited case record data into isolated local form state on selected row change
       useEffect(() => {
         if (selectedRecord && (!formState || formState.id !== selectedRowId)) {
           setFormState(JSON.parse(JSON.stringify(selectedRecord)));
         }
       }, [selectedRowId, selectedRecord]);
 
-      // Wait patiently for the database connection to supply the record before opening deep link
       useEffect(() => {
         if (pendingDeepLink && deceasedList.length > 0) {
           const record = deceasedList.find(d => d.id === pendingDeepLink);
           if (record) {
             setSelectedRowId(pendingDeepLink);
             setActiveTab(record.isCoroner ? "pickup" : "care");
-            
-            // Consume the pending link so it doesn't trigger again
             setPendingDeepLink(null);
-
-            // Self-clean the URL parameter smoothly
             try {
               const cleanUrl = getBaseUrl();
               window.history.replaceState({}, document.title, cleanUrl);
-            } catch(e) {
-              console.warn("History replaceState blocked in sandbox environment", e);
-            }
+            } catch(e) {}
           }
         }
       }, [pendingDeepLink, deceasedList]);
@@ -534,29 +561,10 @@
       const infectionRisks = useMemo(() => ["None", "Blood borne", "Sepsis", "CJD", "Other"], []);
       const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
       const coffinsList = useMemo(() => [
-        "Oak",
-        "Elm",
-        "Oak Dark Stained",
-        "Knotty Oak",
-        "Sapele",
-        "Cardboard",
-        "Seagrass",
-        "Bamboo",
-        "Wicker",
-        "Willow Cromer",
-        "Willow Pod",
-        "Brinkley Oak",
-        "Chiltern Oak",
-        "Windsor Oak Triple",
-        "Cavendish Oak",
-        "Solid Pine",
-        "Walnut",
-        "Rockwood Elm",
-        "Lamboard Oak",
-        "Contemporary Coffin",
-        "Painted Named Coffin",
-        "Picture Coffin",
-        "None"
+        "Oak", "Elm", "Oak Dark Stained", "Knotty Oak", "Sapele", "Cardboard", "Seagrass",
+        "Bamboo", "Wicker", "Willow Cromer", "Willow Pod", "Brinkley Oak", "Chiltern Oak",
+        "Windsor Oak Triple", "Cavendish Oak", "Solid Pine", "Walnut", "Rockwood Elm",
+        "Lamboard Oak", "Contemporary Coffin", "Painted Named Coffin", "Picture Coffin", "None"
       ], []);
       const handlesList = useMemo(() => ["Bar Handles", "Ring Handles", "None"], []);
       const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
@@ -572,7 +580,6 @@
         "Kelling Hospital"
       ], []);
 
-      // Unified brand themes using the premium Joint Group indigo/purple palette
       const brandThemes = useMemo(() => ({
         joint: {
           bannerGradient: 'from-slate-900 via-indigo-950/80 to-slate-900',
@@ -596,14 +603,12 @@
 
       const currentTheme = brandThemes[activeBrand];
 
-      // --- QR CODE GENERATOR HELPER ---
       const getQrCodeUrl = (record, size = 200) => {
         if (!record) return '';
         const deepLinkUrl = `${getBaseUrl()}?case=${record.id}`;
         return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=f8fafc&color=0f172a`;
       };
 
-      // --- PRINT LOGIC INFRASTRUCTURE ---
       const executeIframePrint = (htmlContent, isSticker = false) => {
         try {
           const printWindow = window.open('about:blank', '_blank');
@@ -974,18 +979,14 @@
 
       const printStickerAndCheckBlocks = (record) => {
         const deepLinkUrl = `${getBaseUrl()}?case=${record?.id}`;
-        // High density QR code request size
         const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
 
-        // Stacked high-contrast template perfectly proportioned to fit a 36mm x 89mm (Landscape) DYMO canvas
         const htmlContent = `
           <div style="width: 89mm; height: 36mm; box-sizing: border-box; padding: 3mm 4mm; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; overflow: hidden; gap: 4mm;">
-            <!-- QR Block (Left) -->
             <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
               <img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 28mm; height: 28mm; display: block; object-fit: contain;" />
             </div>
             
-            <!-- Text Block (Right) -->
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">
               <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                 ${record?.title} ${record?.deceasedName || "Unnamed Case"}
@@ -1005,11 +1006,57 @@
         executeIframePrint(htmlContent, true);
       };
 
+
       const handleFieldChange = (fieldName, value) => {
         if (!formState) return;
+        
+        let updatedStock = { ...stockLevels };
+        let stockChanged = false;
+
+        // Automatically manage Coffin stock balances
+        if (fieldName === 'coffin') {
+          const oldVal = formState.coffin || "";
+          const newVal = value || "";
+          if (oldVal !== newVal) {
+            // Restore unit to previous coffin inventory
+            if (oldVal && oldVal !== "None" && updatedStock.coffins[oldVal] !== undefined) {
+              updatedStock.coffins[oldVal] += 1;
+              stockChanged = true;
+            }
+            // Deduct unit from newly assigned coffin inventory
+            if (newVal && newVal !== "None" && updatedStock.coffins[newVal] !== undefined) {
+              updatedStock.coffins[newVal] = Math.max(0, updatedStock.coffins[newVal] - 1);
+              stockChanged = true;
+            }
+          }
+        }
+
+        // Automatically manage Handles stock balances
+        if (fieldName === 'coffinHandles') {
+          const oldVal = formState.coffinHandles || "";
+          const newVal = value || "";
+          if (oldVal !== newVal) {
+            // Restore unit to previous handleset inventory
+            if (oldVal && oldVal !== "None" && updatedStock.handles[oldVal] !== undefined) {
+              updatedStock.handles[oldVal] += 1;
+              stockChanged = true;
+            }
+            // Deduct unit from newly assigned handleset inventory
+            if (newVal && newVal !== "None" && updatedStock.handles[newVal] !== undefined) {
+              updatedStock.handles[newVal] = Math.max(0, updatedStock.handles[newVal] - 1);
+              stockChanged = true;
+            }
+          }
+        }
+
         const updatedRecord = { ...formState, [fieldName]: value };
         setFormState(updatedRecord);
         saveCaseToDb(updatedRecord);
+
+        if (stockChanged) {
+          setStockLevels(updatedStock);
+          saveStockToDb(updatedStock);
+        }
       };
 
       const handleStatusChange = (newStatus) => {
@@ -1063,7 +1110,7 @@
       };
 
       const handleStaffToggle = (staffName, staffEmail) => {
-        if (!formState || isLogisticsLocked) return;
+        if (!formState) return;
         const currentStaff = formState.pickupStaff || [];
         let updatedStaff = [...currentStaff];
         
@@ -1073,11 +1120,10 @@
           updatedStaff.push(staffName);
         }
         
-        // Filter compiled dispatch emails strictly to Adrian or Paul
+        // Filter: only email Paul or Adrian
         const selectedEmails = norfolkStaffList
-          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Adrian") || s.name.includes("Paul")))
+          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian")))
           .map(s => s.email)
-          .filter(Boolean)
           .join(', ');
         
         const updatedRecord = {
@@ -1090,7 +1136,7 @@
       };
 
       const handleTransferStaffToggle = (staffName, staffEmail) => {
-        if (!formState || isLogisticsLocked) return;
+        if (!formState) return;
         const currentStaff = formState.transferStaff || [];
         let updatedStaff = [...currentStaff];
         
@@ -1100,11 +1146,10 @@
           updatedStaff.push(staffName);
         }
         
-        // Filter compiled transfer emails strictly to Adrian or Paul
+        // Filter: only email Paul or Adrian
         const selectedEmails = norfolkStaffList
-          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Adrian") || s.name.includes("Paul")))
+          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian")))
           .map(s => s.email)
-          .filter(Boolean)
           .join(', ');
         
         const updatedRecord = {
@@ -1119,14 +1164,13 @@
       const createAdmission = (isCoronerCase) => {
         const nextId = String(Date.now());
         
-        // Dynamically assign branch defaults based on the active tab/brand
+        // Dynamically assign branch defaults
         const locationName = activeBrand === "gowards" ? "Fakenham" : "Cromer";
         const locationPrefix = activeBrand === "gowards" ? "F" : "C";
         const arrangerCode = activeBrand === "gowards" ? "FAK" : "CRM";
         const defaultVehicle = activeBrand === "gowards" ? "C25 GFS" : "C17 DFS";
         const defaultMortuary = activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary";
         
-        // Calculate the sequential case number specifically for this branch
         const locationCount = deceasedList.filter(d => d.location === locationName).length;
 
         const newCase = {
@@ -1146,11 +1190,10 @@
           encoffined: "No",
           plate: "No",
           bodySize: "",
-          graveMarker: "None",
           condition: "Good",
           infection: "None",
-          coffin: "Chiltern Oak",
-          coffinHandles: "Bar Handles",
+          coffin: "",        // REMOVED PREPOPULATION
+          coffinHandles: "", // REMOVED PREPOPULATION
           clothes: "",
           clothesChecked: false,
           preparations: "No",
@@ -1195,6 +1238,7 @@
         saveCaseToDb(newCase);
         setFormState(newCase);
         setSelectedRowId(nextId);
+        setViewMode("cases");
         setActiveTab(isCoronerCase ? "pickup" : "care");
       };
 
@@ -1258,15 +1302,13 @@
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           
           let matchHud = true;
-          // When a hospital transfer pick up is completed, visually hide coroner badges to treat it as standard
           if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
-          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
+          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && item.transferStatus !== 'Completed';
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
 
           return matchSearch && matchLoc && matchStatus && matchHud;
         });
 
-        // Sort by urgency, most urgent first
         return result.sort((a, b) => {
           const uA = urgencyOrder[a.keyMilestoneUrgency] || 0;
           const uB = urgencyOrder[b.keyMilestoneUrgency] || 0;
@@ -1284,12 +1326,38 @@
 
         return {
           active: activeDashboardCases.length,
-          // Once the transfer pick up is completed, filter out from Coroner counters
           coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
           transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
       }, [deceasedList, activeBrand]);
+
+      // Stock filter engine
+      const filteredStockList = useMemo(() => {
+        const term = stockSearchQuery.toLowerCase();
+        
+        const coffins = Object.entries(stockLevels.coffins)
+          .filter(([name]) => name.toLowerCase().includes(term))
+          .map(([name, val]) => ({ name, type: "coffin", count: val }));
+          
+        const handles = Object.entries(stockLevels.handles)
+          .filter(([name]) => name.toLowerCase().includes(term))
+          .map(([name, val]) => ({ name, type: "handles", count: val }));
+
+        return [...coffins, ...handles];
+      }, [stockLevels, stockSearchQuery]);
+
+      const handleStockLevelAdjust = (type, itemName, delta) => {
+        let updated = { ...stockLevels };
+        if (type === 'coffin') {
+          updated.coffins[itemName] = Math.max(0, (updated.coffins[itemName] || 0) + delta);
+        } else {
+          updated.handles[itemName] = Math.max(0, (updated.handles[itemName] || 0) + delta);
+        }
+        setStockLevels(updated);
+        saveStockToDb(updated);
+      };
+
 
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
@@ -1392,6 +1460,14 @@
                 )}
               </div>
 
+              {/* Dynamic View Mode Toggle Button */}
+              <button 
+                onClick={() => { setSelectedRowId(null); setViewMode(viewMode === "stock" ? "cases" : "stock"); }} 
+                className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 hover:text-white transition transform active:scale-95 shadow-md"
+              >
+                {viewMode === "stock" ? "📁 Active Cases" : "📦 Stock Room"}
+              </button>
+
               <button onClick={() => createAdmission(true)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-rose-500/50 shadow-lg shadow-rose-600/20 transition transform active:scale-95">
                 <Icons.AlertTriangle size={16} /> Record a Coroner's
               </button>
@@ -1402,7 +1478,78 @@
           </header>
 
           {/* Main Content Area */}
-          {!selectedRowId ? (
+          {viewMode === "stock" && !selectedRowId ? (
+            // STOCK INVENTORY VIEW
+            <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
+              <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h2 className="text-base md:text-lg font-black text-white mr-2">Real-Time Stock Room</h2>
+                  <span className="bg-slate-900 border border-slate-850 text-[10px] text-amber-400 font-extrabold px-3 py-1.5 rounded-lg">
+                    ⚡ Auto-decremented on Joinery assignment
+                  </span>
+                </div>
+                <div className="relative w-full md:w-64">
+                  <Icons.Search className="absolute left-3 top-3 md:top-2.5 text-slate-400" size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Search stock catalog..." 
+                    value={stockSearchQuery} 
+                    onChange={(e) => setStockSearchQuery(e.target.value)} 
+                    className="bg-slate-900 border border-slate-850 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-205 w-full focus:outline-none focus:border-indigo-500 transition-colors" 
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredStockList.map((item) => {
+                    const isLow = item.name !== "None" && item.count <= (item.type === "coffin" ? 3 : 10);
+                    return (
+                      <div 
+                        key={item.name}
+                        className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 relative shadow-md ${
+                          isLow ? 'border-l-4 border-l-rose-500 bg-rose-955/5' : 'border-l-4 border-l-indigo-500'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60 uppercase">
+                              {item.type}
+                            </span>
+                            {isLow && item.name !== "None" && (
+                              <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">
+                                Low Stock
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-sm font-black text-white leading-snug mb-1">{item.name}</h3>
+                          <div className="text-xs text-slate-400 font-medium mt-1.5 flex items-baseline gap-1">
+                            Current level: <span className={`text-base font-black ${isLow && item.name !== "None" ? 'text-rose-400' : 'text-emerald-400'}`}>{item.count}</span> units
+                          </div>
+                        </div>
+
+                        {/* Adjuster buttons */}
+                        <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => handleStockLevelAdjust(item.type, item.name, -1)}
+                            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 w-8 h-8 rounded-lg font-black flex items-center justify-center transition active:scale-90"
+                          >
+                            -
+                          </button>
+                          <button 
+                            onClick={() => handleStockLevelAdjust(item.type, item.name, 1)}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white w-8 h-8 rounded-lg font-black flex items-center justify-center transition active:scale-90"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : !selectedRowId ? (
             // DASHBOARD VIEW
             <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
               <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
@@ -1462,28 +1609,28 @@
                     return (
                       <div 
                         key={item.id}
-                        onClick={() => { setSelectedRowId(item.id); setActiveTab(item.isCoroner ? "pickup" : "care"); }}
-                        className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md hover:shadow-xl ${
+                        onClick={() => { setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner ? "pickup" : "care"); }}
+                        className={`bg-slate-950 border border-slate-800/80 rounded-2xl p-4.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md hover:shadow-xl ${
                           showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'
                         }`}
                       >
                         <div className="flex justify-between items-start mb-3">
-                        <div className="flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
-                          {showAsCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
-                          {isTransferCompleted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
-                          {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
-                            <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
-                              item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
-                              item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
-                              'bg-emerald-950/60 text-emerald-300 border-emerald-900'
-                            }`}>
-                              Urgency: {item.keyMilestoneUrgency}
-                            </span>
-                          )}
-                        </div>
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
+                            {showAsCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
+                            {isTransferCompleted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
+                            {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
+                              <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
+                                item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
+                                item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
+                                'bg-emerald-950/60 text-emerald-300 border-emerald-900'
+                              }`}>
+                                Urgency: {item.keyMilestoneUrgency}
+                              </span>
+                            )}
+                          </div>
                         
-                        <div className="flex items-center space-x-1.5">
+                          <div className="flex items-center space-x-1.5">
                             <div className="flex items-center space-x-1 bg-slate-900 px-1 py-0.5 rounded-lg border border-slate-800">
                               <button 
                                 title={item.isArchived ? "Restore File" : "Archive File"}
@@ -1524,44 +1671,14 @@
                             )}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-slate-500 uppercase font-bold">Date:</span>
+                                <span className="text-[10px] text-slate-505 uppercase font-bold">Date:</span>
                                 <span className="text-[11px] font-mono font-bold text-amber-400">{item.keyDate || 'No Date Logged'}</span>
                               </div>
-                              {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
-                                <span className={`text-[9px] font-black px-2.5 py-1 rounded-md border uppercase tracking-wider shadow-sm ${
-                                  item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
-                                  item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
-                                  'bg-emerald-950/60 text-emerald-300 border-emerald-900'
-                                }`}>
-                                  Urgency: {item.keyMilestoneUrgency}
-                                </span>
-                              )}
                             </div>
                           </div>
                         )}
 
-
-                        {/* HOSPITAL TRANSFER BLOCK - hidden if transfer is completed */}
-                        {item.isCoroner && item.transferDateTime && !isTransferCompleted && (
-                          <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
-                            <div className="flex items-center gap-1.5 mb-2.5">
-                              <Icons.Building2 size={12} className="text-indigo-400" />
-                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Hospital Transfer</span>
-                            </div>
-                            <div className="mb-2 flex items-start gap-1.5">
-                              <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">{item.transferType}:</span>
-                              <span className="text-xs font-bold text-white leading-tight">{item.transferHospital}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-slate-500 uppercase font-bold">Scheduled:</span>
-                                <span className="text-[11px] font-mono font-bold text-amber-400">{item.transferDateTime}</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* DISPATCH / TRANSFER LOGISTICS STAGES TIMELINE - hidden if transfer is completed */}
+                        {/* DISPATCH / TRANSFER LOGISTICS STAGES TIMELINE */}
                         {showAsCoroner && (() => {
                           const isTransferActive = (item.transferStatus && item.transferStatus !== 'Pending') || !!item.transferDateTime;
                           const activeStatusLabel = isTransferActive ? 'Transfer Stage:' : 'Dispatch Stage:';
@@ -1586,11 +1703,11 @@
                           );
                         })()}
 
-                        {/* STANDARD FUNERAL BOTTOM ROW - active for standard or completed coroner files */}
+                        {/* STANDARD FUNERAL BOTTOM ROW */}
                         {!showAsCoroner && (
                           <div className="mt-auto pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                            <span>Coffin: <span className="text-slate-300">{item.coffin}</span></span>
-                            {item.infection !== "None" && <span className="text-rose-400 bg-rose-950/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}
+                            <span>Coffin: <span className="text-slate-300">{item.coffin || 'Not selected'}</span></span>
+                            {item.infection !== "None" && <span className="text-rose-400 bg-rose-955/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}
                           </div>
                         )}
                       </div>
@@ -1608,7 +1725,7 @@
             // DETAILS VIEW
             <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 animate-fade-in">
               <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md select-none">
-                <button onClick={() => { setSelectedRowId(null); setFormState(null); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
+                <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
                   <Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard
                 </button>
                 <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
@@ -1708,7 +1825,7 @@
                           </div>
                         </div>
 
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                        <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl">
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Heart className="text-amber-500" size={16} />
                             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Sanitary preparations</h3>
@@ -1747,6 +1864,7 @@
                       </>
                     )}
 
+
                     {/* WORKSHOP TAB FORM MODULES */}
                     {activeTab === "workshop" && (
                       <>
@@ -1758,13 +1876,15 @@
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Selected Wood</label>
-                              <select value={formState?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.coffin || ''} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                                <option value="">-- Select Coffin Model --</option>
                                 {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Handles Spec</label>
-                              <select value={formState?.coffinHandles || 'Bar Handles'} onChange={(e) => handleFieldChange('coffinHandles', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.coffinHandles || ''} onChange={(e) => handleFieldChange('coffinHandles', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                                <option value="">-- Select Handles Spec --</option>
                                 {handlesList.map(h => <option key={h} value={h}>{h}</option>)}
                               </select>
                             </div>
@@ -1820,7 +1940,6 @@
                     {/* CORONER TAB FORM MODULES */}
                     {activeTab === "pickup" && formState?.isCoroner && (
                       <>
-                        {/* Audit Lock Banner */}
                         {isLogisticsLocked && (
                           <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in select-none">
                             <div className="flex items-center gap-3">
@@ -1840,48 +1959,49 @@
                           </div>
                         )}
 
-                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                        <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-305 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Building2 className="text-amber-500" size={16} />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Coroner Authority Details</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-305">Coroner Authority Details</h3>
                           </div>
                           
                           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                             <div className="col-span-2 sm:col-span-2">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Title</label>
-                              <select disabled={isLogisticsLocked} value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850">
+                              <select disabled={isLogisticsLocked} value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855">
                                 {titles.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
-                              <input disabled={isLogisticsLocked} type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
-                              <input disabled={isLogisticsLocked} type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
-                              <input disabled={isLogisticsLocked} type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-205 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">CAD</label>
-                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer / Contact</label>
-                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                           </div>
                         </div>
 
+                        {/* DISPATCH AND FLEET MANAGEMENT */}
                         <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Truck className="text-amber-500" size={16} />
@@ -1918,20 +2038,20 @@
                             <div className="space-y-4">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Target Destination</label>
-                                <select disabled={isLogisticsLocked} value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
+                                <select disabled={isLogisticsLocked} value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
                                   <option value="Cromer Mortuary">Cromer Mortuary</option>
                                   <option value="Fakenham Mortuary">Fakenham Mortuary</option>
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
-                                <select disabled={isLogisticsLocked} value={formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
+                                <select disabled={isLogisticsLocked} value={formState?.pickupVehicle || 'C17 DFS'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Scheduled Date & Time</label>
-                                <input disabled={isLogisticsLocked} type="text" value={formState?.pickupDateTime || ''} onChange={(e) => handleFieldChange('pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-400 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" />
+                                <input disabled={isLogisticsLocked} type="text" value={formState?.pickupDateTime || ''} onChange={(e) => handleFieldChange('pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-bold text-amber-400 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-855" />
                               </div>
                             </div>
                           </div>
@@ -1953,12 +2073,11 @@
                           
                           <div>
                             <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1 select-none">Pick-up Address & Notes</label>
-                            <textarea disabled={isLogisticsLocked} value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none mb-2 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
-                            <textarea disabled={isLogisticsLocked} value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
+                            <textarea disabled={isLogisticsLocked} value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none mb-2 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-855" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
+                            <textarea disabled={isLogisticsLocked} value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-855" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
                           </div>
                         </div>
 
-                        {/* Dispatch Emailer positioned above save button inside Tab 3 */}
                         {dispatchEmailData && (
                           <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
                             <div className="flex items-center space-x-1.5 text-slate-455 mb-3 border-b border-slate-800 pb-3 select-none">
@@ -1980,7 +2099,6 @@
                     {/* HOSPITAL TRANSFER TAB FORM MODULES */}
                     {activeTab === "hospital" && formState?.isCoroner && (
                       <>
-                        {/* Audit Lock Banner */}
                         {isLogisticsLocked && (
                           <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in select-none">
                             <div className="flex items-center gap-3">
@@ -2009,12 +2127,11 @@
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                             <div>
                               <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Transfer Stage:</label>
-                              {/* Keep completed stage option toggles enabled or disabled depending on overall progression status */}
                               <div className="grid grid-cols-2 gap-2 mb-3 select-none">
                                 {["Pending", "Completed"].map((st) => {
                                   const isCurrent = (formState?.transferStatus || 'Pending') === st;
                                   return (
-                                    <button key={st} type="button" onClick={() => handleTransferStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
+                                    <button key={st} type="button" onClick={() => handleTransferStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
                                   );
                                 })}
                               </div>
@@ -2038,26 +2155,26 @@
                             <div className="space-y-4">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Transfer Type</label>
-                                <select disabled={isLogisticsLocked} value={formState?.transferType || 'Pick up'} onChange={(e) => handleFieldChange('transferType', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
+                                <select disabled={isLogisticsLocked} value={formState?.transferType || 'Pick up'} onChange={(e) => handleFieldChange('transferType', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
                                   <option value="Pick up">Pick up</option>
                                   <option value="Drop off">Drop off</option>
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Hospital</label>
-                                <select disabled={isLogisticsLocked} value={formState?.transferHospital || 'Norfolk & Norwich University Hospital (NNUH)'} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
+                                <select disabled={isLogisticsLocked} value={formState?.transferHospital || 'Norfolk & Norwich University Hospital (NNUH)'} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
                                   {norfolkHospitals.map(hosp => <option key={hosp} value={hosp}>{hosp}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
-                                <select disabled={isLogisticsLocked} value={formState?.transferVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('transferVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
+                                <select disabled={isLogisticsLocked} value={formState?.transferVehicle || 'C17 DFS'} onChange={(e) => handleFieldChange('transferVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Scheduled Date & Time</label>
-                                <input disabled={isLogisticsLocked} type="text" value={formState?.transferDateTime || ''} onChange={(e) => handleFieldChange('transferDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-400 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" />
+                                <input disabled={isLogisticsLocked} type="text" value={formState?.transferDateTime || ''} onChange={(e) => handleFieldChange('transferDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-205 w-full focus:outline-none font-bold text-amber-400 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-855" />
                               </div>
                             </div>
                           </div>
@@ -2083,7 +2200,7 @@
                     {/* SAVE & RETURN BUTTON */}
                     <div className="flex justify-end pb-8 pt-4 select-none">
                       <button 
-                        onClick={() => { setSelectedRowId(null); setFormState(null); }}
+                        onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }}
                         className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 py-3.5 sm:py-3 rounded-2xl font-black text-sm tracking-wide shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition transform active:scale-95"
                       >
                         <Icons.Save size={18} /> Save & Return to Summary
@@ -2105,7 +2222,7 @@
                         <button 
                           type="button" 
                           onClick={() => printCareDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Users size={14} className="text-amber-400" />
@@ -2117,7 +2234,7 @@
                         <button 
                           type="button" 
                           onClick={() => printWorkshopDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Hammer size={14} className="text-amber-400" />
@@ -2130,7 +2247,7 @@
                           <button 
                             type="button" 
                             onClick={() => printCoronerDocument(formState)}
-                            className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                            className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                           >
                             <span className="flex items-center gap-2">
                               <Icons.Truck size={14} className="text-rose-400" />
@@ -2144,7 +2261,7 @@
                           <button 
                             type="button" 
                             onClick={() => printHospitalTransferDocument(formState)}
-                            className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                            className="w-full bg-slate-900 hover:bg-slate-855 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                           >
                             <span className="flex items-center gap-2">
                               <Icons.Building2 size={14} className="text-rose-400" />
@@ -2169,28 +2286,17 @@
 
                     {/* QR WIDGET */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
-                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Tracking Pass</span></div>
+                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Tracking Pass</span></div>
                       <div className="mt-8 mb-4 bg-white p-3 rounded-xl shadow-inner">
                         <img src={getQrCodeUrl(formState, 140)} alt="QR Tracking" className="w-32 h-32 object-contain" />
                       </div>
                       <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 justify-center"><span>Live File Link</span></h4>
                       
                       <div className="mt-5 w-full grid grid-cols-2 gap-2">
-                        <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 transition flex items-center justify-center gap-1.5 active:scale-95"><Icons.Maximize2 size={12} /><span>Maximize</span></button>
-                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15 active:scale-95"><Icons.Printer size={12} /><span>Sticker</span></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900 hover:bg-slate-855 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 transition flex items-center justify-center gap-1.5 active:scale-95"><Icons.Maximize2 size={12} /><span>Maximize</span></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-955 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15 active:scale-95"><Icons.Printer size={12} /><span>Sticker</span></button>
                       </div>
                     </div>
-
-                    {/* ANATOMICAL SKULL CONDITION METRIC WIDGET */}
-                    {activeTab === "care" && (
-                      <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
-                        <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
-                        <div className="my-6 p-4 bg-slate-900 rounded-full border border-slate-800/80 shadow-inner">
-                          <BodyConditionIcon condition={formState?.condition} size={64} />
-                        </div>
-                        <h4 className="text-sm font-black text-white uppercase">Status: {formState?.condition}</h4>
-                      </div>
-                    )}
 
                     {/* FILE ADMINISTRATION CARD */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
@@ -2203,7 +2309,7 @@
                         <button 
                           type="button" 
                           onClick={() => handleArchiveToggle(formState.id)}
-                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.FolderOpen size={14} className="text-amber-400" />
@@ -2249,10 +2355,10 @@
           {/* QR MAXIMIZE MODAL */}
           {isQrModalOpen && formState && (
             <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl">
+              <div className="bg-slate-955 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl">
                 <button onClick={() => setIsQrModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
                 <h3 className="text-base font-black text-white mt-2">{formState?.title} {formState?.deceasedName || "Unnamed"}</h3>
-                <p className="text-[10px] text-slate-500 font-mono mt-0.5">Ref: {formState?.ref}</p>
+                <p className="text-[10px] text-slate-550 font-mono mt-0.5">Ref: {formState?.ref}</p>
                 <div className="bg-white p-4 rounded-2xl shadow-2xl inline-block my-4">
                   <img src={getQrCodeUrl(formState, 220)} alt="High res QR" className="w-48 h-48 object-contain" />
                 </div>
@@ -2277,7 +2383,7 @@
                 </div>
                 <div className="mt-5 flex gap-2 justify-end select-none">
                   <button onClick={() => setIsEmailModalOpen(false)} className="bg-slate-800 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button>
-                  <a href={dispatchEmailData.mailtoLink} onClick={() => setIsEmailModalOpen(false)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-5 py-2 rounded-xl text-center flex items-center justify-center transition-colors">Launch Client</a>
+                  <a href={dispatchEmailData.mailtoLink} onClick={() => setIsEmailModalOpen(false)} className="bg-amber-500 hover:bg-amber-400 text-slate-955 text-xs font-black px-5 py-2 rounded-xl text-center flex items-center justify-center transition-colors">Launch Client</a>
                 </div>
               </div>
             </div>
@@ -2309,6 +2415,7 @@
         </div>
       );
     }
+
 
     function BodyConditionIcon({ condition, size = 32 }) {
       if (condition === 'Good') {

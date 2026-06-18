@@ -58,12 +58,43 @@
 
   <div id="root"></div>
 
-  <!-- React Application Source -->
+  <!-- React Application Source (runs as ES Module to support gstatic imports) -->
   <script type="text/babel" data-type="module" data-presets="react-classic">
+    // --- FIREBASE LIVE CONFIGURATION PARSER ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+
+    const norfolkStaffList = [
+      { id: "staff-1", name: "David (Cromer)", email: "david@cromerfunerals.co.uk" },
+      { id: "staff-2", name: "Barrie (Cromer)", email: "sarah@cromerfunerals.co.uk" },
+      { id: "staff-3", name: "Paul (Fakenham)", email: "paul@gowardsindependentfunerals.com" },
+      { id: "staff-4", name: "Peter (Fakenham)", email: "luke@gowardsfunerals.co.uk" },
+      { id: "staff-5", name: "Adrian (Group Operations)", email: "adrian@cromeranddistrictfunerals.co.uk" },
+      { id: "staff-6", name: "Michael (Cromer)", email: "" }
+    ];
+
+    const initialCaseload = [];
+
+    // Real physical inventory values derived strictly from catalog files
+    const initialInventory = {
+      coffins: {
+        "Oak": 12, "Elm": 12, "Oak Dark Stained": 8, "Knotty Oak": 6, "Sapele": 10,
+        "Cardboard": 15, "Seagrass": 8, "Bamboo": 8, "Wicker": 8, "Willow Cromer": 4, "Willow Pod": 4,
+        "Brinkley Oak": 10, "Chiltern Oak": 14, "Windsor Oak Triple": 5, "Cavendish Oak": 5, "Solid Pine": 8,
+        "Walnut": 8, "Rockwood Elm": 8, "Lamboard Oak": 8, "Contemporary Coffin": 6, "Painted Named Coffin": 6, "Picture Coffin": 6
+      },
+      handles: {
+        "Bar Handles": 45, "Ring Handles": 40
+      },
+      wreathHolders: {
+        "Brass Wreath Holders": 30, "Chrome Wreath Holders": 30
+      },
+      crucifixes: {
+        "Brass Crucifix": 20, "Chrome Crucifix": 20, "Wooden Crucifix": 15
+      }
+    };
 
     // ==========================================================
     // 1. YOUR LIVE FIREBASE CONFIGURATION OBJECT:
@@ -127,7 +158,7 @@
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
       ),
       FolderOpen: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M2 10h20"/></svg>
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M2 10h20"/></svg>
       ),
       Building2: ({ size = 16, className = "" }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="15" y1="22" x2="15" y2="16"/><line x1="9" y1="16" x2="15" y2="16"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/></svg>
@@ -173,30 +204,6 @@
       )
     };
 
-    const norfolkStaffList = [
-      { id: "staff-1", name: "David (Cromer)", email: "david@cromerfunerals.co.uk" },
-      { id: "staff-2", name: "Barrie (Cromer)", email: "sarah@cromerfunerals.co.uk" },
-      { id: "staff-3", name: "Paul (Fakenham)", email: "paul@gowardsindependentfunerals.com" },
-      { id: "staff-4", name: "Peter (Fakenham)", email: "luke@gowardsfunerals.co.uk" },
-      { id: "staff-5", name: "Adrian (Group Operations)", email: "adrian@cromeranddistrictfunerals.co.uk" },
-      { id: "staff-6", name: "Michael (Cromer)", email: "" }
-    ];
-
-    const initialCaseload = [];
-
-    // Default stock levels for initialization (10 units per Coffin / 30 units per Handleset)
-    const initialInventory = {
-      coffins: {
-        "Oak": 12, "Elm": 12, "Oak Dark Stained": 8, "Knotty Oak": 6, "Sapele": 10,
-        "Cardboard": 15, "Seagrass": 8, "Bamboo": 8, "Wicker": 8, "Willow Cromer": 4, "Willow Pod": 4,
-        "Brinkley Oak": 10, "Chiltern Oak": 14, "Windsor Oak Triple": 5, "Cavendish Oak": 5, "Solid Pine": 8,
-        "Walnut": 8, "Rockwood Elm": 8, "Lamboard Oak": 8, "Contemporary Coffin": 6, "Painted Named Coffin": 6, "Picture Coffin": 6, "None": 999
-      },
-      handles: {
-        "Bar Handles": 45, "Ring Handles": 40, "None": 999
-      }
-    };
-
     const getTimestamp = () => {
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
@@ -207,22 +214,7 @@
       return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
     };
 
-    // --- BASE URL HELPER FOR QR & PRINTING ---
-    const getBaseUrl = () => {
-      try {
-        const href = window.location.href;
-        if (!href || href === 'about:blank' || href === 'about:srcdoc' || href.startsWith('file://')) {
-          return "https://dappsncfc-cyber.github.io/ParlourCare/";
-        }
-        return href.split('?')[0];
-      } catch (e) {
-        return "https://dappsncfc-cyber.github.io/ParlourCare/";
-      }
-    };
-
-
     function App() {
-      // Hydrate local cache immediately on startup
       const [deceasedList, setDeceasedList] = useState(() => {
         try {
           const local = localStorage.getItem('norfolk_mortuary_cases');
@@ -232,18 +224,27 @@
       const [selectedRowId, setSelectedRowId] = useState(null); 
       const [formState, setFormState] = useState(null);
       
-      // Stock room view states
-      const [viewMode, setViewMode] = useState("cases"); // "cases" or "stock"
+      const [viewMode, setViewMode] = useState("cases"); 
       const [stockSearchQuery, setStockSearchQuery] = useState("");
       
+      // Stock room levels with defensive local caching migration logic
       const [stockLevels, setStockLevels] = useState(() => {
         try {
           const localStock = localStorage.getItem('norfolk_mortuary_stock');
-          return localStock ? JSON.parse(localStock) : initialInventory;
+          if (localStock) {
+            const parsed = JSON.parse(localStock);
+            // Migrate fields to inject Wreath Holders & Crucifix categories safely if missing
+            if (!parsed.wreathHolders) parsed.wreathHolders = initialInventory.wreathHolders;
+            if (!parsed.crucifixes) parsed.crucifixes = initialInventory.crucifixes;
+            // Clean up old 'None' entries from the inventory states
+            if (parsed.coffins && parsed.coffins["None"] !== undefined) delete parsed.coffins["None"];
+            if (parsed.handles && parsed.handles["None"] !== undefined) delete parsed.handles["None"];
+            return parsed;
+          }
+          return initialInventory;
         } catch(e) { return initialInventory; }
       });
 
-      // Deep linking buffer
       const [pendingDeepLink, setPendingDeepLink] = useState(() => {
         try {
           return new URLSearchParams(window.location.search).get('case');
@@ -262,7 +263,6 @@
       const [user, setUser] = useState(null);
       const seededRef = useRef(false);
 
-      // --- NOTIFICATION STATE SYSTEM ---
       const [notifications, setNotifications] = useState([]);
       const [unreadCount, setUnreadCount] = useState(0);
       const [isNotificationTrayOpen, setIsNotificationTrayOpen] = useState(false);
@@ -273,7 +273,6 @@
         return formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
       }, [formState]);
 
-      // --- FATAL ERROR PREVENTION UTILITIES ---
       const showNotification = (title, message, type = "info") => {
         setDialog({ isOpen: true, title, message, type, onConfirm: null });
       };
@@ -282,7 +281,6 @@
         setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       };
 
-      // --- STATE WRITE & SNAPSHOT UTILITIES ---
       const saveStockToDb = async (newStock) => {
         try {
           localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock));
@@ -298,7 +296,6 @@
           }
         }
       };
-
 
       useEffect(() => {
         if (!isFirebaseEnabled) return;
@@ -327,7 +324,6 @@
         };
       }, []);
 
-      // Live Firestore synchronisation listener for stock & cases
       useEffect(() => {
         if (!isFirebaseEnabled) {
           try {
@@ -345,14 +341,18 @@
         const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
         const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
 
-        // Fetch Live Stock Levels
         getDoc(stockDocRef).then((snap) => {
           if (snap.exists()) {
             const remoteStock = snap.data();
+            // Securely ensure category migrations are completed in remote snapshots too
+            if (!remoteStock.wreathHolders) remoteStock.wreathHolders = initialInventory.wreathHolders;
+            if (!remoteStock.crucifixes) remoteStock.crucifixes = initialInventory.crucifixes;
+            if (remoteStock.coffins && remoteStock.coffins["None"] !== undefined) delete remoteStock.coffins["None"];
+            if (remoteStock.handles && remoteStock.handles["None"] !== undefined) delete remoteStock.handles["None"];
+            
             setStockLevels(remoteStock);
             try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
           } else {
-            // Seed stock room immediately if vacant
             setDoc(stockDocRef, initialInventory).catch(e => console.error("Database inventory seeding failed:", e));
           }
         });
@@ -395,10 +395,10 @@
                 const prevMap = new Map((prevListRef.current || []).map(c => [c.id, c]));
                 const currentMap = new Map(cases.map(c => [c.id, c]));
 
-                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
+                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'wreathHolders', 'crucifix', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
                 const fieldLabels = {
                   deceasedName: 'Name', title: 'Title', fridgeTray: 'Tray No.', location: 'Branch',
-                  condition: 'Condition', coffin: 'Coffin', coffinHandles: 'Handles Type', pickupStatus: 'Dispatch Stage', transferStatus: 'Transfer Stage',
+                  condition: 'Condition', coffin: 'Coffin', coffinHandles: 'Handles Type', wreathHolders: 'Wreath Holders', crucifix: 'Crucifix', pickupStatus: 'Dispatch Stage', transferStatus: 'Transfer Stage',
                   isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action', keyMilestoneUrgency: 'Milestone Urgency'
                 };
 
@@ -465,7 +465,6 @@
         };
       }, [user]);
 
-      // Synchronised write-helper updating local state immediately, then syncing to Firestore
       const saveCaseToDb = async (record) => {
         setDeceasedList(prev => {
           const index = prev.findIndex(item => item.id === record.id);
@@ -494,16 +493,23 @@
       const deleteCaseFromDb = async (id) => {
         const deletedCase = deceasedList.find(item => item.id === id);
         
-        // Optimistically return stock on deletion
         if (deletedCase) {
           let updatedStock = { ...stockLevels };
           let changed = false;
-          if (deletedCase.coffin && deletedCase.coffin !== "None" && updatedStock.coffins[deletedCase.coffin] !== undefined) {
+          if (deletedCase.coffin && updatedStock.coffins[deletedCase.coffin] !== undefined) {
             updatedStock.coffins[deletedCase.coffin] += 1;
             changed = true;
           }
-          if (deletedCase.coffinHandles && deletedCase.coffinHandles !== "None" && updatedStock.handles[deletedCase.coffinHandles] !== undefined) {
+          if (deletedCase.coffinHandles && updatedStock.handles[deletedCase.coffinHandles] !== undefined) {
             updatedStock.handles[deletedCase.coffinHandles] += 1;
+            changed = true;
+          }
+          if (deletedCase.wreathHolders && updatedStock.wreathHolders[deletedCase.wreathHolders] !== undefined) {
+            updatedStock.wreathHolders[deletedCase.wreathHolders] += 1;
+            changed = true;
+          }
+          if (deletedCase.crucifix && updatedStock.crucifixes[deletedCase.crucifix] !== undefined) {
+            updatedStock.crucifixes[deletedCase.crucifix] += 1;
             changed = true;
           }
           if (changed) {
@@ -560,13 +566,18 @@
       const conditions = useMemo(() => ["Good", "Medium", "Poor"], []);
       const infectionRisks = useMemo(() => ["None", "Blood borne", "Sepsis", "CJD", "Other"], []);
       const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
+      
       const coffinsList = useMemo(() => [
         "Oak", "Elm", "Oak Dark Stained", "Knotty Oak", "Sapele", "Cardboard", "Seagrass",
         "Bamboo", "Wicker", "Willow Cromer", "Willow Pod", "Brinkley Oak", "Chiltern Oak",
         "Windsor Oak Triple", "Cavendish Oak", "Solid Pine", "Walnut", "Rockwood Elm",
-        "Lamboard Oak", "Contemporary Coffin", "Painted Named Coffin", "Picture Coffin", "None"
+        "Lamboard Oak", "Contemporary Coffin", "Painted Named Coffin", "Picture Coffin"
       ], []);
-      const handlesList = useMemo(() => ["Bar Handles", "Ring Handles", "None"], []);
+      
+      const handlesList = useMemo(() => ["Bar Handles", "Ring Handles"], []);
+      const wreathHoldersList = useMemo(() => ["Brass Wreath Holders", "Chrome Wreath Holders"], []);
+      const crucifixesList = useMemo(() => ["Brass Crucifix", "Chrome Crucifix", "Wooden Crucifix"], []);
+      
       const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
       const vehicleOptions = useMemo(() => ["C17 DFS", "C22 DFS", "C25 GFS"], []);
       
@@ -763,7 +774,8 @@
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'PENDING'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Handles Selected:</span> <strong>${record?.coffinHandles || 'PENDING'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Mountings & Linings:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Wreath Holders:</span> <strong>${record?.wreathHolders || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Crucifix:</span> <strong>${record?.crucifix || 'None'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Coffin Size:</span> <strong style="font-size: 16px; font-family: monospace;">${record?.bodySize || 'PENDING SPEC'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Engraved Name Plate Fixed:</span> <strong>${record?.plate || 'No'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Grave Marker:</span> <strong>${record?.graveMarker || 'None'}</strong></div>
@@ -926,8 +938,10 @@
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Linings & Accessories:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Handles Selected:</span> <strong>${record?.coffinHandles || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Wreath Holders:</span> <strong>${record?.wreathHolders || 'None'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Crucifix:</span> <strong>${record?.crucifix || 'None'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coffin Size:</span> <strong>${record?.bodySize || 'PENDING SPEC'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Engraved Plate Affixed:</span> <strong>${record?.plate || 'No'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Grave Marker:</span> <strong>${record?.graveMarker || 'None'}</strong></div>
@@ -1006,7 +1020,6 @@
         executeIframePrint(htmlContent, true);
       };
 
-
       const handleFieldChange = (fieldName, value) => {
         if (!formState) return;
         
@@ -1019,12 +1032,12 @@
           const newVal = value || "";
           if (oldVal !== newVal) {
             // Restore unit to previous coffin inventory
-            if (oldVal && oldVal !== "None" && updatedStock.coffins[oldVal] !== undefined) {
+            if (oldVal && updatedStock.coffins[oldVal] !== undefined) {
               updatedStock.coffins[oldVal] += 1;
               stockChanged = true;
             }
             // Deduct unit from newly assigned coffin inventory
-            if (newVal && newVal !== "None" && updatedStock.coffins[newVal] !== undefined) {
+            if (newVal && updatedStock.coffins[newVal] !== undefined) {
               updatedStock.coffins[newVal] = Math.max(0, updatedStock.coffins[newVal] - 1);
               stockChanged = true;
             }
@@ -1037,13 +1050,49 @@
           const newVal = value || "";
           if (oldVal !== newVal) {
             // Restore unit to previous handleset inventory
-            if (oldVal && oldVal !== "None" && updatedStock.handles[oldVal] !== undefined) {
+            if (oldVal && updatedStock.handles[oldVal] !== undefined) {
               updatedStock.handles[oldVal] += 1;
               stockChanged = true;
             }
             // Deduct unit from newly assigned handleset inventory
-            if (newVal && newVal !== "None" && updatedStock.handles[newVal] !== undefined) {
+            if (newVal && updatedStock.handles[newVal] !== undefined) {
               updatedStock.handles[newVal] = Math.max(0, updatedStock.handles[newVal] - 1);
+              stockChanged = true;
+            }
+          }
+        }
+
+        // Automatically manage Wreath Holders stock balances
+        if (fieldName === 'wreathHolders') {
+          const oldVal = formState.wreathHolders || "";
+          const newVal = value || "";
+          if (oldVal !== newVal) {
+            // Restore unit to previous wreathHolders inventory
+            if (oldVal && updatedStock.wreathHolders[oldVal] !== undefined) {
+              updatedStock.wreathHolders[oldVal] += 1;
+              stockChanged = true;
+            }
+            // Deduct unit from newly assigned wreathHolders inventory
+            if (newVal && updatedStock.wreathHolders[newVal] !== undefined) {
+              updatedStock.wreathHolders[newVal] = Math.max(0, updatedStock.wreathHolders[newVal] - 1);
+              stockChanged = true;
+            }
+          }
+        }
+
+        // Automatically manage Crucifix stock balances
+        if (fieldName === 'crucifix') {
+          const oldVal = formState.crucifix || "";
+          const newVal = value || "";
+          if (oldVal !== newVal) {
+            // Restore unit to previous crucifix inventory
+            if (oldVal && updatedStock.crucifixes[oldVal] !== undefined) {
+              updatedStock.crucifixes[oldVal] += 1;
+              stockChanged = true;
+            }
+            // Deduct unit from newly assigned crucifix inventory
+            if (newVal && updatedStock.crucifixes[newVal] !== undefined) {
+              updatedStock.crucifixes[newVal] = Math.max(0, updatedStock.crucifixes[newVal] - 1);
               stockChanged = true;
             }
           }
@@ -1192,8 +1241,10 @@
           bodySize: "",
           condition: "Good",
           infection: "None",
-          coffin: "",        // REMOVED PREPOPULATION
-          coffinHandles: "", // REMOVED PREPOPULATION
+          coffin: "",        
+          coffinHandles: "", 
+          wreathHolders: "",
+          crucifix: "",
           clothes: "",
           clothesChecked: false,
           preparations: "No",
@@ -1332,32 +1383,42 @@
         };
       }, [deceasedList, activeBrand]);
 
-      // Stock filter engine
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
         
-        const coffins = Object.entries(stockLevels.coffins)
+        const coffins = Object.entries(stockLevels.coffins || {})
           .filter(([name]) => name.toLowerCase().includes(term))
           .map(([name, val]) => ({ name, type: "coffin", count: val }));
           
-        const handles = Object.entries(stockLevels.handles)
+        const handles = Object.entries(stockLevels.handles || {})
           .filter(([name]) => name.toLowerCase().includes(term))
           .map(([name, val]) => ({ name, type: "handles", count: val }));
 
-        return [...coffins, ...handles];
+        const wreathHolders = Object.entries(stockLevels.wreathHolders || {})
+          .filter(([name]) => name.toLowerCase().includes(term))
+          .map(([name, val]) => ({ name, type: "wreathHolders", count: val }));
+
+        const crucifixes = Object.entries(stockLevels.crucifixes || {})
+          .filter(([name]) => name.toLowerCase().includes(term))
+          .map(([name, val]) => ({ name, type: "crucifix", count: val }));
+
+        return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
       }, [stockLevels, stockSearchQuery]);
 
       const handleStockLevelAdjust = (type, itemName, delta) => {
         let updated = { ...stockLevels };
         if (type === 'coffin') {
           updated.coffins[itemName] = Math.max(0, (updated.coffins[itemName] || 0) + delta);
-        } else {
+        } else if (type === 'handles') {
           updated.handles[itemName] = Math.max(0, (updated.handles[itemName] || 0) + delta);
+        } else if (type === 'wreathHolders') {
+          updated.wreathHolders[itemName] = Math.max(0, (updated.wreathHolders[itemName] || 0) + delta);
+        } else if (type === 'crucifix') {
+          updated.crucifixes[itemName] = Math.max(0, (updated.crucifixes[itemName] || 0) + delta);
         }
         setStockLevels(updated);
         saveStockToDb(updated);
       };
-
 
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
@@ -1370,9 +1431,9 @@
               </span>
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto justify-center">
-              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🤝 Joint Group</button>
-              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🦀 Cromer</button>
-              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🦆 Gowards</button>
+              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🤝 Joint Group</button>
+              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦀 Cromer</button>
+              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦆 Gowards</button>
             </div>
           </div>
 
@@ -1399,17 +1460,15 @@
               </div>
             </div>
             
-            {/* Header Action Row & Notifier Dropdown */}
             <div className="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto items-stretch sm:items-center">
               
-              {/* Notifier Bell Widget */}
               <div className="relative">
                 <button 
                   onClick={() => {
                     setIsNotificationTrayOpen(!isNotificationTrayOpen);
                     setUnreadCount(0);
                   }} 
-                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-955 border border-slate-800/80 hover:bg-slate-900 transition-all relative"
+                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition-all relative"
                 >
                   <Icons.Bell size={18} />
                   <span className="sm:hidden font-black">View Activity Log</span>
@@ -1479,7 +1538,6 @@
 
           {/* Main Content Area */}
           {viewMode === "stock" && !selectedRowId ? (
-            // STOCK INVENTORY VIEW
             <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
               <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
                 <div className="flex flex-wrap items-center gap-2.5">
@@ -1503,7 +1561,8 @@
               <div className="flex-1 overflow-y-auto pr-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredStockList.map((item) => {
-                    const isLow = item.name !== "None" && item.count <= (item.type === "coffin" ? 3 : 10);
+                    const isLow = item.count <= (item.type === "coffin" ? 3 : 10);
+                    const formattedType = item.type === 'coffin' ? 'coffin' : item.type === 'handles' ? 'handles' : item.type === 'wreathHolders' ? 'wreath holders' : 'crucifix';
                     return (
                       <div 
                         key={item.name}
@@ -1514,9 +1573,9 @@
                         <div>
                           <div className="flex justify-between items-start mb-2">
                             <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60 uppercase">
-                              {item.type}
+                              {formattedType}
                             </span>
-                            {isLow && item.name !== "None" && (
+                            {isLow && (
                               <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">
                                 Low Stock
                               </span>
@@ -1524,7 +1583,7 @@
                           </div>
                           <h3 className="text-sm font-black text-white leading-snug mb-1">{item.name}</h3>
                           <div className="text-xs text-slate-400 font-medium mt-1.5 flex items-baseline gap-1">
-                            Current level: <span className={`text-base font-black ${isLow && item.name !== "None" ? 'text-rose-400' : 'text-emerald-400'}`}>{item.count}</span> units
+                            Current level: <span className={`text-base font-black ${isLow ? 'text-rose-400' : 'text-emerald-400'}`}>{item.count}</span> units
                           </div>
                         </div>
 
@@ -1610,7 +1669,7 @@
                       <div 
                         key={item.id}
                         onClick={() => { setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner ? "pickup" : "care"); }}
-                        className={`bg-slate-950 border border-slate-800/80 rounded-2xl p-4.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md hover:shadow-xl ${
+                        className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md hover:shadow-xl ${
                           showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'
                         }`}
                       >
@@ -1665,13 +1724,13 @@
                             </div>
                             {item.keyMilestoneName && (
                               <div className="mb-2 flex items-start gap-1.5">
-                                <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">Action:</span>
+                                <span className="text-[10px] text-slate-505 uppercase font-bold mt-0.5">Action:</span>
                                 <span className="text-sm font-bold text-white leading-tight">{item.keyMilestoneName}</span>
                               </div>
                             )}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-slate-505 uppercase font-bold">Date:</span>
+                                <span className="text-[10px] text-slate-550 uppercase font-bold">Date:</span>
                                 <span className="text-[11px] font-mono font-bold text-amber-400">{item.keyDate || 'No Date Logged'}</span>
                               </div>
                             </div>
@@ -1705,9 +1764,17 @@
 
                         {/* STANDARD FUNERAL BOTTOM ROW */}
                         {!showAsCoroner && (
-                          <div className="mt-auto pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                            <span>Coffin: <span className="text-slate-300">{item.coffin || 'Not selected'}</span></span>
-                            {item.infection !== "None" && <span className="text-rose-400 bg-rose-955/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}
+                          <div className="mt-auto pt-3 border-t border-slate-800/60 flex flex-col gap-1 text-[10px] font-bold text-slate-500">
+                            <div className="flex items-center justify-between">
+                              <span>Coffin: <span className="text-slate-350">{item.coffin || 'Not selected'}</span></span>
+                              {item.infection !== "None" && <span className="text-rose-400 bg-rose-955/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}
+                            </div>
+                            {(item.wreathHolders || item.crucifix) && (
+                              <div className="flex flex-wrap gap-2 text-slate-505 text-[9px] border-t border-slate-900/50 pt-1.5 mt-1">
+                                {item.wreathHolders && <span>🌸 {item.wreathHolders}</span>}
+                                {item.crucifix && <span>✝️ {item.crucifix}</span>}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1758,7 +1825,7 @@
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Layers className="text-indigo-400" size={16} />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-350">Core Admission Details</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Core Admission Details</h3>
                           </div>
                           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                             <div className="col-span-2 sm:col-span-2">
@@ -1844,7 +1911,7 @@
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Key Milestone Date</label>
-                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-505 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors" />
+                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Action</label>
@@ -1864,7 +1931,6 @@
                       </>
                     )}
 
-
                     {/* WORKSHOP TAB FORM MODULES */}
                     {activeTab === "workshop" && (
                       <>
@@ -1873,7 +1939,7 @@
                             <Icons.Hammer className="text-amber-500" size={16} />
                             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Selected Wood</label>
                               <select value={formState?.coffin || ''} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
@@ -1883,17 +1949,31 @@
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Handles Spec</label>
-                              <select value={formState?.coffinHandles || ''} onChange={(e) => handleFieldChange('coffinHandles', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select value={formState?.coffinHandles || ''} onChange={(e) => handleFieldChange('coffinHandles', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-bold">
                                 <option value="">-- Select Handles Spec --</option>
                                 {handlesList.map(h => <option key={h} value={h}>{h}</option>)}
                               </select>
                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border-t border-slate-900 pt-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Linings & Mountings</label>
-                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300 focus:border-indigo-500 transition-colors" placeholder="e.g. Standard Linings" />
+                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Wreath Holders</label>
+                              <select value={formState?.wreathHolders || ''} onChange={(e) => handleFieldChange('wreathHolders', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-bold">
+                                <option value="">-- Select Wreath Holders --</option>
+                                {wreathHoldersList.map(w => <option key={w} value={w}>{w}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Crucifix Model</label>
+                              <select value={formState?.crucifix || ''} onChange={(e) => handleFieldChange('crucifix', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-bold">
+                                <option value="">-- Select Crucifix Spec --</option>
+                                {crucifixesList.map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Coffin Size</label>
                               <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold focus:border-indigo-500 transition-colors" />
@@ -2275,7 +2355,7 @@
                           <button 
                             type="button" 
                             onClick={() => printCombinedMasterDocument(formState)}
-                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-amber-500/10 active:scale-95"
+                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-955 text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-amber-500/10 active:scale-95"
                           >
                             <Icons.FileText size={14} />
                             Print Combined Master Record
@@ -2297,6 +2377,17 @@
                         <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-955 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15 active:scale-95"><Icons.Printer size={12} /><span>Sticker</span></button>
                       </div>
                     </div>
+
+                    {/* ANATOMICAL SKULL CONDITION METRIC WIDGET */}
+                    {activeTab === "care" && (
+                      <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
+                        <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
+                        <div className="my-6 p-4 bg-slate-900 rounded-full border border-slate-800/80 shadow-inner">
+                          <BodyConditionIcon condition={formState?.condition} size={64} />
+                        </div>
+                        <h4 className="text-sm font-black text-white uppercase">Status: {formState?.condition}</h4>
+                      </div>
+                    )}
 
                     {/* FILE ADMINISTRATION CARD */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
@@ -2415,7 +2506,6 @@
         </div>
       );
     }
-
 
     function BodyConditionIcon({ condition, size = 32 }) {
       if (condition === 'Good') {

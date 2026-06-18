@@ -250,7 +250,7 @@
       // --- EDITING LOCK ASSESSOR ---
       // Evaluates if the coroner record is officially archived and locked from further inputs due to completed transfer
       const isLogisticsLocked = useMemo(() => {
-        return formState?.isCoroner && formState?.transferStatus === 'Completed';
+        return formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
       }, [formState]);
 
       // --- FATAL ERROR PREVENTION UTILITIES ---
@@ -1215,9 +1215,9 @@
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           
           let matchHud = true;
-          // When a hospital transfer is completed, visually hide coroner badges to treat it as standard
-          if (hudFilter === "Coroner") matchHud = item.isCoroner && item.transferStatus !== 'Completed';
-          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && item.transferStatus !== 'Completed';
+          // When a hospital transfer pick up is completed, visually hide coroner badges to treat it as standard
+          if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
+          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
 
           return matchSearch && matchLoc && matchStatus && matchHud;
@@ -1241,9 +1241,9 @@
 
         return {
           active: activeDashboardCases.length,
-          // Once the transfer is completed, filter out from Coroner counters
-          coroner: activeDashboardCases.filter(c => c.isCoroner && c.transferStatus !== 'Completed').length,
-          transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && c.transferStatus !== 'Completed').length,
+          // Once the transfer pick up is completed, filter out from Coroner counters
+          coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
+          transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
       }, [deceasedList, activeBrand]);
@@ -1413,14 +1413,14 @@
               <div className="flex-1 overflow-y-auto pr-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredList.map((item) => {
-                    const isTransferCompleted = item.isCoroner && item.transferStatus === 'Completed';
+                    const isTransferCompleted = item.isCoroner && item.transferStatus === 'Completed' && item.transferType === 'Pick up';
                     const showAsCoroner = item.isCoroner && !isTransferCompleted;
 
                     return (
                       <div 
                         key={item.id}
                         onClick={() => { setSelectedRowId(item.id); setActiveTab(item.isCoroner ? "pickup" : "care"); }}
-                        className={`bg-slate-950 border border-slate-800/80 rounded-2xl p-4 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md hover:shadow-xl ${
+                        className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md hover:shadow-xl ${
                           showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'
                         }`}
                       >
@@ -1497,8 +1497,9 @@
                           </div>
                         )}
 
-                        {/* HOSPITAL TRANSFER BLOCK */}
-                        {item.isCoroner && item.transferDateTime && (
+
+                        {/* HOSPITAL TRANSFER BLOCK - hidden if transfer is completed */}
+                        {item.isCoroner && item.transferDateTime && !isTransferCompleted && (
                           <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
                             <div className="flex items-center gap-1.5 mb-2.5">
                               <Icons.Building2 size={12} className="text-indigo-400" />
@@ -1517,7 +1518,8 @@
                           </div>
                         )}
 
-                        {item.isCoroner && (() => {
+                        {/* DISPATCH / TRANSFER LOGISTICS STAGES TIMELINE - hidden if transfer is completed */}
+                        {showAsCoroner && (() => {
                           const isTransferActive = (item.transferStatus && item.transferStatus !== 'Pending') || !!item.transferDateTime;
                           const activeStatusLabel = isTransferActive ? 'Transfer Stage:' : 'Dispatch Stage:';
                           const activeStatus = isTransferActive ? (item.transferStatus || 'Pending') : (item.pickupStatus || 'Pending');
@@ -1540,7 +1542,9 @@
                             </div>
                           );
                         })()}
-                        {!item.isCoroner && (
+
+                        {/* STANDARD FUNERAL BOTTOM ROW - active for standard or completed coroner files */}
+                        {!showAsCoroner && (
                           <div className="mt-auto pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-bold text-slate-500">
                             <span>Coffin: <span className="text-slate-300">{item.coffin}</span></span>
                             {item.infection !== "None" && <span className="text-rose-400 bg-rose-950/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}

@@ -349,10 +349,10 @@
                 const currentMap = new Map(cases.map(c => [c.id, c]));
 
                 // User friendly field mapping
-                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
+                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
                 const fieldLabels = {
                   deceasedName: 'Name', title: 'Title', fridgeTray: 'Tray No.', location: 'Branch',
-                  condition: 'Condition', coffin: 'Coffin', pickupStatus: 'Dispatch Stage', transferStatus: 'Transfer Stage',
+                  condition: 'Condition', coffin: 'Coffin', coffinHandles: 'Handles Type', pickupStatus: 'Dispatch Stage', transferStatus: 'Transfer Stage',
                   isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action',
                   keyMilestoneUrgency: 'Milestone Urgency',
                   transferDateTime: 'Transfer Date & Time', transferHospital: 'Transfer Hospital',
@@ -533,6 +533,7 @@
       const infectionRisks = useMemo(() => ["None", "Blood borne", "Sepsis", "CJD", "Other"], []);
       const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
       const coffinsList = useMemo(() => ["Chiltern Oak", "Regent Oak", "New Ascot", "Simple Coffin", "Mendip Oak", "Cardboard", "Simple Pine", "None"], []);
+      const handlesList = useMemo(() => ["Bar Handles", "Ring Handles", "None"], []);
       const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
       const vehicleOptions = useMemo(() => ["Vauxhall Vivaro CRM-1", "Vauxhall Vivaro FAK-2", "Ford Transit Group-1", "First Call Vehicle 3"], []);
       
@@ -730,13 +731,16 @@
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Timber Specification:</span> <strong>${record?.coffin}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'PENDING'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Handles Selected:</span> <strong>${record?.coffinHandles || 'PENDING'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Mountings & Linings:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Dimensions (Body Size):</span> <strong style="font-size: 16px; font-family: monospace;">${record?.bodySize || 'PENDING SPEC'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Coffin Size:</span> <strong style="font-size: 16px; font-family: monospace;">${record?.bodySize || 'PENDING SPEC'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Engraved Name Plate Fixed:</span> <strong>${record?.plate || 'No'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Grave Marker:</span> <strong>${record?.graveMarker || 'None'}</strong></div>
             </div>
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">2. Dressing Attire & Verification</div>
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">2. Dressing Attire & Verification</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Selected Apparel:</span> <strong>${record?.clothes || 'None Specified'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Apparel Received & Verified:</span> <strong>${record?.clothesChecked ? '✓ Yes (Verified)' : '✗ Pending Receipt'}</strong></div>
@@ -893,10 +897,12 @@
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'PENDING'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Handles Selected:</span> <strong>${record?.coffinHandles || 'PENDING'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Linings & Accessories:</span> <strong>${record?.coffinAccessories || 'Standard Spec'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Joinery Dimensions:</span> <strong>${record?.bodySize || 'PENDING SPEC'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coffin Size:</span> <strong>${record?.bodySize || 'PENDING SPEC'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Engraved Plate Affixed:</span> <strong>${record?.plate || 'No'}</strong></div>
+              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Grave Marker:</span> <strong>${record?.graveMarker || 'None'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Preparation Complete:</span> <strong>${record?.ready || 'No'}</strong></div>
             </div>
 
@@ -1105,9 +1111,11 @@
           encoffined: "No",
           plate: "No",
           bodySize: "",
+          graveMarker: "None",
           condition: "Good",
           infection: "None",
           coffin: "Chiltern Oak",
+          coffinHandles: "Bar Handles",
           clothes: "",
           clothesChecked: false,
           preparations: "No",
@@ -1298,7 +1306,7 @@
                     setIsNotificationTrayOpen(!isNotificationTrayOpen);
                     setUnreadCount(0);
                   }} 
-                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition-all relative"
+                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-955 border border-slate-800/80 hover:bg-slate-900 transition-all relative"
                 >
                   <Icons.Bell size={18} />
                   <span className="sm:hidden font-black">View Activity Log</span>
@@ -1481,7 +1489,7 @@
                             )}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-slate-550 uppercase font-bold">Date:</span>
+                                <span className="text-[10px] text-slate-500 uppercase font-bold">Date:</span>
                                 <span className="text-[11px] font-mono font-bold text-amber-400">{item.keyDate || 'No Date Logged'}</span>
                               </div>
                               {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
@@ -1506,12 +1514,12 @@
                               <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Hospital Transfer</span>
                             </div>
                             <div className="mb-2 flex items-start gap-1.5">
-                              <span className="text-[10px] text-slate-550 uppercase font-bold mt-0.5">{item.transferType}:</span>
+                              <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">{item.transferType}:</span>
                               <span className="text-xs font-bold text-white leading-tight">{item.transferHospital}</span>
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] text-slate-550 uppercase font-bold">Scheduled:</span>
+                                <span className="text-[10px] text-slate-500 uppercase font-bold">Scheduled:</span>
                                 <span className="text-[11px] font-mono font-bold text-amber-400">{item.transferDateTime}</span>
                               </div>
                             </div>
@@ -1684,7 +1692,7 @@
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Key Milestone Date</label>
-                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors" />
+                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-505 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Action</label>
@@ -1719,20 +1727,35 @@
                                 {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </div>
-                            <div className="sm:col-span-2">
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Linings, Plates & Handles</label>
-                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300 focus:border-indigo-500 transition-colors" />
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Handles Spec</label>
+                              <select value={formState?.coffinHandles || 'Bar Handles'} onChange={(e) => handleFieldChange('coffinHandles', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                                {handlesList.map(h => <option key={h} value={h}>{h}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Linings & Mountings</label>
+                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300 focus:border-indigo-500 transition-colors" placeholder="e.g. Standard Linings" />
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Body Size Dimensions</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Coffin Size</label>
                               <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Engraved Name Plate</label>
                               <select value={formState?.plate || 'No'} onChange={(e) => handleFieldChange('plate', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold text-center">
                                 {triStateOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Grave Marker</label>
+                              <select value={formState?.graveMarker || 'None'} onChange={(e) => handleFieldChange('graveMarker', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-205 w-full focus:outline-none font-semibold">
+                                <option value="None">None</option>
+                                <option value="Temporary Oak Cross">Temporary Oak Cross</option>
+                                <option value="Standard Wooden Marker">Standard Wooden Marker</option>
+                                <option value="Premium Engraved Plaque">Premium Engraved Plaque</option>
                               </select>
                             </div>
                           </div>
@@ -1824,7 +1847,7 @@
                           </div>
                         </div>
 
-                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Truck className="text-amber-500" size={16} />
                             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Logistics & Dispatch</h3>
@@ -1884,7 +1907,7 @@
                               {norfolkStaffList.map((staff) => {
                                 const isChecked = (formState?.pickupStaff || []).includes(staff.name);
                                 return (
-                                  <div key={staff.id} onClick={() => handleStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
+                                  <div key={staff.id} onClick={() => handleStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
                                     {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}
                                     <div className="text-xs font-bold">{staff.name}</div>
                                   </div>
@@ -1902,8 +1925,8 @@
 
                         {/* Dispatch Emailer positioned above save button inside Tab 3 */}
                         {dispatchEmailData && (
-                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
-                            <div className="flex items-center space-x-1.5 text-slate-450 mb-3 border-b border-slate-800 pb-3 select-none">
+                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                            <div className="flex items-center space-x-1.5 text-slate-455 mb-3 border-b border-slate-800 pb-3 select-none">
                               <Icons.Mail size={14} className="text-indigo-400" />
                               <span className="text-[10px] font-black tracking-widest uppercase">Dispatch Emailer</span>
                             </div>
@@ -1912,7 +1935,7 @@
                             </div>
                             <div className="mt-4 grid grid-cols-2 gap-2 select-none">
                               <button disabled={isLogisticsLocked} type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 flex items-center justify-center gap-1 transition-colors active:scale-95 disabled:opacity-50">Preview</button>
-                              <a href={isLogisticsLocked ? '#' : dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl flex items-center justify-center gap-1 text-center font-bold shadow-md shadow-amber-500/10 transition transform active:scale-95 disabled:opacity-50">Send</a>
+                              <a href={isLogisticsLocked ? '#' : dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-955 text-[10px] font-black py-2 rounded-xl flex items-center justify-center gap-1 text-center font-bold shadow-md shadow-amber-500/10 transition transform active:scale-95 disabled:opacity-50">Send</a>
                             </div>
                           </div>
                         )}
@@ -1942,7 +1965,7 @@
                           </div>
                         )}
 
-                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Building2 className="text-amber-500" size={16} />
                             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-355">Hospital Transfer Details</h3>
@@ -2010,7 +2033,7 @@
                               {norfolkStaffList.map((staff) => {
                                 const isChecked = (formState?.transferStaff || []).includes(staff.name);
                                 return (
-                                  <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
+                                  <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
                                     {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}
                                     <div className="text-xs font-bold">{staff.name}</div>
                                   </div>
@@ -2047,7 +2070,7 @@
                         <button 
                           type="button" 
                           onClick={() => printCareDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Users size={14} className="text-amber-400" />
@@ -2059,7 +2082,7 @@
                         <button 
                           type="button" 
                           onClick={() => printWorkshopDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
+                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Hammer size={14} className="text-amber-400" />
@@ -2237,7 +2260,7 @@
                 <div className="flex items-center justify-end space-x-2 pt-2">
                   {dialog.type === "confirm" ? (
                     <>
-                      <button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-705 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button>
+                      <button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-755 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button>
                       <button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-600/10">Confirm & Delete</button>
                     </>
                   ) : (

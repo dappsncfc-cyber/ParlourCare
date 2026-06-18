@@ -56,13 +56,12 @@
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
+<body class="bg-slate-900 text-slate-100 min-h-screen antialiased select-none selection:bg-indigo-500 selection:text-white">
 
   <div id="root"></div>
 
   <!-- React Application Source (runs as ES Module to support gstatic imports) -->
   <script type="text/babel" data-type="module" data-presets="react-classic">
-    // --- FIREBASE LIVE CONFIGURATION PARSER ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -81,7 +80,7 @@
     };
 
     // ==========================================================
-    // 2. LIVE CONFIG ROUTER (Do not modify this block)
+    // 2. LIVE CONFIG ROUTER
     // ==========================================================
     const firebaseConfig = typeof __firebase_config !== 'undefined' 
       ? JSON.parse(__firebase_config) 
@@ -130,7 +129,7 @@
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
       ),
       FolderOpen: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M2 10h20"/></svg>
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M2 10h20"/></svg>
       ),
       Building2: ({ size = 16, className = "" }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="15" y1="22" x2="15" y2="16"/><line x1="9" y1="16" x2="15" y2="16"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/></svg>
@@ -144,11 +143,6 @@
       Heart: ({ size = 16, className = "" }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       ),
-      Nose: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M11 3c0 2-2 4-2 6c0 2 7 3 8 8c0.7 2-1 3-3 3c-1.5 0-2.5-1-3-2c-1.5 1-3.5 1-3.5-0.5" />
-        </svg>
-      ),
       Bell: ({ size = 16, className = "" }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       ),
@@ -157,9 +151,6 @@
       ),
       Maximize2: ({ size = 16, className = "" }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-      ),
-      Cloud: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 10h-.01a5 5 0 0 0-9.14-2.29C8.42 7.3 7.72 7 7 7a5 5 0 0 0-5 5c0 1.11.38 2.12 1 2.91V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a5 5 0 0 0-3-4z"/></svg>
       ),
       Mail: ({ size = 16, className = "" }) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -256,6 +247,12 @@
       const prevListRef = useRef([]);
       const isFirstLoadRef = useRef(true);
 
+      // --- EDITING LOCK ASSESSOR ---
+      // Evaluates if the coroner record is officially archived and locked from further inputs due to completed transfer
+      const isLogisticsLocked = useMemo(() => {
+        return formState?.isCoroner && formState?.transferStatus === 'Completed';
+      }, [formState]);
+
       // --- FATAL ERROR PREVENTION UTILITIES ---
       const showNotification = (title, message, type = "info") => {
         setDialog({ isOpen: true, title, message, type, onConfirm: null });
@@ -288,7 +285,9 @@
 
         initAuth();
         const unsubscribe = onAuthStateChanged(auth, setUser);
-        return () => unsubscribe();
+        return () => {
+          if (unsubscribe) unsubscribe();
+        };
       }, []);
 
       // Live Firestore synchronisation listener (RULE 1 & RULE 2 compliant)
@@ -346,14 +345,14 @@
                 isFirstLoadRef.current = false;
               } else {
                 const newNotifications = [];
-                const prevMap = new Map(prevListRef.current.map(c => [c.id, c]));
+                const prevMap = new Map((prevListRef.current || []).map(c => [c.id, c]));
                 const currentMap = new Map(cases.map(c => [c.id, c]));
 
                 // User friendly field mapping
-                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
+                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
                 const fieldLabels = {
                   deceasedName: 'Name', title: 'Title', fridgeTray: 'Tray No.', location: 'Branch',
-                  condition: 'Condition', coffin: 'Coffin', pickupStatus: 'Dispatch Stage',
+                  condition: 'Condition', coffin: 'Coffin', pickupStatus: 'Dispatch Stage', transferStatus: 'Transfer Stage',
                   isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action',
                   keyMilestoneUrgency: 'Milestone Urgency',
                   transferDateTime: 'Transfer Date & Time', transferHospital: 'Transfer Hospital',
@@ -391,7 +390,7 @@
                 });
 
                 // Check deletions
-                prevListRef.current.forEach(oldItem => {
+                (prevListRef.current || []).forEach(oldItem => {
                   if (!currentMap.has(oldItem.id)) {
                     newNotifications.push({
                       id: String(Date.now()) + Math.random(),
@@ -420,7 +419,9 @@
           }
         );
 
-        return () => unsubscribe();
+        return () => {
+          if (unsubscribe) unsubscribe();
+        };
       }, [user]);
 
       // Synchronised write-helper updating local state immediately, then syncing to Firestore
@@ -774,10 +775,10 @@
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
-                <div class="field-row"><span>Pickup Location:</span> <strong>${record?.pickupLocation || 'PENDING'}</strong></div>
-                <div class="field-row"><span>Destination:</span> <strong>${record?.pickupDestination || 'Cromer'}</strong></div>
-                <div class="field-row"><span>Scheduled Time:</span> <strong>${record?.pickupDateTime || 'PENDING'}</strong></div>
-                <div class="field-row"><span>Assigned Fleet Vehicle:</span> <strong>${record?.pickupVehicle || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Pickup Location:</span> <strong>${record?.pickupLocation || 'PENDING'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Destination:</span> <strong>${record?.pickupDestination || 'Cromer'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Scheduled Time:</span> <strong>${record?.pickupDateTime || 'PENDING'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Assigned Fleet Vehicle:</span> <strong>${record?.pickupVehicle || 'N/A'}</strong></div>
               </div>
             </div>
 
@@ -983,7 +984,7 @@
       };
 
       const handleStatusChange = (newStatus) => {
-        if (!formState) return;
+        if (!formState || isLogisticsLocked) return;
         const timestamp = getTimestamp();
         const currentTimestamps = formState.pickupStatusTimestamps || {};
         const updatedTimestamps = {
@@ -1033,7 +1034,7 @@
       };
 
       const handleStaffToggle = (staffName, staffEmail) => {
-        if (!formState) return;
+        if (!formState || isLogisticsLocked) return;
         const currentStaff = formState.pickupStaff || [];
         let updatedStaff = [...currentStaff];
         
@@ -1054,7 +1055,7 @@
       };
 
       const handleTransferStaffToggle = (staffName, staffEmail) => {
-        if (!formState) return;
+        if (!formState || isLogisticsLocked) return;
         const currentStaff = formState.transferStaff || [];
         let updatedStaff = [...currentStaff];
         
@@ -1199,8 +1200,8 @@
       const filteredList = useMemo(() => {
         const urgencyOrder = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
         const result = deceasedList.filter(item => {
-          const matchSearch = item.deceasedName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              item.ref.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchSearch = (item.deceasedName || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              (item.ref || "").toLowerCase().includes(searchQuery.toLowerCase());
           
           let matchLoc = true;
           if (activeBrand === "cromer") {
@@ -1214,7 +1215,8 @@
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           
           let matchHud = true;
-          if (hudFilter === "Coroner") matchHud = item.isCoroner;
+          // When a hospital transfer is completed, visually hide coroner badges to treat it as standard
+          if (hudFilter === "Coroner") matchHud = item.isCoroner && item.transferStatus !== 'Completed';
           if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && item.transferStatus !== 'Completed';
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
 
@@ -1239,7 +1241,8 @@
 
         return {
           active: activeDashboardCases.length,
-          coroner: activeDashboardCases.filter(c => c.isCoroner).length,
+          // Once the transfer is completed, filter out from Coroner counters
+          coroner: activeDashboardCases.filter(c => c.isCoroner && c.transferStatus !== 'Completed').length,
           transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && c.transferStatus !== 'Completed').length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
@@ -1249,27 +1252,27 @@
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
           
           {/* Brand Subheader */}
-          <div className="bg-slate-950 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-30 font-medium">
+          <div className="bg-slate-950 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-30 font-medium select-none">
             <div className="flex items-center space-x-2">
               <span className="font-bold tracking-wide uppercase text-[10px] text-teal-400">
                 ParlourCare &copy; <a href="https://www.offscriptlabs.co.uk" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-teal-300 transition-colors">Offscript Labs 2026</a>
               </span>
             </div>
             <div className="flex items-center space-x-2 w-full sm:w-auto justify-center">
-              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🤝 Joint Group</button>
-              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦀 Cromer</button>
-              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition text-[11px] font-bold ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦆 Gowards</button>
+              <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🤝 Joint Group</button>
+              <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🦀 Cromer</button>
+              <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-800"}`}>🦆 Gowards</button>
             </div>
           </div>
 
           {/* Main Header */}
-          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg`}>
+          <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg select-none`}>
             <div className="flex items-center space-x-3.5">
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/60">
+              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/60 shadow-md">
                 <span className="text-2xl">{activeBrand === "joint" ? "🤝" : activeBrand === "cromer" ? "🦀" : "🦆"}</span>
               </div>
               <div>
-                <h1 className="text-lg md:text-xl font-black text-white">{currentTheme.brandName}</h1>
+                <h1 className="text-lg md:text-xl font-black text-white tracking-tight">{currentTheme.brandName}</h1>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="bg-slate-950 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-800 uppercase tracking-wider">Mortuary Management</span>
                   {isFirebaseEnabled ? (
@@ -1295,7 +1298,7 @@
                     setIsNotificationTrayOpen(!isNotificationTrayOpen);
                     setUnreadCount(0);
                   }} 
-                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-350 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition relative"
+                  className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition-all relative"
                 >
                   <Icons.Bell size={18} />
                   <span className="sm:hidden font-black">View Activity Log</span>
@@ -1307,9 +1310,9 @@
                 </button>
                 
                 {isNotificationTrayOpen && (
-                  <div className="absolute right-0 mt-3.5 w-80 bg-slate-950 border border-slate-800/80 rounded-2xl shadow-2xl p-4.5 z-50 animate-fade-in">
+                  <div className="absolute right-0 mt-3.5 w-80 bg-slate-950 border border-slate-800/80 rounded-2xl shadow-2xl p-4 z-50 animate-fade-in">
                     <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
-                      <span className="text-xs font-black uppercase text-slate-200 tracking-wider">Live Activity Log</span>
+                      <span className="text-xs font-black uppercase text-slate-255 tracking-wider">Live Activity Log</span>
                       {notifications.length > 0 && (
                         <button 
                           onClick={() => setNotifications([])} 
@@ -1335,7 +1338,7 @@
                               }`}>
                                 {notif.title}
                               </span>
-                              <span className="text-[9px] text-slate-500 font-mono font-bold">{notif.timestamp.split(' ')[1]}</span>
+                              <span className="text-[9px] text-slate-505 font-mono font-bold">{notif.timestamp.split(' ')[1]}</span>
                             </div>
                             <p className="text-[11px] text-slate-300 leading-normal font-medium">{notif.message}</p>
                           </div>
@@ -1358,33 +1361,33 @@
           {/* Main Content Area */}
           {!selectedRowId ? (
             // DASHBOARD VIEW
-            <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in">
+            <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
               <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <h2 className="text-base md:text-lg font-black text-white mr-2">Active Case Dashboard</h2>
                   {activeBrand === "joint" ? (
-                    <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
+                    <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900 border border-slate-850 text-xs text-slate-205 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
                       <option value="All">All Branches</option>
                       {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                     </select>
                   ) : (
-                    <span className="bg-slate-900 border border-slate-800 text-xs text-amber-400 font-extrabold px-3 py-1.5 rounded-lg flex-1 sm:flex-none">
+                    <span className="bg-slate-900 border border-slate-850 text-xs text-amber-400 font-extrabold px-3 py-1.5 rounded-lg flex-1 sm:flex-none shadow-sm">
                       📍 {activeBrand === "cromer" ? "Cromer Branch" : "Fakenham Branch"} Only
                     </span>
                   )}
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-900 border border-slate-800 text-xs text-slate-200 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-900 border border-slate-850 text-xs text-slate-205 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none flex-1 sm:flex-none">
                     <option value="Active">📁 Active Custody ({deceasedList.filter(d => !d.isArchived).length})</option>
                     <option value="Archived">🗃️ Archived Files ({deceasedList.filter(d => d.isArchived).length})</option>
                   </select>
                 </div>
                 <div className="relative w-full md:w-64">
-                  <Icons.Search className="absolute left-3 top-3 md:top-2 text-slate-400" size={16} />
-                  <input type="text" placeholder="Search case roster..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-200 w-full focus:outline-none focus:border-indigo-500" />
+                  <Icons.Search className="absolute left-3 top-3 md:top-2.5 text-slate-400" size={16} />
+                  <input type="text" placeholder="Search case roster..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-850 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-205 w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                 </div>
               </div>
 
               {/* HUD Command Centre */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0 animate-fade-in">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0 animate-fade-in select-none">
                 <div onClick={() => setHudFilter("All")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'All' ? 'border-indigo-500/60 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-slate-800/80 hover:border-indigo-500/30'}`}>
                   <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                   <span className="text-3xl font-black text-indigo-400 relative z-10">{hudStats.active}</span>
@@ -1409,21 +1412,28 @@
 
               <div className="flex-1 overflow-y-auto pr-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredList.map((item) => (
-                    <div 
-                      key={item.id}
-                      onClick={() => { setSelectedRowId(item.id); setActiveTab(item.isCoroner ? "pickup" : "care"); }}
-                      className={`bg-slate-950 border border-slate-800/80 rounded-2xl p-4.5 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md ${item.isCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
+                  {filteredList.map((item) => {
+                    const isTransferCompleted = item.isCoroner && item.transferStatus === 'Completed';
+                    const showAsCoroner = item.isCoroner && !isTransferCompleted;
+
+                    return (
+                      <div 
+                        key={item.id}
+                        onClick={() => { setSelectedRowId(item.id); setActiveTab(item.isCoroner ? "pickup" : "care"); }}
+                        className={`bg-slate-950 border border-slate-800/80 rounded-2xl p-4 cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 transition-all flex flex-col relative animate-fade-in shadow-md hover:shadow-xl ${
+                          showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-3">
                         <div className="flex flex-wrap gap-1.5 items-center">
                           <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
-                          {item.isCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
+                          {showAsCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
+                          {isTransferCompleted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
                           {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
                             <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${
-                              item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-400 border-rose-900' :
-                              item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-400 border-amber-900' :
-                              'bg-emerald-950/60 text-emerald-400 border-emerald-900'
+                              item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
+                              item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
+                              'bg-emerald-950/60 text-emerald-300 border-emerald-900'
                             }`}>
                               Urgency: {item.keyMilestoneUrgency}
                             </span>
@@ -1431,126 +1441,127 @@
                         </div>
                         
                         <div className="flex items-center space-x-1.5">
-                          <div className="flex items-center space-x-1 bg-slate-900 px-1 py-0.5 rounded-lg border border-slate-800">
-                            <button 
-                              title={item.isArchived ? "Restore File" : "Archive File"}
-                              onClick={(e) => { e.stopPropagation(); handleArchiveToggle(item.id); }} 
-                              className="p-1 rounded-md text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition"
-                            >
-                              <Icons.FolderOpen size={13} />
-                            </button>
-                            <button 
-                              title="Delete File"
-                              onClick={(e) => { e.stopPropagation(); confirmCaseDeletion(item.id, item.deceasedName); }} 
-                              className="p-1 rounded-md text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
-                            >
-                              <Icons.Trash2 size={13} />
-                            </button>
-                          </div>
-                          <div className="bg-slate-900 p-1.5 w-8 h-8 rounded-full border border-slate-800 flex items-center justify-center text-base select-none">
-                            {item.condition === 'Poor' ? '🤮' : item.condition === 'Medium' ? '🤢' : '😊'}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <h3 className="text-base font-black text-white mb-1">{item.title} {item.deceasedName || "Unnamed Admission"}</h3>
-                      <p className="text-xs text-slate-400 mb-4">{item.location} • Tray {item.fridgeTray || 'Pending'}</p>
-                      
-                      {/* ACTIVE MILESTONE BLOCK */}
-                      {(item.keyDate || item.keyMilestoneName || (item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None')) && (
-                        <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
-                          <div className="flex items-center gap-1.5 mb-2.5">
-                            <Icons.Layers size={12} className="text-indigo-400" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Active Milestone</span>
-                          </div>
-                          {item.keyMilestoneName && (
-                            <div className="mb-2 flex items-start gap-1.5">
-                              <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">Action:</span>
-                              <span className="text-sm font-bold text-white leading-tight">{item.keyMilestoneName}</span>
+                            <div className="flex items-center space-x-1 bg-slate-900 px-1 py-0.5 rounded-lg border border-slate-800">
+                              <button 
+                                title={item.isArchived ? "Restore File" : "Archive File"}
+                                onClick={(e) => { e.stopPropagation(); handleArchiveToggle(item.id); }} 
+                                className="p-1 rounded-md text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors"
+                              >
+                                <Icons.FolderOpen size={13} />
+                              </button>
+                              <button 
+                                title="Delete File"
+                                onClick={(e) => { e.stopPropagation(); confirmCaseDeletion(item.id, item.deceasedName); }} 
+                                className="p-1 rounded-md text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
+                              >
+                                <Icons.Trash2 size={13} />
+                              </button>
                             </div>
-                          )}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-slate-500 uppercase font-bold">Date:</span>
-                              <span className="text-[11px] font-mono font-bold text-amber-400">{item.keyDate || 'No Date Logged'}</span>
-                            </div>
-                            {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
-                              <span className={`text-[9px] font-black px-2.5 py-1 rounded-md border uppercase tracking-wider shadow-sm ${
-                                item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
-                                item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
-                                'bg-emerald-950/60 text-emerald-300 border-emerald-900'
-                              }`}>
-                                Urgency: {item.keyMilestoneUrgency}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* HOSPITAL TRANSFER BLOCK */}
-                      {item.isCoroner && item.transferDateTime && (
-                        <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
-                          <div className="flex items-center gap-1.5 mb-2.5">
-                            <Icons.Building2 size={12} className="text-indigo-400" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Hospital Transfer</span>
-                          </div>
-                          <div className="mb-2 flex items-start gap-1.5">
-                            <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">{item.transferType}:</span>
-                            <span className="text-xs font-bold text-white leading-tight">{item.transferHospital}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-slate-500 uppercase font-bold">Scheduled:</span>
-                              <span className="text-[11px] font-mono font-bold text-amber-400">{item.transferDateTime}</span>
+                            <div className="bg-slate-900 p-1.5 w-8 h-8 rounded-full border border-slate-800 flex items-center justify-center text-base select-none">
+                              {item.condition === 'Poor' ? '🤮' : item.condition === 'Medium' ? '🤢' : '😊'}
                             </div>
                           </div>
                         </div>
-                      )}
-
-                      {item.isCoroner && (() => {
-                        const isTransferActive = (item.transferStatus && item.transferStatus !== 'Pending') || !!item.transferDateTime;
-                        const activeStatusLabel = isTransferActive ? 'Transfer Stage:' : 'Dispatch Stage:';
-                        const activeStatus = isTransferActive ? (item.transferStatus || 'Pending') : (item.pickupStatus || 'Pending');
-                        const activeTimestamps = isTransferActive ? (item.transferStatusTimestamps || {}) : (item.pickupStatusTimestamps || {});
                         
-                        return (
-                          <div className="mt-auto pt-3 border-t border-slate-800/60">
-                            <div className="flex justify-between text-[10px] font-bold uppercase mb-1">
-                              <span className="text-slate-500">{activeStatusLabel}</span>
-                              <span className="text-amber-400 font-extrabold">{activeStatus}</span>
+                        <h3 className="text-base font-black text-white mb-1">{item.title} {item.deceasedName || "Unnamed Admission"}</h3>
+                        <p className="text-xs text-slate-400 mb-4">{item.location} • Tray {item.fridgeTray || 'Pending'}</p>
+                        
+                        {/* ACTIVE MILESTONE BLOCK */}
+                        {(item.keyDate || item.keyMilestoneName || (item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None')) && (
+                          <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
+                            <div className="flex items-center gap-1.5 mb-2.5">
+                              <Icons.Layers size={12} className="text-indigo-400" />
+                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Active Milestone</span>
                             </div>
-                            <div className="w-full bg-slate-900 rounded-full h-1.5 border border-slate-800/60 overflow-hidden mb-1">
-                              <div className="bg-gradient-to-r from-rose-500 to-amber-500 h-full transition-all duration-300" style={{ width: activeStatus === 'Pending' ? '25%' : activeStatus === 'Dispatched' ? '50%' : activeStatus === 'On Scene' ? '75%' : '100%' }}></div>
-                            </div>
-                            {activeTimestamps[activeStatus] && (
-                              <div className="text-[9px] text-slate-400 text-right font-mono font-bold">
-                                Logged: {activeTimestamps[activeStatus]}
+                            {item.keyMilestoneName && (
+                              <div className="mb-2 flex items-start gap-1.5">
+                                <span className="text-[10px] text-slate-500 uppercase font-bold mt-0.5">Action:</span>
+                                <span className="text-sm font-bold text-white leading-tight">{item.keyMilestoneName}</span>
                               </div>
                             )}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-slate-550 uppercase font-bold">Date:</span>
+                                <span className="text-[11px] font-mono font-bold text-amber-400">{item.keyDate || 'No Date Logged'}</span>
+                              </div>
+                              {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && (
+                                <span className={`text-[9px] font-black px-2.5 py-1 rounded-md border uppercase tracking-wider shadow-sm ${
+                                  item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' :
+                                  item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' :
+                                  'bg-emerald-950/60 text-emerald-300 border-emerald-900'
+                                }`}>
+                                  Urgency: {item.keyMilestoneUrgency}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        );
-                      })()}
-                      {!item.isCoroner && (
-                        <div className="mt-auto pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                          <span>Coffin: <span className="text-slate-300">{item.coffin}</span></span>
-                          {item.infection !== "None" && <span className="text-rose-400 bg-rose-950/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+
+                        {/* HOSPITAL TRANSFER BLOCK */}
+                        {item.isCoroner && item.transferDateTime && (
+                          <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
+                            <div className="flex items-center gap-1.5 mb-2.5">
+                              <Icons.Building2 size={12} className="text-indigo-400" />
+                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Hospital Transfer</span>
+                            </div>
+                            <div className="mb-2 flex items-start gap-1.5">
+                              <span className="text-[10px] text-slate-550 uppercase font-bold mt-0.5">{item.transferType}:</span>
+                              <span className="text-xs font-bold text-white leading-tight">{item.transferHospital}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-slate-550 uppercase font-bold">Scheduled:</span>
+                                <span className="text-[11px] font-mono font-bold text-amber-400">{item.transferDateTime}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {item.isCoroner && (() => {
+                          const isTransferActive = (item.transferStatus && item.transferStatus !== 'Pending') || !!item.transferDateTime;
+                          const activeStatusLabel = isTransferActive ? 'Transfer Stage:' : 'Dispatch Stage:';
+                          const activeStatus = isTransferActive ? (item.transferStatus || 'Pending') : (item.pickupStatus || 'Pending');
+                          const activeTimestamps = isTransferActive ? (item.transferStatusTimestamps || {}) : (item.pickupStatusTimestamps || {});
+                          
+                          return (
+                            <div className="mt-auto pt-3 border-t border-slate-800/60">
+                              <div className="flex justify-between text-[10px] font-bold uppercase mb-1">
+                                <span className="text-slate-500">{activeStatusLabel}</span>
+                                <span className="text-amber-400 font-extrabold">{activeStatus}</span>
+                              </div>
+                              <div className="w-full bg-slate-900 rounded-full h-1.5 border border-slate-800/60 overflow-hidden mb-1">
+                                <div className="bg-gradient-to-r from-rose-500 to-amber-500 h-full transition-all duration-300" style={{ width: activeStatus === 'Pending' ? '25%' : activeStatus === 'Dispatched' ? '50%' : activeStatus === 'On Scene' ? '75%' : '100%' }}></div>
+                              </div>
+                              {activeTimestamps[activeStatus] && (
+                                <div className="text-[9px] text-slate-400 text-right font-mono font-bold">
+                                  Logged: {activeTimestamps[activeStatus]}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                        {!item.isCoroner && (
+                          <div className="mt-auto pt-3 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                            <span>Coffin: <span className="text-slate-300">{item.coffin}</span></span>
+                            {item.infection !== "None" && <span className="text-rose-400 bg-rose-950/40 border border-rose-900/50 px-1.5 py-0.5 rounded">⚠️ {item.infection}</span>}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           ) : selectedRowId && !formState ? (
-            <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
+            <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col justify-center items-center py-20 select-none">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
               <p className="mt-4 text-xs font-bold text-slate-400">Loading Case File...</p>
             </div>
           ) : (
             // DETAILS VIEW
             <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 animate-fade-in">
-              <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md">
-                <button onClick={() => { setSelectedRowId(null); setFormState(null); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0">
+              <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md select-none">
+                <button onClick={() => { setSelectedRowId(null); setFormState(null); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
                   <Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard
                 </button>
                 <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
@@ -1581,7 +1592,10 @@
                     {activeTab === "care" && (
                       <>
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Layers className="text-indigo-400" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-250">Core Admission Details</h3></div>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
+                            <Icons.Layers className="text-indigo-400" size={16} />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-350">Core Admission Details</h3>
+                          </div>
                           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                             <div className="col-span-2 sm:col-span-2">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Title</label>
@@ -1591,7 +1605,7 @@
                             </div>
                             <div className="col-span-2 sm:col-span-4">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
-                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
+                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors" />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1603,25 +1617,28 @@
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tray No.</label>
-                              <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-black w-full focus:outline-none text-center" />
+                              <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-black w-full focus:outline-none text-center focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-455 block mb-1">D.O.B.</label>
-                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
+                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
-                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                           </div>
                         </div>
 
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.AlertTriangle className="text-rose-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Clinical Protocols & Hazards</h3></div>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
+                            <Icons.AlertTriangle className="text-rose-500" size={16} />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Clinical Protocols & Hazards</h3>
+                          </div>
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-rose-455 block mb-1">Bio-Hazard Infection</label>
-                              <select value={formState?.infection || 'None'} onChange={(e) => handleFieldChange('infection', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-rose-455 font-bold w-full focus:outline-none">
+                              <label className="text-[10px] font-bold uppercase text-rose-400 block mb-1">Bio-Hazard Infection</label>
+                              <select value={formState?.infection || 'None'} onChange={(e) => handleFieldChange('infection', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-rose-400 font-bold w-full focus:outline-none">
                                 {infectionRisks.map(r => <option key={r} value={r}>{r}</option>)}
                               </select>
                             </div>
@@ -1635,36 +1652,39 @@
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Implants/Devices</label>
-                              <input type="text" value={formState?.devicesDetails || ''} onChange={(e) => handleFieldChange('devicesDetails', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none font-bold text-amber-400" />
+                              <input type="text" value={formState?.devicesDetails || ''} onChange={(e) => handleFieldChange('devicesDetails', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none font-bold text-amber-400 focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Embalming Details</label>
-                              <input type="text" value={formState?.embalmingDetails || ''} onChange={(e) => handleFieldChange('embalmingDetails', e.target.value)} placeholder="Completed: DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input type="text" value={formState?.embalmingDetails || ''} onChange={(e) => handleFieldChange('embalmingDetails', e.target.value)} placeholder="Completed: DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                           </div>
                         </div>
 
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Heart className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Sanitary preparations</h3></div>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
+                            <Icons.Heart className="text-amber-500" size={16} />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Sanitary preparations</h3>
+                          </div>
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Grooming & Sanitary</label>
-                              <textarea value={formState?.preparationsDetails || ''} onChange={(e) => handleFieldChange('preparationsDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
+                              <textarea value={formState?.preparationsDetails || ''} onChange={(e) => handleFieldChange('preparationsDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Jewellery Custody</label>
-                              <textarea value={formState?.jewelleryDetails || ''} onChange={(e) => handleFieldChange('jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none" />
+                              <textarea value={formState?.jewelleryDetails || ''} onChange={(e) => handleFieldChange('jewelleryDetails', e.target.value)} rows={3} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none focus:border-indigo-500 transition-colors" />
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Key Milestone Date</label>
-                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full focus:outline-none" />
+                              <input type="text" value={formState?.keyDate || ''} onChange={(e) => handleFieldChange('keyDate', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-500 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Action</label>
-                              <input type="text" value={formState?.keyMilestoneName || ''} onChange={(e) => handleFieldChange('keyMilestoneName', e.target.value)} placeholder="e.g. Family Viewing" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold" />
+                              <input type="text" value={formState?.keyMilestoneName || ''} onChange={(e) => handleFieldChange('keyMilestoneName', e.target.value)} placeholder="e.g. Family Viewing" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Milestone Urgency</label>
@@ -1684,23 +1704,26 @@
                     {activeTab === "workshop" && (
                       <>
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
+                            <Icons.Hammer className="text-amber-500" size={16} />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3>
+                          </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-455 block mb-1">Selected Wood</label>
+                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Selected Wood</label>
                               <select value={formState?.coffin || 'Chiltern Oak'} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
                                 {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             </div>
                             <div className="sm:col-span-2">
-                              <label className="text-[10px] font-bold uppercase text-amber-455 block mb-1">Linings, Plates & Handles</label>
-                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300" />
+                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Linings, Plates & Handles</label>
+                              <input type="text" value={formState?.coffinAccessories || ''} onChange={(e) => handleFieldChange('coffinAccessories', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-300 focus:border-indigo-500 transition-colors" />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Body Size Dimensions</label>
-                              <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold" />
+                              <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Engraved Name Plate</label>
@@ -1712,11 +1735,14 @@
                         </div>
 
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Users size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Dressing & Viewings</h3></div>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
+                            <Icons.Users size={16} />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Dressing & Viewings</h3>
+                          </div>
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Dressing Attire</label>
-                              <input type="text" value={formState?.clothes || ''} onChange={(e) => handleFieldChange('clothes', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold" />
+                              <input type="text" value={formState?.clothes || ''} onChange={(e) => handleFieldChange('clothes', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Family Viewing</label>
@@ -1732,61 +1758,87 @@
                     {/* CORONER TAB FORM MODULES */}
                     {activeTab === "pickup" && formState?.isCoroner && (
                       <>
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Coroner Authority Details</h3></div>
+                        {/* Audit Lock Banner */}
+                        {isLogisticsLocked && (
+                          <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in select-none">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">🔒</span>
+                              <div className="text-left">
+                                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4>
+                                <p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked to preserve audit integrity.</p>
+                              </div>
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={() => handleTransferStatusChange('Pending')} 
+                              className="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold transition-all active:scale-95"
+                            >
+                              🔓 Unlock Logistics
+                            </button>
+                          </div>
+                        )}
+
+                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
+                            <Icons.Building2 className="text-amber-500" size={16} />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Coroner Authority Details</h3>
+                          </div>
                           
                           <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                             <div className="col-span-2 sm:col-span-2">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Title</label>
-                              <select value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
+                              <select disabled={isLogisticsLocked} value={formState?.title || 'Mr'} onChange={(e) => handleFieldChange('title', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850">
                                 {titles.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
-                              <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
-                              <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-455 font-bold w-full focus:outline-none" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
-                              <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">CAD</label>
-                              <input type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer / Contact</label>
-                              <input type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" />
+                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-850" />
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4"><Icons.Truck className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Logistics & Dispatch</h3></div>
+                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
+                            <Icons.Truck className="text-amber-500" size={16} />
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Logistics & Dispatch</h3>
+                          </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                             <div>
                               <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Dispatch Stage:</label>
-                              <div className="grid grid-cols-2 gap-2 mb-3">
+                              <div className="grid grid-cols-2 gap-2 mb-3 select-none">
                                 {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
                                   const isCurrent = formState?.pickupStatus === st;
                                   return (
-                                    <button key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
+                                    <button disabled={isLogisticsLocked} key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 disabled:opacity-50 ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
                                   );
                                 })}
                               </div>
                               
-                              <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner">
+                              <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner select-none">
                                 <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">Dispatch Milestone Log</span>
                                 <div className="space-y-1">
                                   {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => {
@@ -1804,31 +1856,31 @@
                             <div className="space-y-4">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Target Destination</label>
-                                <select value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <select disabled={isLogisticsLocked} value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
                                   <option value="Cromer Mortuary">Cromer Mortuary</option>
                                   <option value="Fakenham Mortuary">Fakenham Mortuary</option>
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
-                                <select value={formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <select disabled={isLogisticsLocked} value={formState?.pickupVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('pickupVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Scheduled Date & Time</label>
-                                <input type="text" value={formState?.pickupDateTime || ''} onChange={(e) => handleFieldChange('pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-500" />
+                                <input disabled={isLogisticsLocked} type="text" value={formState?.pickupDateTime || ''} onChange={(e) => handleFieldChange('pickupDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-400 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" />
                               </div>
                             </div>
                           </div>
                           
                           <div className="mb-5">
-                            <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Assigned Staff:</label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 select-none">Assigned Staff:</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 select-none">
                               {norfolkStaffList.map((staff) => {
                                 const isChecked = (formState?.pickupStaff || []).includes(staff.name);
                                 return (
-                                  <div key={staff.id} onClick={() => handleStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-850'}`}>
+                                  <div key={staff.id} onClick={() => handleStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
                                     {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}
                                     <div className="text-xs font-bold">{staff.name}</div>
                                   </div>
@@ -1838,25 +1890,25 @@
                           </div>
                           
                           <div>
-                            <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Pick-up Address & Notes</label>
-                            <textarea value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none mb-2" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
-                            <textarea value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
+                            <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1 select-none">Pick-up Address & Notes</label>
+                            <textarea disabled={isLogisticsLocked} value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none mb-2 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
+                            <textarea disabled={isLogisticsLocked} value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
                           </div>
                         </div>
 
                         {/* Dispatch Emailer positioned above save button inside Tab 3 */}
                         {dispatchEmailData && (
-                          <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                            <div className="flex items-center space-x-1.5 text-slate-400 mb-3 border-b border-slate-800 pb-3">
+                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                            <div className="flex items-center space-x-1.5 text-slate-450 mb-3 border-b border-slate-800 pb-3 select-none">
                               <Icons.Mail size={14} className="text-indigo-400" />
                               <span className="text-[10px] font-black tracking-widest uppercase">Dispatch Emailer</span>
                             </div>
-                            <div className="space-y-2.5 bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono">
+                            <div className="space-y-2.5 bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono select-none">
                               <div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{formState?.pickupStaffEmails || 'None'}</span></div>
                             </div>
-                            <div className="mt-4 grid grid-cols-2 gap-2">
-                              <button type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 flex items-center justify-center gap-1">Preview</button>
-                              <a href={dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl flex items-center justify-center gap-1 text-center font-bold shadow-md shadow-amber-500/10">Send</a>
+                            <div className="mt-4 grid grid-cols-2 gap-2 select-none">
+                              <button disabled={isLogisticsLocked} type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 flex items-center justify-center gap-1 transition-colors active:scale-95 disabled:opacity-50">Preview</button>
+                              <a href={isLogisticsLocked ? '#' : dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl flex items-center justify-center gap-1 text-center font-bold shadow-md shadow-amber-500/10 transition transform active:scale-95 disabled:opacity-50">Send</a>
                             </div>
                           </div>
                         )}
@@ -1866,25 +1918,46 @@
                     {/* HOSPITAL TRANSFER TAB FORM MODULES */}
                     {activeTab === "hospital" && formState?.isCoroner && (
                       <>
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4">
+                        {/* Audit Lock Banner */}
+                        {isLogisticsLocked && (
+                          <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in select-none">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">🔒</span>
+                              <div className="text-left">
+                                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4>
+                                <p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked to preserve audit integrity.</p>
+                              </div>
+                            </div>
+                            <button 
+                              type="button" 
+                              onClick={() => handleTransferStatusChange('Pending')} 
+                              className="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold transition-all active:scale-95"
+                            >
+                              🔓 Unlock Logistics
+                            </button>
+                          </div>
+                        )}
+
+                        <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Building2 className="text-amber-500" size={16} />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Hospital Transfer Details</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-355">Hospital Transfer Details</h3>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                             <div>
                               <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Transfer Stage:</label>
-                              <div className="grid grid-cols-2 gap-2 mb-3">
+                              {/* Keep completed stage option toggles enabled or disabled depending on overall progression status */}
+                              <div className="grid grid-cols-2 gap-2 mb-3 select-none">
                                 {["Pending", "Completed"].map((st) => {
                                   const isCurrent = (formState?.transferStatus || 'Pending') === st;
                                   return (
-                                    <button key={st} type="button" onClick={() => handleTransferStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
+                                    <button key={st} type="button" onClick={() => handleTransferStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
                                   );
                                 })}
                               </div>
                               
-                              <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner">
+                              <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner select-none">
                                 <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">Transfer Milestone Log</span>
                                 <div className="space-y-1">
                                   {["Pending", "Completed"].map((st) => {
@@ -1903,37 +1976,37 @@
                             <div className="space-y-4">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Transfer Type</label>
-                                <select value={formState?.transferType || 'Pick up'} onChange={(e) => handleFieldChange('transferType', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <select disabled={isLogisticsLocked} value={formState?.transferType || 'Pick up'} onChange={(e) => handleFieldChange('transferType', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
                                   <option value="Pick up">Pick up</option>
                                   <option value="Drop off">Drop off</option>
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Hospital</label>
-                                <select value={formState?.transferHospital || 'Norfolk & Norwich University Hospital (NNUH)'} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <select disabled={isLogisticsLocked} value={formState?.transferHospital || 'Norfolk & Norwich University Hospital (NNUH)'} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
                                   {norfolkHospitals.map(hosp => <option key={hosp} value={hosp}>{hosp}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
-                                <select value={formState?.transferVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('transferVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold">
+                                <select disabled={isLogisticsLocked} value={formState?.transferVehicle || 'Vauxhall Vivaro CRM-1'} onChange={(e) => handleFieldChange('transferVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-850">
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Scheduled Date & Time</label>
-                                <input type="text" value={formState?.transferDateTime || ''} onChange={(e) => handleFieldChange('transferDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-500" />
+                                <input disabled={isLogisticsLocked} type="text" value={formState?.transferDateTime || ''} onChange={(e) => handleFieldChange('transferDateTime', e.target.value)} placeholder="DD/MM/YYYY HH:MM" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold text-amber-400 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-850" />
                               </div>
                             </div>
                           </div>
 
                           <div className="mb-5">
-                            <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Assigned Staff:</label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 select-none">Assigned Staff:</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 select-none">
                               {norfolkStaffList.map((staff) => {
                                 const isChecked = (formState?.transferStaff || []).includes(staff.name);
                                 return (
-                                  <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-850'}`}>
+                                  <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name, staff.email)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-950/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
                                     {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}
                                     <div className="text-xs font-bold">{staff.name}</div>
                                   </div>
@@ -1946,7 +2019,7 @@
                     )}
 
                     {/* SAVE & RETURN BUTTON */}
-                    <div className="flex justify-end pb-8 pt-4">
+                    <div className="flex justify-end pb-8 pt-4 select-none">
                       <button 
                         onClick={() => { setSelectedRowId(null); setFormState(null); }}
                         className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 py-3.5 sm:py-3 rounded-2xl font-black text-sm tracking-wide shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition transform active:scale-95"
@@ -1957,20 +2030,20 @@
                   </div>
 
                   {/* RIGHT COLUMN: UTILITY WIDGETS */}
-                  <div className="space-y-6">
+                  <div className="space-y-6 select-none">
                     
                     {/* DOCUMENT PRINT STATION */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
-                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400">
-                        <Icons.Printer size={13} className="text-indigo-455" />
-                        <span className="text-[9px] font-bold tracking-widest uppercase">Document Print Station</span>
+                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450">
+                        <Icons.Printer size={13} className="text-indigo-400" />
+                        <span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Document Print Station</span>
                       </div>
                       
                       <div className="mt-8 space-y-2.5 w-full">
                         <button 
                           type="button" 
                           onClick={() => printCareDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Users size={14} className="text-amber-400" />
@@ -1982,7 +2055,7 @@
                         <button 
                           type="button" 
                           onClick={() => printWorkshopDocument(formState)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Hammer size={14} className="text-amber-400" />
@@ -1995,10 +2068,10 @@
                           <button 
                             type="button" 
                             onClick={() => printCoronerDocument(formState)}
-                            className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                            className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                           >
                             <span className="flex items-center gap-2">
-                              <Icons.Truck size={14} className="text-rose-455" />
+                              <Icons.Truck size={14} className="text-rose-400" />
                               Print Coroner Dispatch (Tab 3)
                             </span>
                             <Icons.Printer size={12} className="text-slate-500" />
@@ -2009,10 +2082,10 @@
                           <button 
                             type="button" 
                             onClick={() => printHospitalTransferDocument(formState)}
-                            className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                            className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                           >
                             <span className="flex items-center gap-2">
-                              <Icons.Building2 size={14} className="text-rose-455" />
+                              <Icons.Building2 size={14} className="text-rose-400" />
                               Print Hospital Transfer (Tab 4)
                             </span>
                             <Icons.Printer size={12} className="text-slate-500" />
@@ -2023,7 +2096,7 @@
                           <button 
                             type="button" 
                             onClick={() => printCombinedMasterDocument(formState)}
-                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-3 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-amber-500/10"
+                            className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black py-3 px-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-amber-500/10 active:scale-95"
                           >
                             <Icons.FileText size={14} />
                             Print Combined Master Record
@@ -2034,15 +2107,15 @@
 
                     {/* QR WIDGET */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
-                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase">Tracking Pass</span></div>
+                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Tracking Pass</span></div>
                       <div className="mt-8 mb-4 bg-white p-3 rounded-xl shadow-inner">
                         <img src={getQrCodeUrl(formState, 140)} alt="QR Tracking" className="w-32 h-32 object-contain" />
                       </div>
                       <h4 className="text-xs font-black text-white uppercase flex items-center gap-1.5 justify-center"><span>Live File Link</span></h4>
                       
                       <div className="mt-5 w-full grid grid-cols-2 gap-2">
-                        <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 transition flex items-center justify-center gap-1.5"><Icons.Maximize2 size={12} /><span>Maximize</span></button>
-                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15"><Icons.Printer size={12} /><span>Sticker</span></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 transition flex items-center justify-center gap-1.5 active:scale-95"><Icons.Maximize2 size={12} /><span>Maximize</span></button>
+                        <button type="button" onClick={(e) => { e.preventDefault(); printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15 active:scale-95"><Icons.Printer size={12} /><span>Sticker</span></button>
                       </div>
                     </div>
 
@@ -2051,7 +2124,7 @@
                       <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
                         <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
                         <div className="my-6 p-4 bg-slate-900 rounded-full border border-slate-800/80 shadow-inner">
-                          <BodyConditionIcon fill opacity={0.1} condition={formState?.condition} size={64} />
+                          <BodyConditionIcon condition={formState?.condition} size={64} />
                         </div>
                         <h4 className="text-sm font-black text-white uppercase">Status: {formState?.condition}</h4>
                       </div>
@@ -2059,16 +2132,16 @@
 
                     {/* FILE ADMINISTRATION CARD */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
-                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-400">
-                        <Icons.FolderOpen size={13} className="text-indigo-455" />
-                        <span className="text-[9px] font-bold tracking-widest uppercase">File Administration</span>
+                      <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455">
+                        <Icons.FolderOpen size={13} className="text-indigo-400" />
+                        <span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">File Administration</span>
                       </div>
                       
                       <div className="mt-8 space-y-2.5 w-full">
                         <button 
                           type="button" 
                           onClick={() => handleArchiveToggle(formState.id)}
-                          className="w-full bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.FolderOpen size={14} className="text-amber-400" />
@@ -2094,7 +2167,7 @@
                               }
                             });
                           }}
-                          className="w-full bg-red-950/20 hover:bg-red-950/40 text-red-200 border border-red-900/40 text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-between"
+                          className="w-full bg-red-955/20 hover:bg-red-950/40 text-red-200 border border-red-900/40 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between active:scale-[0.99]"
                         >
                           <span className="flex items-center gap-2">
                             <Icons.Trash2 size={14} className="text-red-400" />
@@ -2113,8 +2186,8 @@
 
           {/* QR MAXIMIZE MODAL */}
           {isQrModalOpen && formState && (
-            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl animate-fade-in">
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
+              <div className="bg-slate-950 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl">
                 <button onClick={() => setIsQrModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
                 <h3 className="text-base font-black text-white mt-2">{formState?.title} {formState?.deceasedName || "Unnamed"}</h3>
                 <p className="text-[10px] text-slate-500 font-mono mt-0.5">Ref: {formState?.ref}</p>
@@ -2122,8 +2195,8 @@
                   <img src={getQrCodeUrl(formState, 220)} alt="High res QR" className="w-48 h-48 object-contain" />
                 </div>
                 <div className="mt-5 flex gap-2">
-                  <button onClick={() => { printStickerAndCheckBlocks(formState); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 text-slate-950 text-xs font-black py-2.5 rounded-xl">Print Sticker</button>
-                  <button onClick={() => setIsQrModalOpen(false)} className="bg-slate-800 text-slate-300 text-xs font-bold px-5 py-2.5 rounded-xl">Close</button>
+                  <button onClick={() => { printStickerAndCheckBlocks(formState); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black py-2.5 rounded-xl transition-colors">Print Sticker</button>
+                  <button onClick={() => setIsQrModalOpen(false)} className="bg-slate-800 hover:bg-slate-705 text-slate-300 text-xs font-bold px-5 py-2.5 rounded-xl transition-colors">Close</button>
                 </div>
               </div>
             </div>
@@ -2131,18 +2204,18 @@
 
           {/* EMAIL PREVIEW LOGISTICS MODAL */}
           {isEmailModalOpen && formState && dispatchEmailData && (
-            <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[9999]">
+            <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[9999] animate-fade-in">
               <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full p-6 relative shadow-2xl">
                 <button onClick={() => setIsEmailModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
-                <h3 className="text-base font-black text-white mb-4">Email Preview</h3>
+                <h3 className="text-base font-black text-white mb-4 select-none">Email Preview</h3>
                 <div className="space-y-2 bg-slate-900 p-4 rounded-2xl border border-slate-800 text-xs font-mono">
                   <div className="border-b border-slate-800 pb-2 text-slate-400"><span className="font-bold text-white">To:</span> {formState?.pickupStaffEmails}</div>
                   <div className="border-b border-slate-800 pb-2 text-slate-400"><span className="font-bold text-white">Subject:</span> {dispatchEmailData.subject}</div>
                   <div className="text-slate-300 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto pt-2">{dispatchEmailData.body}</div>
                 </div>
-                <div className="mt-5 flex gap-2 justify-end">
-                  <button onClick={() => setIsEmailModalOpen(false)} className="bg-slate-800 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl">Cancel</button>
-                  <a href={dispatchEmailData.mailtoLink} onClick={() => setIsEmailModalOpen(false)} className="bg-amber-500 text-slate-950 text-xs font-black px-5 py-2 rounded-xl">Launch Client</a>
+                <div className="mt-5 flex gap-2 justify-end select-none">
+                  <button onClick={() => setIsEmailModalOpen(false)} className="bg-slate-800 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button>
+                  <a href={dispatchEmailData.mailtoLink} onClick={() => setIsEmailModalOpen(false)} className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black px-5 py-2 rounded-xl text-center flex items-center justify-center transition-colors">Launch Client</a>
                 </div>
               </div>
             </div>
@@ -2150,21 +2223,21 @@
 
           {/* SYSTEM CONFIRMATION MODAL */}
           {dialog.isOpen && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
-              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
+              <div className="bg-slate-955 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
                 <div className="flex items-center space-x-3 text-amber-500">
-                  <Icons.AlertTriangle className="flex-shrink-0 animate-bounce" size={24} />
+                  <Icons.AlertTriangle className="flex-shrink-0" size={24} />
                   <h4 className="text-base font-black uppercase tracking-wider text-white">{dialog.title}</h4>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">{dialog.message}</p>
                 <div className="flex items-center justify-end space-x-2 pt-2">
                   {dialog.type === "confirm" ? (
                     <>
-                      <button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition">Cancel</button>
-                      <button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-lg shadow-red-600/10">Confirm & Delete</button>
+                      <button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-705 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button>
+                      <button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-red-600/10">Confirm & Delete</button>
                     </>
                   ) : (
-                    <button onClick={closeDialog} className="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-5 py-2 rounded-xl transition shadow-lg">Ok</button>
+                    <button onClick={closeDialog} className="bg-amber-500 hover:bg-amber-400 text-slate-955 text-xs font-bold px-5 py-2 rounded-xl transition-colors shadow-lg">Ok</button>
                   )}
                 </div>
               </div>

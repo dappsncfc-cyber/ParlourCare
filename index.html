@@ -444,7 +444,7 @@
           
           let matchHud = true;
           if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
-          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && item.transferStatus !== 'Completed';
+          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferStatus && item.transferStatus !== 'Completed';
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
 
           return matchSearch && matchLoc && matchStatus && matchHud;
@@ -467,7 +467,7 @@
         return {
           active: activeDashboardCases.length,
           coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
-          transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
+          transfers: activeDashboardCases.filter(c => c.isCoroner && !!c.transferStatus && c.transferStatus !== 'Completed').length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
       }, [deceasedList, activeBrand]);
@@ -865,7 +865,7 @@
           id: nextId,
           ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
           fridgeTray: "", keyDate: "", keyMilestoneName: "", keyMilestoneUrgency: "None", deceasedName: "", title: "Mr", dob: "", dod: "", arranger: arrangerCode, location: locationName, greenCoroner: "No", encoffined: "No", plate: "No", bodySize: "", condition: "Good", infection: "None", coffin: "", coffinHandles: "", wreathHolders: "", crucifix: "", clothes: "", clothesChecked: false, preparations: "No", preparationsDetails: "", jewellery: "No", jewelleryDetails: "", devices: "No", devicesDetails: "", embalming: "No", embalmingDetails: "", coffinAccessories: "", viewing: "R", ready: "No", 
-          isCoroner: isCoronerCase, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: defaultMortuary, pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: defaultVehicle, pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", transferStatus: "Pending", transferStatusTimestamps: { "Pending": getTimestamp() }, transferDateTime: "", transferHospital: "Norfolk & Norwich University Hospital (NNUH)", transferType: "Pick up", transferVehicle: defaultVehicle, transferStaff: [], transferStaffEmails: "", isArchived: false
+          isCoroner: isCoronerCase, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: defaultMortuary, pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: defaultVehicle, pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", transferStatus: "", transferStatusTimestamps: {}, transferDateTime: "", transferHospital: "", transferType: "", transferVehicle: "", transferStaff: [], transferStaffEmails: "", isArchived: false
         };
         saveCaseToDb(newCase);
         setFormState(newCase);
@@ -1707,10 +1707,35 @@
                           </div>
                         )}
 
+                        {item.isCoroner && (item.transferType || item.transferHospital || item.transferDateTime) && (
+                          <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
+                            <div className="flex items-center gap-1.5 mb-2.5">
+                              <Icons.Building2 size={12} className="text-rose-400" />
+                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Scheduled Transfer</span>
+                            </div>
+                            {(item.transferType || item.transferHospital) && (
+                              <div className="mb-2 flex items-start gap-1.5">
+                                <span className="text-[10px] text-slate-505 uppercase font-bold mt-0.5">Details:</span>
+                                <span className="text-sm font-bold text-white leading-tight">
+                                  {item.transferType ? `${item.transferType} - ` : ''}{item.transferHospital || 'Pending Location'}
+                                </span>
+                              </div>
+                            )}
+                            {item.transferDateTime && (
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] text-slate-550 uppercase font-bold">Time:</span>
+                                  <span className="text-[11px] font-mono font-bold text-amber-400">{item.transferDateTime}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {showAsCoroner && (() => {
-                          const isTransferActive = (item.transferStatus && item.transferStatus !== 'Pending') || !!item.transferDateTime;
+                          const isTransferActive = !!item.transferStatus;
                           const activeStatusLabel = isTransferActive ? 'Transfer Stage:' : 'Dispatch Stage:';
-                          const activeStatus = isTransferActive ? (item.transferStatus || 'Pending') : (item.pickupStatus || 'Pending');
+                          const activeStatus = isTransferActive ? item.transferStatus : (item.pickupStatus || 'Pending');
                           const activeTimestamps = isTransferActive ? (item.transferStatusTimestamps || {}) : (item.pickupStatusTimestamps || {});
                           
                           return (
@@ -2191,7 +2216,7 @@
                               <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Transfer Stage:</label>
                               <div className="grid grid-cols-2 gap-2 mb-3 select-none">
                                 {["Pending", "Completed"].map((st) => {
-                                  const isCurrent = (formState?.transferStatus || 'Pending') === st;
+                                  const isCurrent = formState?.transferStatus === st;
                                   return (
                                     <button key={st} type="button" onClick={() => handleTransferStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 ${isCurrent ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
                                   );
@@ -2217,20 +2242,23 @@
                             <div className="space-y-4">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Transfer Type</label>
-                                <select disabled={isLogisticsLocked} value={formState?.transferType || 'Pick up'} onChange={(e) => handleFieldChange('transferType', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
+                                <select disabled={isLogisticsLocked} value={formState?.transferType || ''} onChange={(e) => handleFieldChange('transferType', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
+                                  <option value="">-- Select Type --</option>
                                   <option value="Pick up">Pick up</option>
                                   <option value="Drop off">Drop off</option>
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Hospital</label>
-                                <select disabled={isLogisticsLocked} value={formState?.transferHospital || 'Norfolk & Norwich University Hospital (NNUH)'} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
+                                <select disabled={isLogisticsLocked} value={formState?.transferHospital || ''} onChange={(e) => handleFieldChange('transferHospital', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
+                                  <option value="">-- Select Hospital --</option>
                                   {norfolkHospitals.map(hosp => <option key={hosp} value={hosp}>{hosp}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Vehicle Assigned</label>
-                                <select disabled={isLogisticsLocked} value={formState?.transferVehicle || 'C17 DFS'} onChange={(e) => handleFieldChange('transferVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
+                                <select disabled={isLogisticsLocked} value={formState?.transferVehicle || ''} onChange={(e) => handleFieldChange('transferVehicle', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
+                                  <option value="">-- Select Vehicle --</option>
                                   {vehicleOptions.map(veh => <option key={veh} value={veh}>{veh}</option>)}
                                 </select>
                               </div>

@@ -2,9 +2,32 @@
 <html lang="en-GB">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ParlourCare Portal</title>
   
+  <script>
+    // PWA ON-THE-FLY INJECTION
+    const manifest = {
+      name: "ParlourCare Portal",
+      short_name: "ParlourCare",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#0f172a",
+      theme_color: "#4f46e5",
+      icons: [{
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M12 2L2 22h20L12 2z'/%3E%3C/svg%3E",
+        sizes: "192x192",
+        type: "image/svg+xml"
+      }]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const manifestUrl = URL.createObjectURL(manifestBlob);
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = manifestUrl;
+    document.head.appendChild(link);
+  </script>
+
   <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -29,7 +52,7 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   
-  <!-- Babel Standalone CDN to compile JSX on-the-fly with module support -->
+  <!-- Babel Standalone CDN -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
     Babel.registerPreset('react-classic', {
@@ -41,13 +64,8 @@
 
   <style>
     /* Hide scrollbars but keep functionality */
-    .scrollbar-none::-webkit-scrollbar {
-      display: none;
-    }
-    .scrollbar-none {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
     @media print {
       .no-print { display: none !important; }
       body { background: white !important; color: black !important; }
@@ -60,7 +78,6 @@
 
   <!-- React Application Source -->
   <script type="text/babel" data-type="module" data-presets="react-classic">
-    // --- FIREBASE LIVE CONFIGURATION PARSER ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -76,7 +93,33 @@
 
     const initialCaseload = [];
 
-    // Real physical inventory values derived strictly from catalog files
+    const defaultAppSettings = {
+      labels: {
+        fridgeTray: "Tray No.",
+        deceasedName: "Deceased Name",
+        location: "Branch",
+        dob: "D.O.B.",
+        dod: "D.O.D.",
+        coronerRef: "CAD",
+        coronerOfficer: "Officer / Contact",
+        pickupDestination: "Target Destination",
+        pickupLocation: "Pick-up Address & Notes"
+      },
+      lists: {
+        locations: ["Cromer", "Fakenham"],
+        conditions: ["Good", "Medium", "Poor"],
+        infectionRisks: ["None", "Blood borne", "Sepsis", "CJD", "Other"],
+        coffins: ["Oak", "Elm", "Oak Dark Stained", "Knotty Oak", "Sapele", "Cardboard", "Seagrass", "Bamboo", "Wicker", "Willow Cromer", "Willow Pod", "Brinkley Oak", "Chiltern Oak", "Windsor Oak Triple", "Cavendish Oak", "Solid Pine", "Walnut", "Rockwood Elm", "Lamboard Oak", "Contemporary Coffin", "Painted Named Coffin", "Picture Coffin"],
+        handles: ["Bar Handles", "Ring Handles"],
+        wreathHolders: ["Brass Wreath Holders", "Chrome Wreath Holders"],
+        crucifixes: ["Brass Crucifix", "Chrome Crucifix", "Wooden Crucifix"],
+        vehicles: ["C17 DFS", "C22 DFS", "C25 GFS"],
+        hospitals: ["Norfolk & Norwich University Hospital (NNUH)", "Queen Elizabeth Hospital King's Lynn (QEH)", "James Paget University Hospital (JPUH)", "Cromer Hospital", "Hellesdon Hospital", "North Walsham War Memorial Hospital", "Kelling Hospital"],
+        titles: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"]
+      },
+      customFields: []
+    };
+
     const initialInventory = {
       coffins: {
         "Oak": 12, "Elm": 12, "Oak Dark Stained": 8, "Knotty Oak": 6, "Sapele": 10,
@@ -84,20 +127,11 @@
         "Brinkley Oak": 10, "Chiltern Oak": 14, "Windsor Oak Triple": 5, "Cavendish Oak": 5, "Solid Pine": 8,
         "Walnut": 8, "Rockwood Elm": 8, "Lamboard Oak": 8, "Contemporary Coffin": 6, "Painted Named Coffin": 6, "Picture Coffin": 6
       },
-      handles: {
-        "Bar Handles": 45, "Ring Handles": 40
-      },
-      wreathHolders: {
-        "Brass Wreath Holders": 30, "Chrome Wreath Holders": 30
-      },
-      crucifixes: {
-        "Brass Crucifix": 20, "Chrome Crucifix": 20, "Wooden Crucifix": 15
-      }
+      handles: { "Bar Handles": 45, "Ring Handles": 40 },
+      wreathHolders: { "Brass Wreath Holders": 30, "Chrome Wreath Holders": 30 },
+      crucifixes: { "Brass Crucifix": 20, "Chrome Crucifix": 20, "Wooden Crucifix": 15 }
     };
 
-    // ==========================================================
-    // 1. YOUR LIVE FIREBASE CONFIGURATION OBJECT:
-    // ==========================================================
     const myFirebaseConfig = {
       apiKey: "AIzaSyBG7j-uqX15Yb4ccGruvbK7s8SyNUwW-rk",
       authDomain: "parlourcare-fcc26.firebaseapp.com",
@@ -108,9 +142,6 @@
       measurementId: "G-YZ6KT1P1BQ"
     };
 
-    // ==========================================================
-    // 2. LIVE CONFIG ROUTER
-    // ==========================================================
     const firebaseConfig = typeof __firebase_config !== 'undefined' 
       ? JSON.parse(__firebase_config) 
       : (myFirebaseConfig.apiKey !== "YOUR_API_KEY_HERE" ? myFirebaseConfig : { apiKey: "MOCK_API_KEY" });
@@ -135,75 +166,30 @@
     const { useState, useMemo, useEffect, useRef } = React;
 
     const Icons = {
-      Users: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      ),
-      Search: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      ),
-      Plus: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      ),
-      AlertTriangle: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      ),
-      X: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      ),
-      Printer: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-      ),
-      Trash2: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-      ),
-      FolderOpen: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M2 10h20"/></svg>
-      ),
-      Building2: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="15" y1="22" x2="15" y2="16"/><line x1="9" y1="16" x2="15" y2="16"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/></svg>
-      ),
-      Hammer: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18.42 9.59l-1.9 1.9a1 1 0 0 1-1.41 0L12.5 8.9a1 1 0 0 1 0-1.41l1.9-1.9a4 4 0 1 1 5.66 5.66z"/><path d="M9 13l-6 6a1.5 1.5 0 1 0 2 2l6-6"/><path d="M13 13l-4-4"/></svg>
-      ),
-      Layers: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polygon points="2 17 12 22 22 17"/><polygon points="2 12 12 17 22 12"/></svg>
-      ),
-      Heart: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      ),
-      Bell: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      ),
-      QrCode: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="7" y1="17" x2="7" y2="17.01"/><line x1="17" y1="17" x2="17" y2="17.01"/><line x1="17" y1="7" x2="17" y2="7.01"/><line x1="7" y1="7" x2="7" y2="7.01"/></svg>
-      ),
-      Maximize2: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-      ),
-      Mail: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      ),
-      Truck: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      ),
-      CheckSquare: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      ),
-      Square: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
-      ),
-      ArrowLeft: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      ),
-      Save: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      ),
-      FileText: ({ size = 16, className = "" }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-      )
+      Users: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+      Search: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+      Plus: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      AlertTriangle: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+      X: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      Printer: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>,
+      Trash2: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
+      FolderOpen: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M2 10h20"/></svg>,
+      Building2: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="15" y1="22" x2="15" y2="16"/><line x1="9" y1="16" x2="15" y2="16"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/></svg>,
+      Hammer: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18.42 9.59l-1.9 1.9a1 1 0 0 1-1.41 0L12.5 8.9a1 1 0 0 1 0-1.41l1.9-1.9a4 4 0 1 1 5.66 5.66z"/><path d="M9 13l-6 6a1.5 1.5 0 1 0 2 2l6-6"/><path d="M13 13l-4-4"/></svg>,
+      Layers: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polygon points="2 17 12 22 22 17"/><polygon points="2 12 12 17 22 12"/></svg>,
+      Heart: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+      Bell: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+      QrCode: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="7" y1="17" x2="7" y2="17.01"/><line x1="17" y1="17" x2="17" y2="17.01"/><line x1="17" y1="7" x2="17" y2="7.01"/><line x1="7" y1="7" x2="7" y2="7.01"/></svg>,
+      Maximize2: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>,
+      Mail: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+      Truck: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
+      CheckSquare: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
+      Square: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>,
+      ArrowLeft: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+      Save: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+      FileText: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     };
 
-    // --- CRITICAL FIX: Add the missing getBaseUrl function ---
     const getBaseUrl = () => {
       try {
         return window.location.origin + window.location.pathname;
@@ -222,42 +208,114 @@
       return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
     };
 
-    function App() {
-      // --- ADDED LOGIN STATE ---
-      const [loggedInUser, setLoggedInUser] = useState(() => {
-        try { return localStorage.getItem('parlourcare_user') || null; } catch(e) { return null; }
-      });
-      const isAuthenticated = !!loggedInUser;
-      const isCatherine = loggedInUser === 'catherine';
+    function SignaturePad({ value, onChange, disabled }) {
+      const canvasRef = React.useRef(null);
+      const [isDrawing, setIsDrawing] = React.useState(false);
 
-      const [loginError, setLoginError] = useState("");
-      const [username, setUsername] = useState("adrian");
-      const [password, setPassword] = useState("");
-
-      const handleLogin = (e) => {
-        e.preventDefault();
-        const u = username.toLowerCase().trim();
-        let valid = false;
-        
-        if ((u === 'adrian' || u === 'paul') && password === "daniscool2026") valid = true;
-        if (u === 'catherine' && password === "iloveadrian") valid = true;
-
-        if (valid) {
-          setLoggedInUser(u);
-          try { localStorage.setItem('parlourcare_user', u); } catch(e) {}
-          setLoginError("");
+      React.useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (value) {
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          };
+          img.src = value;
         } else {
-          setLoginError("Invalid password for selected user.");
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
+      }, [value]);
+
+      const getCoordinates = (e, canvas) => {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
       };
 
-      const handleLogout = () => {
-        setLoggedInUser(null);
-        try { localStorage.removeItem('parlourcare_user'); } catch(e) {}
-        setUsername("adrian");
-        setPassword("");
+      const startDrawing = (e) => {
+        if (disabled) return;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const { x, y } = getCoordinates(e, canvas);
+        
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        setIsDrawing(true);
       };
-      // -------------------------
+
+      const draw = (e) => {
+        if (!isDrawing || disabled) return;
+        if (e.touches && e.cancelable) e.preventDefault(); 
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const { x, y } = getCoordinates(e, canvas);
+        
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      };
+
+      const stopDrawing = () => {
+        if (!isDrawing || disabled) return;
+        setIsDrawing(false);
+        const canvas = canvasRef.current;
+        onChange(canvas.toDataURL('image/png'));
+      };
+
+      const clearPad = () => {
+        if (disabled) return;
+        onChange('');
+      };
+
+      return (
+        <div className="flex flex-col gap-1.5 w-full">
+          <div 
+            className={`border-2 rounded-xl overflow-hidden bg-white h-40 md:h-48 shadow-inner relative ${disabled ? 'opacity-50 cursor-not-allowed border-slate-700' : 'border-slate-300'}`}
+            style={{ touchAction: 'none' }}
+          >
+            {!value && !disabled && (
+              <div className="absolute bottom-[25%] left-8 right-8 border-b-2 border-slate-200 border-dashed pointer-events-none"></div>
+            )}
+            <canvas
+              ref={canvasRef}
+              width={800}
+              height={400}
+              className="w-full h-full cursor-crosshair touch-none relative z-10"
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+          </div>
+          {!disabled && (
+            <button type="button" onClick={clearPad} className="text-[10px] text-slate-500 hover:text-rose-400 font-bold self-end transition-colors uppercase tracking-wider mt-1">
+              Clear Signature
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    function App() {
+      // 1. ALL STATE HOOKS
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [loggedInUser, setLoggedInUser] = useState(null);
+      const [username, setUsername] = useState('adrian');
+      const [passwordInput, setPasswordInput] = useState('');
+      const [loginError, setLoginError] = useState('');
 
       const [deceasedList, setDeceasedList] = useState(() => {
         try {
@@ -267,20 +325,23 @@
       });
       const [selectedRowId, setSelectedRowId] = useState(null); 
       const [formState, setFormState] = useState(null);
-      
       const [viewMode, setViewMode] = useState("cases"); 
       const [stockSearchQuery, setStockSearchQuery] = useState("");
       
-      // Stock room levels with defensive local caching migration logic
+      const [appSettings, setAppSettings] = useState(() => {
+        try {
+          const local = localStorage.getItem('parlourcare_settings');
+          return local ? JSON.parse(local) : defaultAppSettings;
+        } catch(e) { return defaultAppSettings; }
+      });
+      const [adminInput, setAdminInput] = useState({});
       const [stockLevels, setStockLevels] = useState(() => {
         try {
           const localStock = localStorage.getItem('norfolk_mortuary_stock');
           if (localStock) {
             const parsed = JSON.parse(localStock);
-            // Migrate fields to inject Wreath Holders & Crucifix categories safely if missing
             if (!parsed.wreathHolders) parsed.wreathHolders = initialInventory.wreathHolders;
             if (!parsed.crucifixes) parsed.crucifixes = initialInventory.crucifixes;
-            // Clean up old 'None' entries from the inventory states
             if (parsed.coffins && parsed.coffins["None"] !== undefined) delete parsed.coffins["None"];
             if (parsed.handles && parsed.handles["None"] !== undefined) delete parsed.handles["None"];
             return parsed;
@@ -313,327 +374,15 @@
       const prevListRef = useRef([]);
       const isFirstLoadRef = useRef(true);
 
+      // 2. USE MEMO HOOKS
       const isLogisticsLocked = useMemo(() => {
         return formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
       }, [formState]);
-
-      const showNotification = (title, message, type = "info") => {
-        setDialog({ isOpen: true, title, message, type, onConfirm: null });
-      };
-
-      const closeDialog = () => {
-        setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
-      };
-
-      const saveStockToDb = async (newStock) => {
-        try {
-          localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock));
-        } catch(e){}
-
-        if (isFirebaseEnabled && auth.currentUser) {
-          try {
-            const safeAppId = String(appId);
-            const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
-            await setDoc(stockDocRef, JSON.parse(JSON.stringify(newStock)));
-          } catch(err) {
-            console.error("Live stock save rejected:", err);
-          }
-        }
-      };
-
-      useEffect(() => {
-        if (!isFirebaseEnabled) return;
-
-        const initAuth = async () => {
-          try {
-            if (initialAuthToken) {
-              await signInWithCustomToken(auth, initialAuthToken);
-            } else {
-              await signInAnonymously(auth);
-            }
-          } catch (err) {
-            console.error("Firebase auth failed, trying anonymous fallback:", err);
-            try {
-              await signInAnonymously(auth);
-            } catch (anonErr) {
-              console.error("Anonymous fallback failed:", anonErr);
-            }
-          }
-        };
-
-        initAuth();
-        const unsubscribe = onAuthStateChanged(auth, setUser);
-        return () => {
-          if (unsubscribe) unsubscribe();
-        };
-      }, []);
-
-      useEffect(() => {
-        if (!isFirebaseEnabled) {
-          try {
-            const local = localStorage.getItem('norfolk_mortuary_cases');
-            const parsedLocal = local ? JSON.parse(local) : initialCaseload;
-            setDeceasedList(parsedLocal);
-            prevListRef.current = parsedLocal;
-          } catch(e) {}
-          return;
-        }
-
-        if (!user) return;
-
-        const safeAppId = String(appId);
-        const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
-        const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
-
-        getDoc(stockDocRef).then((snap) => {
-          if (snap.exists()) {
-            const remoteStock = snap.data();
-            // Securely ensure category migrations are completed in remote snapshots too
-            if (!remoteStock.wreathHolders) remoteStock.wreathHolders = initialInventory.wreathHolders;
-            if (!remoteStock.crucifixes) remoteStock.crucifixes = initialInventory.crucifixes;
-            if (remoteStock.coffins && remoteStock.coffins["None"] !== undefined) delete remoteStock.coffins["None"];
-            if (remoteStock.handles && remoteStock.handles["None"] !== undefined) delete remoteStock.handles["None"];
-            
-            setStockLevels(remoteStock);
-            try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
-          } else {
-            setDoc(stockDocRef, initialInventory).catch(e => console.error("Database inventory seeding failed:", e));
-          }
-        });
-
-        const unsubscribe = onSnapshot(
-          colRef,
-          (snapshot) => {
-            if (snapshot.empty && !seededRef.current) {
-              seededRef.current = true;
-              let currentCases = initialCaseload;
-              try {
-                const localData = localStorage.getItem('norfolk_mortuary_cases');
-                if (localData) currentCases = JSON.parse(localData);
-              } catch(e) {}
-              
-              if (currentCases.length > 0) {
-                currentCases.forEach((c) => {
-                  const safeRecordId = String(c.id);
-                  const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
-                  setDoc(docRef, JSON.parse(JSON.stringify(c)));
-                });
-                setDeceasedList(currentCases);
-                prevListRef.current = currentCases;
-                try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(currentCases)); } catch(e){}
-              } else {
-                setDeceasedList([]);
-                prevListRef.current = [];
-              }
-            } else {
-              const cases = [];
-              snapshot.forEach((doc) => {
-                cases.push({ id: doc.id, ...doc.data() });
-              });
-
-              if (isFirstLoadRef.current) {
-                prevListRef.current = cases;
-                isFirstLoadRef.current = false;
-              } else {
-                const newNotifications = [];
-                const prevMap = new Map((prevListRef.current || []).map(c => [c.id, c]));
-                const currentMap = new Map(cases.map(c => [c.id, c]));
-
-                const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'wreathHolders', 'crucifix', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
-                const fieldLabels = {
-                  deceasedName: 'Name', title: 'Title', fridgeTray: 'Tray No.', location: 'Branch',
-                  condition: 'Condition', coffin: 'Coffin', coffinHandles: 'Handles Type', wreathHolders: 'Wreath Holders', crucifix: 'Crucifix', pickupStatus: 'Dispatch Stage', transferStatus: 'Transfer Stage',
-                  isArchived: 'Archive Status', keyMilestoneName: 'Milestone Action', keyMilestoneUrgency: 'Milestone Urgency'
-                };
-
-                cases.forEach(curr => {
-                  const prev = prevMap.get(curr.id);
-                  if (!prev) {
-                    newNotifications.push({
-                      id: String(Date.now()) + Math.random(),
-                      type: 'addition',
-                      title: 'Case Added',
-                      message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) was registered.`,
-                      timestamp: getTimestamp()
-                    });
-                  } else {
-                    const changedFields = [];
-                    for (let f of fieldsToCheck) {
-                      if (JSON.stringify(curr[f]) !== JSON.stringify(prev[f])) {
-                        changedFields.push(fieldLabels[f] || f);
-                      }
-                    }
-                    if (changedFields.length > 0) {
-                      newNotifications.push({
-                        id: String(Date.now()) + Math.random(),
-                        type: 'update',
-                        title: 'Case Updated',
-                        message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) had updates to: ${changedFields.join(', ')}.`,
-                        timestamp: getTimestamp()
-                      });
-                    }
-                  }
-                });
-
-                (prevListRef.current || []).forEach(oldItem => {
-                  if (!currentMap.has(oldItem.id)) {
-                    newNotifications.push({
-                      id: String(Date.now()) + Math.random(),
-                      type: 'deletion',
-                      title: 'Case Removed',
-                      message: `${oldItem.title} ${oldItem.deceasedName || 'Unnamed Case'} (${oldItem.ref}) was deleted.`,
-                      timestamp: getTimestamp()
-                    });
-                  }
-                });
-
-                if (newNotifications.length > 0) {
-                  setNotifications(prev => [...newNotifications, ...prev].slice(0, 20));
-                  setUnreadCount(prev => prev + newNotifications.length);
-                }
-                prevListRef.current = cases;
-              }
-
-              setDeceasedList(cases);
-              try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases)); } catch(e){}
-            }
-          },
-          (error) => {
-            console.error("Firestore synchronisation error:", error);
-            showNotification("Sync Status", "Live cloud stream is temporarily offline. Working locally.", "info");
-          }
-        );
-
-        return () => {
-          if (unsubscribe) unsubscribe();
-        };
-      }, [user]);
-
-      const saveCaseToDb = async (record) => {
-        setDeceasedList(prev => {
-          const index = prev.findIndex(item => item.id === record.id);
-          let next;
-          if (index > -1) {
-            next = prev.map(item => item.id === record.id ? record : item);
-          } else {
-            next = [...prev, record];
-          }
-          try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
-          return next;
-        });
-
-        if (isFirebaseEnabled && auth.currentUser) {
-          try {
-            const safeAppId = String(appId);
-            const safeRecordId = String(record.id);
-            const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
-            await setDoc(docRef, JSON.parse(JSON.stringify(record)));
-          } catch (err) {
-            console.error("Live save rejected:", err);
-          }
-        }
-      };
-
-      const deleteCaseFromDb = async (id) => {
-        const deletedCase = deceasedList.find(item => item.id === id);
-        
-        if (deletedCase) {
-          let updatedStock = { ...stockLevels };
-          let changed = false;
-          if (deletedCase.coffin && updatedStock.coffins[deletedCase.coffin] !== undefined) {
-            updatedStock.coffins[deletedCase.coffin] += 1;
-            changed = true;
-          }
-          if (deletedCase.coffinHandles && updatedStock.handles[deletedCase.coffinHandles] !== undefined) {
-            updatedStock.handles[deletedCase.coffinHandles] += 1;
-            changed = true;
-          }
-          if (deletedCase.wreathHolders && updatedStock.wreathHolders[deletedCase.wreathHolders] !== undefined) {
-            updatedStock.wreathHolders[deletedCase.wreathHolders] += 1;
-            changed = true;
-          }
-          if (deletedCase.crucifix && updatedStock.crucifixes[deletedCase.crucifix] !== undefined) {
-            updatedStock.crucifixes[deletedCase.crucifix] += 1;
-            changed = true;
-          }
-          if (changed) {
-            setStockLevels(updatedStock);
-            saveStockToDb(updatedStock);
-          }
-        }
-
-        setDeceasedList(prev => {
-          const next = prev.filter(item => item.id !== id);
-          try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
-          return next;
-        });
-
-        if (isFirebaseEnabled && user) {
-          try {
-            const safeAppId = String(appId);
-            const safeRecordId = String(id);
-            const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
-            await deleteDoc(docRef);
-          } catch (err) {
-            console.error("Live deletion rejected:", err);
-          }
-        }
-      };
 
       const selectedRecord = useMemo(() => {
         if (!selectedRowId) return null;
         return deceasedList.find(d => d.id === selectedRowId) || null;
       }, [deceasedList, selectedRowId]);
-
-      useEffect(() => {
-        if (selectedRecord && (!formState || formState.id !== selectedRowId)) {
-          setFormState(JSON.parse(JSON.stringify(selectedRecord)));
-        }
-      }, [selectedRowId, selectedRecord]);
-
-      useEffect(() => {
-        if (pendingDeepLink && deceasedList.length > 0) {
-          const record = deceasedList.find(d => d.id === pendingDeepLink);
-          if (record) {
-            setSelectedRowId(pendingDeepLink);
-            setActiveTab(record.isCoroner ? "pickup" : "care");
-            setPendingDeepLink(null);
-            try {
-              const cleanUrl = getBaseUrl();
-              window.history.replaceState({}, document.title, cleanUrl);
-            } catch(e) {}
-          }
-        }
-      }, [pendingDeepLink, deceasedList]);
-
-      const locations = useMemo(() => ["Cromer", "Fakenham"], []);
-      const conditions = useMemo(() => ["Good", "Medium", "Poor"], []);
-      const infectionRisks = useMemo(() => ["None", "Blood borne", "Sepsis", "CJD", "Other"], []);
-      const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
-      
-      const coffinsList = useMemo(() => [
-        "Oak", "Elm", "Oak Dark Stained", "Knotty Oak", "Sapele", "Cardboard", "Seagrass",
-        "Bamboo", "Wicker", "Willow Cromer", "Willow Pod", "Brinkley Oak", "Chiltern Oak",
-        "Windsor Oak Triple", "Cavendish Oak", "Solid Pine", "Walnut", "Rockwood Elm",
-        "Lamboard Oak", "Contemporary Coffin", "Painted Named Coffin", "Picture Coffin"
-      ], []);
-      
-      const handlesList = useMemo(() => ["Bar Handles", "Ring Handles"], []);
-      const wreathHoldersList = useMemo(() => ["Brass Wreath Holders", "Chrome Wreath Holders"], []);
-      const crucifixesList = useMemo(() => ["Brass Crucifix", "Chrome Crucifix", "Wooden Crucifix"], []);
-      
-      const titles = useMemo(() => ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"], []);
-      const vehicleOptions = useMemo(() => ["C17 DFS", "C22 DFS", "C25 GFS"], []);
-      
-      const norfolkHospitals = useMemo(() => [
-        "Norfolk & Norwich University Hospital (NNUH)",
-        "Queen Elizabeth Hospital King's Lynn (QEH)",
-        "James Paget University Hospital (JPUH)",
-        "Cromer Hospital",
-        "Hellesdon Hospital",
-        "North Walsham War Memorial Hospital",
-        "Kelling Hospital"
-      ], []);
 
       const brandThemes = useMemo(() => ({
         joint: {
@@ -658,10 +407,452 @@
 
       const currentTheme = brandThemes[activeBrand];
 
-      const getQrCodeUrl = (record, size = 200) => {
-        if (!record) return '';
-        const deepLinkUrl = `${getBaseUrl()}?case=${record.id}`;
-        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=f8fafc&color=0f172a`;
+      const dispatchEmailData = useMemo(() => {
+        if (!formState) return null;
+        const subject = `🚨 CORONER DISPATCH: Removal Call - ${(formState?.title || '')} ${(formState?.deceasedName || '')} (${(formState?.ref || '')})`;
+        const body = `CROMER & DISTRICT / GOWARDS FUNERAL SERVICES\n` +
+          `CORONER'S PICK-UP DISPATCH INSTRUCTION\n` +
+          `----------------------------------------\n\n` +
+          `ARR Ref: ${(formState?.ref || '')}\n` +
+          `Deceased Name: ${(formState?.title || '')} ${(formState?.deceasedName || 'Unnamed')}\n` +
+          `CAD: ${(formState?.coronerRef || 'N/A')}\n` +
+          `Coroner Officer: ${(formState?.coronerOfficer || 'N/A')}\n\n` +
+          `Pick-up Location: ${(formState?.pickupLocation || 'PENDING')}\n` +
+          `Target Destination: ${(formState?.pickupDestination || 'PENDING')}\n` +
+          `Scheduled Date/Time: ${(formState?.pickupDateTime || 'PENDING')}\n\n` +
+          `Vehicle Assigned: ${(formState?.pickupVehicle || 'C17 DFS')}\n` +
+          `Staff Dispatched: ${(formState?.pickupStaff || []).join(', ') || 'PENDING'}\n` +
+          `Equipment Checklist: ${(formState?.pickupEquipment || []).join(', ') || 'First Call Stretcher'}\n\n` +
+          `SPECIAL INSTRUCTIONS:\n` +
+          `- ${(formState?.pickupInstructions || 'Standard pick-up procedures.')}\n` +
+          `----------------------------------------\n`;
+        const mailtoLink = `mailto:${encodeURIComponent(formState?.pickupStaffEmails || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        return { subject, body, mailtoLink };
+      }, [formState]);
+
+      const filteredList = useMemo(() => {
+        const urgencyOrder = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
+        const result = deceasedList.filter(item => {
+          const matchSearch = (item.deceasedName || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              (item.ref || "").toLowerCase().includes(searchQuery.toLowerCase());
+          let matchLoc = true;
+          if (activeBrand === "cromer") matchLoc = item.location === "Cromer";
+          else if (activeBrand === "gowards") matchLoc = item.location === "Fakenham";
+          else matchLoc = locationFilter === "All" || item.location === locationFilter;
+
+          const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
+          
+          let matchHud = true;
+          if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
+          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && item.transferStatus !== 'Completed';
+          if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
+
+          return matchSearch && matchLoc && matchStatus && matchHud;
+        });
+
+        return result.sort((a, b) => {
+          const uA = urgencyOrder[a.keyMilestoneUrgency] || 0;
+          const uB = urgencyOrder[b.keyMilestoneUrgency] || 0;
+          return uB - uA;
+        });
+      }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand, hudFilter]);
+
+      const hudStats = useMemo(() => {
+        const activeDashboardCases = deceasedList.filter(item => {
+          if (item.isArchived) return false;
+          if (activeBrand === "cromer") return item.location === "Cromer";
+          if (activeBrand === "gowards") return item.location === "Fakenham";
+          return true;
+        });
+        return {
+          active: activeDashboardCases.length,
+          coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
+          transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
+          urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
+        };
+      }, [deceasedList, activeBrand]);
+
+      const filteredStockList = useMemo(() => {
+        const term = stockSearchQuery.toLowerCase();
+        const coffins = Object.entries(stockLevels.coffins || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "coffin", count: val }));
+        const handles = Object.entries(stockLevels.handles || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "handles", count: val }));
+        const wreathHolders = Object.entries(stockLevels.wreathHolders || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "wreathHolders", count: val }));
+        const crucifixes = Object.entries(stockLevels.crucifixes || {}).filter(([name]) => name.toLowerCase().includes(term)).map(([name, val]) => ({ name, type: "crucifix", count: val }));
+        return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
+      }, [stockLevels, stockSearchQuery]);
+
+
+      // 3. USE EFFECT HOOKS
+      useEffect(() => {
+        if (!isFirebaseEnabled) return;
+        const initAuth = async () => {
+          try {
+            if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+            else await signInAnonymously(auth);
+          } catch (err) {
+            try { await signInAnonymously(auth); } catch (anonErr) {}
+          }
+        };
+        initAuth();
+        const unsubscribe = onAuthStateChanged(auth, setUser);
+        return () => { if (unsubscribe) unsubscribe(); };
+      }, []);
+
+      useEffect(() => {
+        if (!isFirebaseEnabled) {
+          try {
+            const local = localStorage.getItem('norfolk_mortuary_cases');
+            const parsedLocal = local ? JSON.parse(local) : initialCaseload;
+            setDeceasedList(parsedLocal);
+            prevListRef.current = parsedLocal;
+          } catch(e) {}
+          return;
+        }
+
+        if (!user) return;
+
+        const safeAppId = String(appId);
+        const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
+        const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
+
+        getDoc(stockDocRef).then((snap) => {
+          if (snap.exists()) {
+            const remoteStock = snap.data();
+            if (!remoteStock.wreathHolders) remoteStock.wreathHolders = initialInventory.wreathHolders;
+            if (!remoteStock.crucifixes) remoteStock.crucifixes = initialInventory.crucifixes;
+            if (remoteStock.coffins && remoteStock.coffins["None"] !== undefined) delete remoteStock.coffins["None"];
+            if (remoteStock.handles && remoteStock.handles["None"] !== undefined) delete remoteStock.handles["None"];
+            setStockLevels(remoteStock);
+            try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
+          } else {
+            setDoc(stockDocRef, initialInventory).catch(e => console.error(e));
+          }
+        });
+
+        const settingsDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'config', 'settings');
+        getDoc(settingsDocRef).then((snap) => {
+          if (snap.exists()) setAppSettings(snap.data());
+          else setDoc(settingsDocRef, defaultAppSettings);
+        });
+
+        const unsubscribeSettings = onSnapshot(settingsDocRef, (doc) => {
+          if (doc.exists()) {
+            setAppSettings(doc.data());
+            try { localStorage.setItem('parlourcare_settings', JSON.stringify(doc.data())); } catch(e){}
+          }
+        });
+
+        const unsubscribe = onSnapshot(colRef, (snapshot) => {
+          if (snapshot.empty && !seededRef.current) {
+            seededRef.current = true;
+            let currentCases = initialCaseload;
+            try {
+              const localData = localStorage.getItem('norfolk_mortuary_cases');
+              if (localData) currentCases = JSON.parse(localData);
+            } catch(e) {}
+            if (currentCases.length > 0) {
+              currentCases.forEach((c) => {
+                const safeRecordId = String(c.id);
+                const docRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'cases', safeRecordId);
+                setDoc(docRef, JSON.parse(JSON.stringify(c)));
+              });
+              setDeceasedList(currentCases);
+              prevListRef.current = currentCases;
+              try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(currentCases)); } catch(e){}
+            } else {
+              setDeceasedList([]);
+              prevListRef.current = [];
+            }
+          } else {
+            const cases = [];
+            snapshot.forEach((doc) => cases.push({ id: doc.id, ...doc.data() }));
+
+            if (isFirstLoadRef.current) {
+              prevListRef.current = cases;
+              isFirstLoadRef.current = false;
+            } else {
+              const newNotifications = [];
+              const prevMap = new Map((prevListRef.current || []).map(c => [c.id, c]));
+              const currentMap = new Map(cases.map(c => [c.id, c]));
+              const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'wreathHolders', 'crucifix', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
+              
+              cases.forEach(curr => {
+                const prev = prevMap.get(curr.id);
+                if (!prev) {
+                  newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'addition', title: 'Case Added', message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) was registered.`, timestamp: getTimestamp() });
+                } else {
+                  const changedFields = [];
+                  for (let f of fieldsToCheck) {
+                    if (JSON.stringify(curr[f]) !== JSON.stringify(prev[f])) changedFields.push(f);
+                  }
+                  if (changedFields.length > 0) {
+                    newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'update', title: 'Case Updated', message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) had updates.`, timestamp: getTimestamp() });
+                  }
+                }
+              });
+
+              (prevListRef.current || []).forEach(oldItem => {
+                if (!currentMap.has(oldItem.id)) {
+                  newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'deletion', title: 'Case Removed', message: `${oldItem.title} ${oldItem.deceasedName || 'Unnamed Case'} (${oldItem.ref}) was deleted.`, timestamp: getTimestamp() });
+                }
+              });
+
+              if (newNotifications.length > 0) {
+                setNotifications(prev => [...newNotifications, ...prev].slice(0, 20));
+                setUnreadCount(prev => prev + newNotifications.length);
+              }
+              prevListRef.current = cases;
+            }
+
+            setDeceasedList(cases);
+            try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases)); } catch(e){}
+          }
+        });
+
+        return () => {
+          if (unsubscribe) unsubscribe();
+          if (unsubscribeSettings) unsubscribeSettings();
+        };
+      }, [user]);
+
+      useEffect(() => {
+        if (selectedRecord && (!formState || formState.id !== selectedRowId)) {
+          setFormState(JSON.parse(JSON.stringify(selectedRecord)));
+        }
+      }, [selectedRowId, selectedRecord]);
+
+      useEffect(() => {
+        if (pendingDeepLink && deceasedList.length > 0) {
+          const record = deceasedList.find(d => d.id === pendingDeepLink);
+          if (record) {
+            setSelectedRowId(pendingDeepLink);
+            setActiveTab(record.isCoroner ? "pickup" : "care");
+            setPendingDeepLink(null);
+            try {
+              const cleanUrl = getBaseUrl();
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch(e) {}
+          }
+        }
+      }, [pendingDeepLink, deceasedList]);
+
+      // 4. LOGIC & HANDLERS
+      const locations = appSettings.lists?.locations || defaultAppSettings.lists.locations;
+      const conditions = appSettings.lists?.conditions || defaultAppSettings.lists.conditions;
+      const infectionRisks = appSettings.lists?.infectionRisks || defaultAppSettings.lists.infectionRisks;
+      const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
+      const coffinsList = appSettings.lists?.coffins || defaultAppSettings.lists.coffins;
+      const handlesList = appSettings.lists?.handles || defaultAppSettings.lists.handles;
+      const wreathHoldersList = appSettings.lists?.wreathHolders || defaultAppSettings.lists.wreathHolders;
+      const crucifixesList = appSettings.lists?.crucifixes || defaultAppSettings.lists.crucifixes;
+      const titles = appSettings.lists?.titles || defaultAppSettings.lists.titles;
+      const vehicleOptions = appSettings.lists?.vehicles || defaultAppSettings.lists.vehicles;
+      const norfolkHospitals = appSettings.lists?.hospitals || defaultAppSettings.lists.hospitals;
+      const labels = appSettings.labels || defaultAppSettings.labels;
+      const customFields = appSettings.customFields || [];
+
+      const saveSettingsToDb = async (newSettings) => {
+        try { localStorage.setItem('parlourcare_settings', JSON.stringify(newSettings)); } catch(e){}
+        if (isFirebaseEnabled && auth.currentUser) {
+          try {
+            const docRef = doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings');
+            await setDoc(docRef, newSettings);
+          } catch(err) {}
+        }
+      };
+
+      const handleAddListItem = (listName) => {
+        if (!adminInput[listName]) return;
+        const newSettings = { 
+          ...appSettings, 
+          lists: { ...appSettings.lists, [listName]: [...(appSettings.lists[listName]||[]), adminInput[listName]] } 
+        };
+        setAppSettings(newSettings);
+        saveSettingsToDb(newSettings);
+        setAdminInput({ ...adminInput, [listName]: '' });
+      };
+
+      const handleRemoveListItem = (listName, itemIndex) => {
+        const updatedList = [...(appSettings.lists[listName]||[])];
+        updatedList.splice(itemIndex, 1);
+        const newSettings = { ...appSettings, lists: { ...appSettings.lists, [listName]: updatedList } };
+        setAppSettings(newSettings);
+        saveSettingsToDb(newSettings);
+      };
+
+      const handleLabelChange = (key, val) => {
+        const newSettings = { ...appSettings, labels: { ...appSettings.labels, [key]: val } };
+        setAppSettings(newSettings);
+        saveSettingsToDb(newSettings);
+      };
+
+      const handleAddCustomField = () => {
+        if (!adminInput.newFieldName) return;
+        const newId = 'custom_' + Date.now();
+        const newSettings = { 
+          ...appSettings, 
+          customFields: [...customFields, { id: newId, label: adminInput.newFieldName }] 
+        };
+        setAppSettings(newSettings);
+        saveSettingsToDb(newSettings);
+        setAdminInput({ ...adminInput, newFieldName: '' });
+      };
+      
+      const handleRemoveCustomField = (id) => {
+        const newSettings = { ...appSettings, customFields: customFields.filter(f => f.id !== id) };
+        setAppSettings(newSettings);
+        saveSettingsToDb(newSettings);
+      };
+
+      const showNotification = (title, message, type = "info") => setDialog({ isOpen: true, title, message, type, onConfirm: null });
+      const closeDialog = () => setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
+
+      const saveStockToDb = async (newStock) => {
+        try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock)); } catch(e){}
+        if (isFirebaseEnabled && auth.currentUser) {
+          try {
+            const docRef = doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory');
+            await setDoc(docRef, JSON.parse(JSON.stringify(newStock)));
+          } catch(err) {}
+        }
+      };
+
+      const saveCaseToDb = async (record) => {
+        setDeceasedList(prev => {
+          const index = prev.findIndex(item => item.id === record.id);
+          const next = index > -1 ? prev.map(item => item.id === record.id ? record : item) : [...prev, record];
+          try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
+          return next;
+        });
+        if (isFirebaseEnabled && auth.currentUser) {
+          try {
+            const docRef = doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id));
+            await setDoc(docRef, JSON.parse(JSON.stringify(record)));
+          } catch (err) {}
+        }
+      };
+
+      const deleteCaseFromDb = async (id) => {
+        const deletedCase = deceasedList.find(item => item.id === id);
+        if (deletedCase) {
+          let updatedStock = { ...stockLevels };
+          let changed = false;
+          if (deletedCase.coffin && updatedStock.coffins[deletedCase.coffin] !== undefined) { updatedStock.coffins[deletedCase.coffin] += 1; changed = true; }
+          if (deletedCase.coffinHandles && updatedStock.handles[deletedCase.coffinHandles] !== undefined) { updatedStock.handles[deletedCase.coffinHandles] += 1; changed = true; }
+          if (deletedCase.wreathHolders && updatedStock.wreathHolders[deletedCase.wreathHolders] !== undefined) { updatedStock.wreathHolders[deletedCase.wreathHolders] += 1; changed = true; }
+          if (deletedCase.crucifix && updatedStock.crucifixes[deletedCase.crucifix] !== undefined) { updatedStock.crucifixes[deletedCase.crucifix] += 1; changed = true; }
+          if (changed) { setStockLevels(updatedStock); saveStockToDb(updatedStock); }
+        }
+        setDeceasedList(prev => {
+          const next = prev.filter(item => item.id !== id);
+          try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
+          return next;
+        });
+        if (isFirebaseEnabled && user) {
+          try {
+            const docRef = doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id));
+            await deleteDoc(docRef);
+          } catch (err) {}
+        }
+      };
+
+      const handleStockLevelAdjust = (type, itemName, delta) => {
+        let updated = { ...stockLevels };
+        if (type === 'coffin') updated.coffins[itemName] = Math.max(0, (updated.coffins[itemName] || 0) + delta);
+        else if (type === 'handles') updated.handles[itemName] = Math.max(0, (updated.handles[itemName] || 0) + delta);
+        else if (type === 'wreathHolders') updated.wreathHolders[itemName] = Math.max(0, (updated.wreathHolders[itemName] || 0) + delta);
+        else if (type === 'crucifix') updated.crucifixes[itemName] = Math.max(0, (updated.crucifixes[itemName] || 0) + delta);
+        setStockLevels(updated);
+        saveStockToDb(updated);
+      };
+
+      const handleFieldChange = (fieldName, value) => {
+        if (!formState) return;
+        let updatedStock = { ...stockLevels };
+        let stockChanged = false;
+
+        if (fieldName === 'coffin' || fieldName === 'coffinHandles' || fieldName === 'wreathHolders' || fieldName === 'crucifix') {
+          const cat = fieldName === 'coffin' ? 'coffins' : fieldName === 'coffinHandles' ? 'handles' : fieldName === 'wreathHolders' ? 'wreathHolders' : 'crucifixes';
+          const oldVal = formState[fieldName] || "";
+          const newVal = value || "";
+          if (oldVal !== newVal) {
+            if (oldVal && updatedStock[cat][oldVal] !== undefined) { updatedStock[cat][oldVal] += 1; stockChanged = true; }
+            if (newVal && updatedStock[cat][newVal] !== undefined) { updatedStock[cat][newVal] = Math.max(0, updatedStock[cat][newVal] - 1); stockChanged = true; }
+          }
+        }
+        const updatedRecord = { ...formState, [fieldName]: value };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+        if (stockChanged) { setStockLevels(updatedStock); saveStockToDb(updatedStock); }
+      };
+
+      const handleStatusChange = (newStatus) => {
+        if (!formState || isLogisticsLocked) return;
+        const ts = { ...formState.pickupStatusTimestamps, [newStatus]: getTimestamp() };
+        const updatedRecord = { ...formState, pickupStatus: newStatus, pickupStatusTimestamps: ts };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+      };
+
+      const handleTransferStatusChange = (newStatus) => {
+        if (!formState) return;
+        const ts = { ...formState.transferStatusTimestamps, [newStatus]: getTimestamp() };
+        const updatedRecord = { ...formState, transferStatus: newStatus, transferStatusTimestamps: ts };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+      };
+
+      const handleArchiveToggle = (id) => {
+        const item = deceasedList.find(d => d.id === id);
+        if (!item) return;
+        const updatedRecord = { ...item, isArchived: !item.isArchived };
+        saveCaseToDb(updatedRecord);
+        if (selectedRowId === id && formState) setFormState(prev => ({ ...prev, isArchived: !item.isArchived }));
+        showNotification(!item.isArchived ? "Record Archived" : "Record Restored", "File moved successfully.", "info");
+      };
+
+      const handleStaffToggle = (staffName, staffEmail) => {
+        if (!formState) return;
+        let updatedStaff = [...(formState.pickupStaff || [])];
+        if (updatedStaff.includes(staffName)) updatedStaff = updatedStaff.filter(s => s !== staffName);
+        else updatedStaff.push(staffName);
+        const emails = norfolkStaffList.filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian"))).map(s => s.email).join(', ');
+        const updatedRecord = { ...formState, pickupStaff: updatedStaff, pickupStaffEmails: emails };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+      };
+
+      const handleTransferStaffToggle = (staffName, staffEmail) => {
+        if (!formState) return;
+        let updatedStaff = [...(formState.transferStaff || [])];
+        if (updatedStaff.includes(staffName)) updatedStaff = updatedStaff.filter(s => s !== staffName);
+        else updatedStaff.push(staffName);
+        const emails = norfolkStaffList.filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian"))).map(s => s.email).join(', ');
+        const updatedRecord = { ...formState, transferStaff: updatedStaff, transferStaffEmails: emails };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+      };
+
+      const createAdmission = (isCoronerCase) => {
+        const nextId = String(Date.now());
+        const locationName = activeBrand === "gowards" ? "Fakenham" : "Cromer";
+        const locationPrefix = activeBrand === "gowards" ? "F" : "C";
+        const arrangerCode = activeBrand === "gowards" ? "FAK" : "CRM";
+        const defaultVehicle = activeBrand === "gowards" ? "C25 GFS" : "C17 DFS";
+        const defaultMortuary = activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary";
+        const locationCount = deceasedList.filter(d => d.location === locationName).length;
+
+        const newCase = {
+          id: nextId,
+          ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
+          fridgeTray: "", keyDate: "", keyMilestoneName: "", keyMilestoneUrgency: "None", deceasedName: "", title: "Mr", dob: "", dod: "", arranger: arrangerCode, location: locationName, greenCoroner: "No", encoffined: "No", plate: "No", bodySize: "", condition: "Good", infection: "None", coffin: "", coffinHandles: "", wreathHolders: "", crucifix: "", clothes: "", clothesChecked: false, preparations: "No", preparationsDetails: "", jewellery: "No", jewelleryDetails: "", devices: "No", devicesDetails: "", embalming: "No", embalmingDetails: "", coffinAccessories: "", viewing: "R", ready: "No", 
+          isCoroner: isCoronerCase, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: defaultMortuary, pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: defaultVehicle, pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", transferStatus: "Pending", transferStatusTimestamps: { "Pending": getTimestamp() }, transferDateTime: "", transferHospital: "Norfolk & Norwich University Hospital (NNUH)", transferType: "Pick up", transferVehicle: defaultVehicle, transferStaff: [], transferStaffEmails: "", isArchived: false
+        };
+        saveCaseToDb(newCase);
+        setFormState(newCase);
+        setSelectedRowId(nextId);
+        setViewMode("cases");
+        setActiveTab(isCoronerCase ? "pickup" : "care");
       };
 
       const executeIframePrint = (htmlContent, isSticker = false) => {
@@ -674,76 +865,39 @@
                 <head>
                   <title>Mortuary Portal - Print</title>
                   <style>
-                    body { 
-                      margin: 0; 
-                      padding: 0; 
-                      background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; 
-                      color: #000000; 
-                      font-family: 'Segoe UI', Arial, sans-serif; 
-                      -webkit-print-color-adjust: exact; 
-                      print-color-adjust: exact; 
-                    }
-                    .print-canvas { 
-                      background: #ffffff; 
-                      min-height: ${isSticker ? 'auto' : '100vh'}; 
-                      box-sizing: border-box; 
-                      padding: ${isSticker ? '0' : '40px'};
-                      ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''}
-                    }
-                    @media print {
-                      body { padding: 0 !important; margin: 0 !important; }
-                      .no-print { display: none !important; }
-                      .print-canvas { padding: 0 !important; background: transparent !important; }
-                      ${isSticker ? '@page { size: 89mm 36mm; margin: 0mm; }' : ''}
-                    }
+                    body { margin: 0; padding: 0; background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; color: #000000; font-family: 'Segoe UI', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .print-canvas { background: #ffffff; min-height: ${isSticker ? 'auto' : '100vh'}; box-sizing: border-box; padding: ${isSticker ? '0' : '40px'}; ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''} }
+                    @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } .print-canvas { padding: 0 !important; background: transparent !important; } ${isSticker ? '@page { size: 89mm 36mm; margin: 0mm; }' : ''} }
                   </style>
                 </head>
                 <body>
-                  <div class="no-print" style="background: #0f172a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: sticky; top: 0; left: 0; right: 0; z-index: 10000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); -webkit-font-smoothing: antialiased;">
-                    <span style="color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">📄 Norfolk Mortuary Portal - ${isSticker ? 'Sticker Desk' : 'Print Desk'}</span>
-                    <div style="display: flex; gap: 8px;">
-                      <button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(234, 179, 8, 0.2); transition: background 0.2s;">
-                        🖨️ Tap to Print
-                      </button>
-                      <button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">
-                        Close Tab
-                      </button>
+                  <div class="no-print" style="background: #0f172a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; position: sticky; top: 0; left: 0; right: 0; z-index: 10000;">
+                    <span style="color: #94a3b8; font-size: 11px; font-weight: 800;">📄 Norfolk Mortuary - Print Desk</span>
+                    <div>
+                      <button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; margin-right: 8px;">🖨️ Print</button>
+                      <button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Close</button>
                     </div>
                   </div>
-                  <div class="print-canvas">
-                    ${htmlContent}
-                  </div>
-                  <script>
-                    window.onload = function() {
-                      setTimeout(() => {
-                        window.print();
-                      }, 500);
-                    };
-                  <\/script>
+                  <div class="print-canvas">${htmlContent}</div>
+                  <script>window.onload = function() { setTimeout(() => { window.print(); }, 500); };<\/script>
                 </body>
               </html>
             `;
-            
             printWindow.document.open();
             printWindow.document.write(decoratedHtml);
             printWindow.document.close();
-          } else {
-            showNotification(
-              "Print Desk Blocked", 
-              "Your browser blocked the print window. Please click allow pop-ups for this mortuary portal.", 
-              "info"
-            );
-          }
-        } catch (error) {
-          console.error("Print execution failed:", error);
-          showNotification("Print Error", "An error occurred while generating the print template.", "info");
-        }
+          } else showNotification("Print Blocked", "Allow pop-ups to print.", "info");
+        } catch (error) { showNotification("Print Error", "Failed to generate print.", "info"); }
+      };
+
+      const getQrCodeUrl = (record, size = 200) => {
+        if (!record) return '';
+        const deepLinkUrl = `${getBaseUrl()}?case=${record.id}`;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=f8fafc&color=0f172a`;
       };
 
       const printDocHeader = (record, docTitle) => {
-        const deepLinkUrl = `${getBaseUrl()}?case=${record?.id}`;
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(deepLinkUrl)}&bgcolor=ffffff&color=000000`;
-
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(`${getBaseUrl()}?case=${record?.id}`)}&bgcolor=ffffff&color=000000`;
         return `
           <div style="border-bottom: 3px double #000; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-family: 'Segoe UI', Arial, sans-serif;">
             <div>
@@ -779,13 +933,7 @@
           <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
             ${printDocHeader(record, "Clinical Mortuary & Registration Record")}
             ${printRecordCard(record)}
-            
-            ${record?.infection && record?.infection !== 'None' ? `
-              <div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px;">
-                🚨 BIO-HAZARD PROTOCOLS ACTIVE: ${record.infection.toUpperCase()}
-              </div>
-            ` : ''}
-
+            ${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px;">🚨 BIO-HAZARD PROTOCOLS ACTIVE: ${record.infection.toUpperCase()}</div>` : ''}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Anatomical & Care Status</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Body Condition Score:</span> <strong>${record?.condition}</strong></div>
@@ -793,12 +941,10 @@
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Embalming Action:</span> <strong>${record?.embalmingDetails || 'None'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Key Milestone Date:</span> <strong>${record?.keyDate || 'Pending'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Sanitary Preparation & Grooming</div>
               <div style="font-size: 13px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations only.'}</div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Valuables & Jewellery Custody Register</div>
               <div style="font-size: 13px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No personal effects logged.'}</div>
@@ -813,7 +959,6 @@
           <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
             ${printDocHeader(record, "Coffin Joinery & Workshop Specification")}
             ${printRecordCard(record)}
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'PENDING'}</strong></div>
@@ -824,13 +969,11 @@
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Engraved Name Plate Fixed:</span> <strong>${record?.plate || 'No'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Grave Marker:</span> <strong>${record?.graveMarker || 'None'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">2. Dressing Attire & Verification</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Selected Apparel:</span> <strong>${record?.clothes || 'None Specified'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Apparel Received & Verified:</span> <strong>${record?.clothesChecked ? '✓ Yes (Verified)' : '✗ Pending Receipt'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">3. Viewing Milestones</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Family Viewing Request:</span> <strong>${record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED'}</strong></div>
@@ -843,23 +986,30 @@
 
       const printCoronerDocument = (record) => {
         if (!record?.isCoroner) return;
-        
         let timelineHtml = '';
         if (record?.pickupStatusTimestamps) {
-          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => {
-            timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
-          });
+          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
         }
-
         const htmlContent = `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
             ${printDocHeader(record, "Coroner's Removal Authority & Dispatch")}
             ${printRecordCard(record)}
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>CAD Reference:</span> <strong>${record?.coronerRef || 'N/A'}</strong></div>
-              <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Instructing Officer:</span> <strong>${record?.coronerOfficer || 'N/A'}</strong></div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;">
+                <span>Instructing Officer:</span> 
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <strong>${record?.coronerOfficer || 'N/A'}</strong>
+                  ${record?.coronerSignature ? `
+                    <div style="display: flex; align-items: center; gap: 6px; margin-left: 15px; border-left: 2px solid #e2e8f0; padding-left: 15px;">
+                      <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signed:</span>
+                      <img src="${record.coronerSignature}" style="height: 65px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
+                      <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-left: 5px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
             </div>
 
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
@@ -870,13 +1020,11 @@
                 <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Assigned Fleet Vehicle:</span> <strong>${record?.pickupVehicle || 'N/A'}</strong></div>
               </div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew & Equipment Checks</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Crew Dispatched:</span> <strong>${(record?.pickupStaff || []).join(', ') || 'PENDING'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Mobilised Equipment:</span> <strong>${(record?.pickupEquipment || []).join(', ') || 'First Call Stretcher'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Current Mission Stage:</span> <strong style="text-transform: uppercase; color: #b45309;">${record?.pickupStatus}</strong></div>
@@ -892,19 +1040,14 @@
 
       const printHospitalTransferDocument = (record) => {
         if (!record?.isCoroner) return;
-        
         let timelineHtml = '';
         if (record?.transferStatusTimestamps) {
-          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => {
-            timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
-          });
+          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
         }
-
         const htmlContent = `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.5;">
             ${printDocHeader(record, "Hospital Transfer Details & Logistics")}
             ${printRecordCard(record)}
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Transfer Type:</span> <strong>${record?.transferType || 'N/A'}</strong></div>
@@ -912,12 +1055,10 @@
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Scheduled Date & Time:</span> <strong>${record?.transferDateTime || 'PENDING'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Vehicle Assigned:</span> <strong>${record?.transferVehicle || 'N/A'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Assigned Transfer Staff</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Staff Dispatched:</span> <strong>${(record?.transferStaff || []).join(', ') || 'PENDING'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Transfer Audits</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Current Transfer Stage:</span> <strong style="text-transform: uppercase; color: #b45309;">${record?.transferStatus || 'Pending'}</strong></div>
@@ -934,29 +1075,17 @@
       const printCombinedMasterDocument = (record) => {
         let timelineHtml = '';
         if (record?.pickupStatusTimestamps) {
-          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => {
-            timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
-          });
+          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
         }
-        
         let transferTimelineHtml = '';
         if (record?.transferStatusTimestamps) {
-          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => {
-            transferTimelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
-          });
+          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { transferTimelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
         }
-
         const htmlContent = `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; background: #fff; line-height: 1.4;">
             ${printDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)")}
             ${printRecordCard(record)}
-
-            ${record?.infection && record?.infection !== 'None' ? `
-              <div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">
-                🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}
-              </div>
-            ` : ''}
-
+            ${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}</div>` : ''}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Body Condition:</span> <strong>${record?.condition}</strong></div>
@@ -965,21 +1094,16 @@
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Embalming Logs:</span> <strong>${record?.embalmingDetails || 'None'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Key Milestone Date:</span> <strong>${record?.keyDate || 'Pending'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div>
               <div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div>
               <div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div>
             </div>
-
             <div style="page-break-before: always; margin-top: 40px;"></div>
-
             ${printDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2")}
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Timber Specification:</span> <strong>${record?.coffin || 'None'}</strong></div>
@@ -991,30 +1115,38 @@
               <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Grave Marker:</span> <strong>${record?.graveMarker || 'None'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Preparation Complete:</span> <strong>${record?.ready || 'No'}</strong></div>
             </div>
-
             <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
               <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Dressing Apparel:</span> <strong>${record?.clothes || 'None'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Apparel Checked/Received:</span> <strong>${record?.clothesChecked ? 'Yes' : 'No'}</strong></div>
               <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Family Viewing Status:</span> <strong>${record?.viewing || 'Requested'}</strong></div>
             </div>
-
             ${record?.isCoroner ? `
               <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
                 <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>CAD Ref:</span> <strong>${record.coronerRef || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coroner Officer:</span> <strong>${record.coronerOfficer || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;">
+                  <span>Coroner Officer:</span> 
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <strong>${record.coronerOfficer || 'N/A'}</strong>
+                    ${record.coronerSignature ? `
+                      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px; border-left: 2px solid #e2e8f0; padding-left: 10px;">
+                        <span style="font-size: 10px; color: #64748b; font-weight: bold;">Signed:</span>
+                        <img src="${record.coronerSignature}" style="height: 45px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
+                        <span style="font-size: 10px; color: #64748b; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Pick-up Location:</span> <strong>${record.pickupLocation || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Scheduled Date:</span> <strong>${record.pickupDateTime || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Fleet Vehicle:</span> <strong>${record.pickupVehicle || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Stage Status:</span> <strong>${record.pickupStatus || 'N/A'}</strong></div>
-                
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
                   <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
                   ${timelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
                 </div>
               </div>
-
               <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
                 <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital Transfer Details & Logistics</div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Transfer Type:</span> <strong>${record.transferType || 'N/A'}</strong></div>
@@ -1023,7 +1155,6 @@
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Fleet Vehicle:</span> <strong>${record.transferVehicle || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Staff:</span> <strong>${(record.transferStaff || []).join(', ') || 'PENDING'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Transfer Stage:</span> <strong>${record.transferStatus || 'Pending'}</strong></div>
-                
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
                   <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
                   ${transferTimelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
@@ -1038,448 +1169,69 @@
       const printStickerAndCheckBlocks = (record) => {
         const deepLinkUrl = `${getBaseUrl()}?case=${record?.id}`;
         const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
-
         const htmlContent = `
           <div style="width: 89mm; height: 36mm; box-sizing: border-box; padding: 3mm 4mm; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; overflow: hidden; gap: 4mm;">
             <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
               <img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 28mm; height: 28mm; display: block; object-fit: contain;" />
             </div>
-            
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">
               <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                 ${record?.title} ${record?.deceasedName || "Unnamed Case"}
               </div>
-              <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">
-                DOB: ${record?.dob || 'PENDING'}
-              </div>
-              <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">
-                REF: ${record?.ref}
-              </div>
-              <div style="font-size: 7px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">
-                Scan for Care File
-              </div>
+              <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">DOB: ${record?.dob || 'PENDING'}</div>
+              <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">REF: ${record?.ref}</div>
+              <div style="font-size: 7px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">Scan for Care File</div>
             </div>
           </div>
         `;
         executeIframePrint(htmlContent, true);
       };
 
-      const handleFieldChange = (fieldName, value) => {
-        if (!formState) return;
+      const handleLogin = (e) => {
+        e.preventDefault();
+        const u = username.toLowerCase();
+        const p = passwordInput;
+        let valid = false;
         
-        let updatedStock = { ...stockLevels };
-        let stockChanged = false;
+        if ((u === 'adrian' || u === 'paul') && p === "daniscool2026") valid = true;
+        if (u === 'catherine' && p === "iloveadrian") valid = true;
+        if (u === 'admin' && p === "offscriptlabs2026") valid = true;
 
-        // Automatically manage Coffin stock balances
-        if (fieldName === 'coffin') {
-          const oldVal = formState.coffin || "";
-          const newVal = value || "";
-          if (oldVal !== newVal) {
-            // Restore unit to previous coffin inventory
-            if (oldVal && updatedStock.coffins[oldVal] !== undefined) {
-              updatedStock.coffins[oldVal] += 1;
-              stockChanged = true;
-            }
-            // Deduct unit from newly assigned coffin inventory
-            if (newVal && updatedStock.coffins[newVal] !== undefined) {
-              updatedStock.coffins[newVal] = Math.max(0, updatedStock.coffins[newVal] - 1);
-              stockChanged = true;
-            }
-          }
-        }
-
-        // Automatically manage Handles stock balances
-        if (fieldName === 'coffinHandles') {
-          const oldVal = formState.coffinHandles || "";
-          const newVal = value || "";
-          if (oldVal !== newVal) {
-            // Restore unit to previous handleset inventory
-            if (oldVal && updatedStock.handles[oldVal] !== undefined) {
-              updatedStock.handles[oldVal] += 1;
-              stockChanged = true;
-            }
-            // Deduct unit from newly assigned handleset inventory
-            if (newVal && updatedStock.handles[newVal] !== undefined) {
-              updatedStock.handles[newVal] = Math.max(0, updatedStock.handles[newVal] - 1);
-              stockChanged = true;
-            }
-          }
-        }
-
-        // Automatically manage Wreath Holders stock balances
-        if (fieldName === 'wreathHolders') {
-          const oldVal = formState.wreathHolders || "";
-          const newVal = value || "";
-          if (oldVal !== newVal) {
-            // Restore unit to previous wreathHolders inventory
-            if (oldVal && updatedStock.wreathHolders[oldVal] !== undefined) {
-              updatedStock.wreathHolders[oldVal] += 1;
-              stockChanged = true;
-            }
-            // Deduct unit from newly assigned wreathHolders inventory
-            if (newVal && updatedStock.wreathHolders[newVal] !== undefined) {
-              updatedStock.wreathHolders[newVal] = Math.max(0, updatedStock.wreathHolders[newVal] - 1);
-              stockChanged = true;
-            }
-          }
-        }
-
-        // Automatically manage Crucifix stock balances
-        if (fieldName === 'crucifix') {
-          const oldVal = formState.crucifix || "";
-          const newVal = value || "";
-          if (oldVal !== newVal) {
-            // Restore unit to previous crucifix inventory
-            if (oldVal && updatedStock.crucifixes[oldVal] !== undefined) {
-              updatedStock.crucifixes[oldVal] += 1;
-              stockChanged = true;
-            }
-            // Deduct unit from newly assigned crucifix inventory
-            if (newVal && updatedStock.crucifixes[newVal] !== undefined) {
-              updatedStock.crucifixes[newVal] = Math.max(0, updatedStock.crucifixes[newVal] - 1);
-              stockChanged = true;
-            }
-          }
-        }
-
-        const updatedRecord = { ...formState, [fieldName]: value };
-        setFormState(updatedRecord);
-        saveCaseToDb(updatedRecord);
-
-        if (stockChanged) {
-          setStockLevels(updatedStock);
-          saveStockToDb(updatedStock);
-        }
-      };
-
-      const handleStatusChange = (newStatus) => {
-        if (!formState || isLogisticsLocked) return;
-        const timestamp = getTimestamp();
-        const currentTimestamps = formState.pickupStatusTimestamps || {};
-        const updatedTimestamps = {
-          ...currentTimestamps,
-          [newStatus]: timestamp
-        };
-        const updatedRecord = {
-          ...formState,
-          pickupStatus: newStatus,
-          pickupStatusTimestamps: updatedTimestamps
-        };
-        setFormState(updatedRecord);
-        saveCaseToDb(updatedRecord);
-      };
-
-      const handleTransferStatusChange = (newStatus) => {
-        if (!formState) return;
-        const timestamp = getTimestamp();
-        const currentTimestamps = formState.transferStatusTimestamps || {};
-        const updatedTimestamps = {
-          ...currentTimestamps,
-          [newStatus]: timestamp
-        };
-        const updatedRecord = {
-          ...formState,
-          transferStatus: newStatus,
-          transferStatusTimestamps: updatedTimestamps
-        };
-        setFormState(updatedRecord);
-        saveCaseToDb(updatedRecord);
-      };
-
-      const handleArchiveToggle = (id) => {
-        const item = deceasedList.find(d => d.id === id);
-        if (!item) return;
-        const updatedArchiveState = !item.isArchived;
-        const updatedRecord = { ...item, isArchived: updatedArchiveState };
-        saveCaseToDb(updatedRecord);
-        if (selectedRowId === id && formState) {
-          setFormState(prev => ({ ...prev, isArchived: updatedArchiveState }));
-        }
-        showNotification(
-          updatedArchiveState ? "Record Archived" : "Record Restored",
-          `The file for ${item.deceasedName || "Unnamed Admission"} was moved successfully.`,
-          "info"
-        );
-      };
-
-      const handleStaffToggle = (staffName, staffEmail) => {
-        if (!formState) return;
-        const currentStaff = formState.pickupStaff || [];
-        let updatedStaff = [...currentStaff];
-        
-        if (updatedStaff.includes(staffName)) {
-          updatedStaff = updatedStaff.filter(s => s !== staffName);
+        if (valid) {
+          setIsAuthenticated(true);
+          setLoggedInUser(u);
+          setLoginError('');
         } else {
-          updatedStaff.push(staffName);
+          setLoginError('Invalid password for selected user.');
         }
-        
-        // Filter: only email Paul or Adrian
-        const selectedEmails = norfolkStaffList
-          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian")))
-          .map(s => s.email)
-          .join(', ');
-        
-        const updatedRecord = {
-          ...formState,
-          pickupStaff: updatedStaff,
-          pickupStaffEmails: selectedEmails
-        };
-        setFormState(updatedRecord);
-        saveCaseToDb(updatedRecord);
       };
 
-      const handleTransferStaffToggle = (staffName, staffEmail) => {
-        if (!formState) return;
-        const currentStaff = formState.transferStaff || [];
-        let updatedStaff = [...currentStaff];
-        
-        if (updatedStaff.includes(staffName)) {
-          updatedStaff = updatedStaff.filter(s => s !== staffName);
-        } else {
-          updatedStaff.push(staffName);
-        }
-        
-        // Filter: only email Paul or Adrian
-        const selectedEmails = norfolkStaffList
-          .filter(s => updatedStaff.includes(s.name) && (s.name.includes("Paul") || s.name.includes("Adrian")))
-          .map(s => s.email)
-          .join(', ');
-        
-        const updatedRecord = {
-          ...formState,
-          transferStaff: updatedStaff,
-          transferStaffEmails: selectedEmails
-        };
-        setFormState(updatedRecord);
-        saveCaseToDb(updatedRecord);
+      const handleLogout = () => {
+        setIsAuthenticated(false);
+        setLoggedInUser(null);
+        setPasswordInput('');
+        setSelectedRowId(null);
+        setViewMode('cases');
       };
 
-      const createAdmission = (isCoronerCase) => {
-        const nextId = String(Date.now());
-        
-        // Dynamically assign branch defaults
-        const locationName = activeBrand === "gowards" ? "Fakenham" : "Cromer";
-        const locationPrefix = activeBrand === "gowards" ? "F" : "C";
-        const arrangerCode = activeBrand === "gowards" ? "FAK" : "CRM";
-        const defaultVehicle = activeBrand === "gowards" ? "C25 GFS" : "C17 DFS";
-        const defaultMortuary = activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary";
-        
-        const locationCount = deceasedList.filter(d => d.location === locationName).length;
-
-        const newCase = {
-          id: nextId,
-          ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
-          fridgeTray: "",
-          keyDate: "",
-          keyMilestoneName: "",
-          keyMilestoneUrgency: "None",
-          deceasedName: "", 
-          title: "Mr",
-          dob: "", 
-          dod: "", 
-          arranger: arrangerCode,
-          location: locationName,
-          greenCoroner: "No",
-          encoffined: "No",
-          plate: "No",
-          bodySize: "",
-          condition: "Good",
-          infection: "None",
-          coffin: "",        
-          coffinHandles: "", 
-          wreathHolders: "",
-          crucifix: "",
-          clothes: "",
-          clothesChecked: false,
-          preparations: "No",
-          preparationsDetails: "",
-          jewellery: "No",
-          jewelleryDetails: "",
-          devices: "No",
-          devicesDetails: "",
-          embalming: "No",
-          embalmingDetails: "",
-          coffinAccessories: "",
-          viewing: "R",
-          ready: "No",
-          isCoroner: isCoronerCase,
-          coronerRef: "", 
-          coronerOfficer: "",
-          pickupLocation: "",
-          pickupDestination: defaultMortuary,
-          pickupDateTime: "",
-          pickupStaff: [],
-          pickupStaffEmails: "",
-          pickupVehicle: defaultVehicle,
-          pickupEquipment: ["First Call Stretcher"],
-          pickupStatus: "Pending",
-          pickupStatusTimestamps: {
-            "Pending": getTimestamp()
-          },
-          pickupInstructions: "",
-          transferStatus: "Pending",
-          transferStatusTimestamps: {
-            "Pending": getTimestamp()
-          },
-          transferDateTime: "",
-          transferHospital: "Norfolk & Norwich University Hospital (NNUH)",
-          transferType: "Pick up",
-          transferVehicle: defaultVehicle,
-          transferStaff: [],
-          transferStaffEmails: "",
-          isArchived: false
-        };
-
-        saveCaseToDb(newCase);
-        setFormState(newCase);
-        setSelectedRowId(nextId);
-        setViewMode("cases");
-        setActiveTab(isCoronerCase ? "pickup" : "care");
-      };
-
-      const confirmCaseDeletion = (id, name) => {
-        setDialog({
-          isOpen: true,
-          title: "Confirm Case Removal",
-          message: `Are you certain you want to remove the care profile for ${name || "this case"}? This action deletes the record permanently.`,
-          type: "confirm",
-          onConfirm: () => {
-            deleteCaseFromDb(id);
-            if (selectedRowId === id) {
-              setSelectedRowId(null);
-              setFormState(null);
-            }
-            closeDialog();
-            showNotification("Case Removed", "The deceased record was removed from active custody registers.", "info");
-          }
-        });
-      };
-
-      const dispatchEmailData = useMemo(() => {
-        if (!formState) return null;
-        const subject = `🚨 CORONER DISPATCH: Removal Call - ${(formState?.title || '')} ${(formState?.deceasedName || '')} (${(formState?.ref || '')})`;
-        const body = `CROMER & DISTRICT / GOWARDS FUNERAL SERVICES\n` +
-          `CORONER'S PICK-UP DISPATCH INSTRUCTION\n` +
-          `----------------------------------------\n\n` +
-          `ARR Ref: ${(formState?.ref || '')}\n` +
-          `Deceased Name: ${(formState?.title || '')} ${(formState?.deceasedName || 'Unnamed')}\n` +
-          `CAD: ${(formState?.coronerRef || 'N/A')}\n` +
-          `Coroner Officer: ${(formState?.coronerOfficer || 'N/A')}\n\n` +
-          `Pick-up Location: ${(formState?.pickupLocation || 'PENDING')}\n` +
-          `Target Destination: ${(formState?.pickupDestination || 'PENDING')}\n` +
-          `Scheduled Date/Time: ${(formState?.pickupDateTime || 'PENDING')}\n\n` +
-          `Vehicle Assigned: ${(formState?.pickupVehicle || 'C17 DFS')}\n` +
-          `Staff Dispatched: ${(formState?.pickupStaff || []).join(', ') || 'PENDING'}\n` +
-          `Equipment Checklist: ${(formState?.pickupEquipment || []).join(', ') || 'First Call Stretcher'}\n\n` +
-          `SPECIAL INSTRUCTIONS:\n` +
-          `- ${(formState?.pickupInstructions || 'Standard pick-up procedures.')}\n` +
-          `----------------------------------------\n`;
-
-        const mailtoLink = `mailto:${encodeURIComponent(formState?.pickupStaffEmails || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        return { subject, body, mailtoLink };
-      }, [formState]);
-
-      const filteredList = useMemo(() => {
-        const urgencyOrder = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
-        const result = deceasedList.filter(item => {
-          const matchSearch = (item.deceasedName || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              (item.ref || "").toLowerCase().includes(searchQuery.toLowerCase());
-          
-          let matchLoc = true;
-          if (activeBrand === "cromer") {
-            matchLoc = item.location === "Cromer";
-          } else if (activeBrand === "gowards") {
-            matchLoc = item.location === "Fakenham";
-          } else {
-            matchLoc = locationFilter === "All" || item.location === locationFilter;
-          }
-
-          const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
-          
-          let matchHud = true;
-          if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
-          if (hudFilter === "Transfers") matchHud = item.isCoroner && !!item.transferDateTime && item.transferStatus !== 'Completed';
-          if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
-
-          return matchSearch && matchLoc && matchStatus && matchHud;
-        });
-
-        return result.sort((a, b) => {
-          const uA = urgencyOrder[a.keyMilestoneUrgency] || 0;
-          const uB = urgencyOrder[b.keyMilestoneUrgency] || 0;
-          return uB - uA;
-        });
-      }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand, hudFilter]);
-
-      const hudStats = useMemo(() => {
-        const activeDashboardCases = deceasedList.filter(item => {
-          if (item.isArchived) return false;
-          if (activeBrand === "cromer") return item.location === "Cromer";
-          if (activeBrand === "gowards") return item.location === "Fakenham";
-          return true; // joint
-        });
-
-        return {
-          active: activeDashboardCases.length,
-          coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
-          transfers: activeDashboardCases.filter(c => c.isCoroner && c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
-          urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
-        };
-      }, [deceasedList, activeBrand]);
-
-      const filteredStockList = useMemo(() => {
-        const term = stockSearchQuery.toLowerCase();
-        
-        const coffins = Object.entries(stockLevels.coffins || {})
-          .filter(([name]) => name.toLowerCase().includes(term))
-          .map(([name, val]) => ({ name, type: "coffin", count: val }));
-          
-        const handles = Object.entries(stockLevels.handles || {})
-          .filter(([name]) => name.toLowerCase().includes(term))
-          .map(([name, val]) => ({ name, type: "handles", count: val }));
-
-        const wreathHolders = Object.entries(stockLevels.wreathHolders || {})
-          .filter(([name]) => name.toLowerCase().includes(term))
-          .map(([name, val]) => ({ name, type: "wreathHolders", count: val }));
-
-        const crucifixes = Object.entries(stockLevels.crucifixes || {})
-          .filter(([name]) => name.toLowerCase().includes(term))
-          .map(([name, val]) => ({ name, type: "crucifix", count: val }));
-
-        return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
-      }, [stockLevels, stockSearchQuery]);
-
-      const handleStockLevelAdjust = (type, itemName, delta) => {
-        let updated = { ...stockLevels };
-        if (type === 'coffin') {
-          updated.coffins[itemName] = Math.max(0, (updated.coffins[itemName] || 0) + delta);
-        } else if (type === 'handles') {
-          updated.handles[itemName] = Math.max(0, (updated.handles[itemName] || 0) + delta);
-        } else if (type === 'wreathHolders') {
-          updated.wreathHolders[itemName] = Math.max(0, (updated.wreathHolders[itemName] || 0) + delta);
-        } else if (type === 'crucifix') {
-          updated.crucifixes[itemName] = Math.max(0, (updated.crucifixes[itemName] || 0) + delta);
-        }
-        setStockLevels(updated);
-        saveStockToDb(updated);
-      };
-
+      // 5. RENDER LOGIC
       if (!isAuthenticated) {
         return (
           <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 antialiased select-none">
-            <div className="bg-slate-950 p-8 rounded-3xl border border-slate-800 shadow-2xl max-w-md w-full animate-fade-in relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500"></div>
-              <div className="text-center mb-8 mt-2">
-                <div className="bg-slate-900 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-800 shadow-inner">
-                  <span className="text-3xl">🤝</span>
-                </div>
-                <h1 className="text-2xl font-black text-white tracking-tight">ParlourCare Portal</h1>
-                <p className="text-xs text-slate-400 mt-2 font-medium">Authorised Personnel Only</p>
-              </div>
+            <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl animate-fade-in relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500"></div>
               
+              <div className="text-center mb-8">
+                <div className="mx-auto w-16 h-16 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-center mb-4 shadow-inner">
+                  <span className="text-3xl">🏛️</span>
+                </div>
+                <h1 className="text-2xl font-black text-white tracking-tight">ParlourCare</h1>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">Staff Gateway</p>
+              </div>
+
               <form onSubmit={handleLogin} className="space-y-5">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Username</label>
+                  <label className="text-[10px] font-black uppercase text-slate-500 block mb-2">Select User</label>
                   <div className="relative">
                     <Icons.Users className="absolute left-3 top-3 text-slate-500" size={16} />
                     <select 
@@ -1491,52 +1243,50 @@
                       <option value="adrian">Adrian</option>
                       <option value="paul">Paul</option>
                       <option value="catherine">Catherine</option>
+                      <option value="admin">System Admin</option>
                     </select>
-                    <div className="absolute right-3 top-3 text-slate-500 pointer-events-none">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </div>
                   </div>
                 </div>
+                
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Password</label>
+                  <label className="text-[10px] font-black uppercase text-slate-500 block mb-2">Password</label>
                   <div className="relative">
-                    <Icons.AlertTriangle className="absolute left-3 top-3 text-slate-500" size={16} />
+                    <Icons.QrCode className="absolute left-3 top-3 text-slate-500" size={16} />
                     <input 
                       type="password" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
                       className="w-full bg-slate-900 border border-slate-700/80 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors font-bold"
-                      placeholder="••••••••••••"
+                      placeholder="Enter access code"
                       required
                     />
                   </div>
                 </div>
 
                 {loginError && (
-                  <div className="bg-rose-950/50 border border-rose-900/50 text-rose-400 text-xs font-bold p-3 rounded-xl text-center animate-fade-in">
-                    {loginError}
+                  <div className="bg-rose-950/50 border border-rose-900/50 text-rose-400 text-xs font-bold p-3 rounded-xl flex items-center gap-2">
+                    <Icons.AlertTriangle size={14} /> {loginError}
                   </div>
                 )}
 
                 <button 
                   type="submit" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm py-3 rounded-xl transition transform active:scale-95 shadow-lg shadow-indigo-500/20 mt-2"
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] mt-4"
                 >
                   Secure Login
                 </button>
               </form>
-              <div className="mt-8 text-center border-t border-slate-800/60 pt-4">
-                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">&copy; 2026 Offscript Labs</span>
-              </div>
             </div>
           </div>
         );
       }
 
+      const isCatherine = loggedInUser === 'catherine';
+      const isAdmin = loggedInUser === 'admin';
+
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
           
-          {/* Brand Subheader */}
           <div className="bg-slate-950 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-30 font-medium select-none">
             <div className="flex items-center space-x-2">
               <span className="font-bold tracking-wide uppercase text-[10px] text-teal-400">
@@ -1547,11 +1297,11 @@
               <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🤝 Joint Group</button>
               <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦀 Cromer</button>
               <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold active:scale-95 ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦆 Gowards</button>
-              <button onClick={handleLogout} className="flex-1 sm:flex-initial ml-2 px-3 py-1.5 rounded-lg transition-all duration-150 text-[10px] font-black uppercase text-rose-400 border border-rose-900/50 hover:bg-rose-950/30 active:scale-95">Logout</button>
+              
+              <button onClick={handleLogout} className="flex-1 sm:flex-initial ml-2 px-3 py-1.5 rounded-lg transition-all duration-150 text-[11px] font-bold text-rose-400 border border-rose-900/50 hover:bg-rose-950/40 active:scale-95">Logout</button>
             </div>
           </div>
 
-          {/* Main Header */}
           <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg select-none`}>
             <div className="flex items-center space-x-3.5">
               <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/60 shadow-md">
@@ -1635,7 +1385,6 @@
                 </div>
               )}
 
-              {/* Dynamic View Mode Toggle Button */}
               {!isCatherine && (
                 <button 
                   onClick={() => { setSelectedRowId(null); setViewMode(viewMode === "stock" ? "cases" : "stock"); }} 
@@ -1645,11 +1394,22 @@
                 </button>
               )}
 
-              <button onClick={() => createAdmission(true)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-rose-500/50 shadow-lg shadow-rose-600/20 transition transform active:scale-95">
-                <Icons.AlertTriangle size={16} /> Record a Coroner's
-              </button>
+              {isAdmin && (
+                <button 
+                  onClick={() => { setSelectedRowId(null); setViewMode("admin"); }} 
+                  className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-indigo-900/50 border border-indigo-500/50 hover:bg-indigo-800/80 text-indigo-200 hover:text-white transition transform active:scale-95 shadow-md"
+                >
+                  ⚙️ Admin Portal
+                </button>
+              )}
+
+              {(!isCatherine || (isCatherine && viewMode !== "admin")) && !isAdmin && (
+                <button onClick={() => createAdmission(true)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-rose-500/50 shadow-lg shadow-rose-600/20 transition transform active:scale-95">
+                  <Icons.AlertTriangle size={16} /> Record a Coroner's
+                </button>
+              )}
               
-              {!isCatherine && (
+              {!isCatherine && !isAdmin && (
                 <button onClick={() => createAdmission(false)} className={`w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black ${currentTheme.primaryBtn} border border-slate-700/50 shadow-lg transition transform active:scale-95`}>
                   <Icons.Plus size={16} /> Quick Add Admission
                 </button>
@@ -1657,8 +1417,73 @@
             </div>
           </header>
 
-          {/* Main Content Area */}
-          {viewMode === "stock" && !selectedRowId ? (
+          {viewMode === "admin" && isAdmin && !selectedRowId ? (
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in bg-slate-900">
+              <div className="max-w-5xl mx-auto">
+                <div className="flex items-center gap-3 mb-8 border-b border-slate-800 pb-4">
+                  <div className="p-3 bg-indigo-950 rounded-xl border border-indigo-500/30 text-2xl">⚙️</div>
+                  <div>
+                    <h2 className="text-2xl font-black text-white">System Administration Portal</h2>
+                    <p className="text-sm text-slate-400">Configure global dropdowns, labels, and add custom fields.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">📝 UI Label Overrides</h3>
+                    <div className="space-y-4">
+                      {Object.keys(defaultAppSettings.labels).map(lblKey => (
+                        <div key={lblKey}>
+                          <label className="text-[10px] font-black uppercase text-slate-500 block mb-1">Internal: {lblKey}</label>
+                          <input type="text" value={labels[lblKey] || ''} onChange={(e) => handleLabelChange(lblKey, e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-sm p-2.5 text-white w-full focus:border-indigo-500 transition-colors font-bold" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">➕ Add Custom Care Fields</h3>
+                    <div className="flex gap-2 mb-4">
+                      <input type="text" placeholder="e.g. Religion, Pacemaker Details" value={adminInput.newFieldName || ''} onChange={(e) => setAdminInput({...adminInput, newFieldName: e.target.value})} className="bg-slate-900 border border-slate-700/80 rounded-lg text-sm p-2.5 text-white w-full focus:border-indigo-500 transition-colors" />
+                      <button onClick={handleAddCustomField} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 rounded-lg transition-colors whitespace-nowrap">Add Field</button>
+                    </div>
+                    <div className="space-y-2">
+                      {customFields.length === 0 && <p className="text-sm text-slate-500 italic">No custom fields added yet.</p>}
+                      {customFields.map(cf => (
+                        <div key={cf.id} className="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800/80">
+                          <span className="font-bold text-slate-200">{cf.label} <span className="text-[10px] text-slate-500 ml-2 font-mono">({cf.id})</span></span>
+                          <button onClick={() => handleRemoveCustomField(cf.id)} className="text-rose-400 hover:text-rose-300 p-1 bg-rose-950/30 rounded"><Icons.Trash2 size={14}/></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">📋 Dropdown List Managers</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {Object.keys(defaultAppSettings.lists).map(listKey => (
+                        <div key={listKey} className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                          <h4 className="font-bold text-slate-300 uppercase text-xs tracking-widest mb-3 border-b border-slate-800 pb-2">{listKey}</h4>
+                          <div className="flex gap-2 mb-3">
+                            <input type="text" placeholder={`Add item...`} value={adminInput[listKey] || ''} onChange={(e) => setAdminInput({...adminInput, [listKey]: e.target.value})} className="bg-slate-950 border border-slate-700/80 rounded-lg text-xs p-2 text-white w-full focus:border-indigo-500 transition-colors" />
+                            <button onClick={() => handleAddListItem(listKey)} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 rounded-lg text-xs transition-colors"><Icons.Plus size={12}/></button>
+                          </div>
+                          <div className="max-h-40 overflow-y-auto pr-2 space-y-1 scrollbar-none">
+                            {(appSettings.lists[listKey] || []).map((item, idx) => (
+                              <div key={idx} className="flex justify-between items-center group hover:bg-slate-800 p-1.5 rounded text-xs text-slate-300 transition-colors border border-transparent hover:border-slate-700">
+                                <span className="truncate pr-2">{item}</span>
+                                <button onClick={() => handleRemoveListItem(listKey, idx)} className="text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><Icons.X size={12}/></button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : viewMode === "stock" && !selectedRowId ? (
             <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
               <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
                 <div className="flex flex-wrap items-center gap-2.5">
@@ -1708,7 +1533,6 @@
                           </div>
                         </div>
 
-                        {/* Adjuster buttons */}
                         <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-end gap-2">
                           <button 
                             onClick={() => handleStockLevelAdjust(item.type, item.name, -1)}
@@ -1730,7 +1554,6 @@
               </div>
             </div>
           ) : !selectedRowId ? (
-            // DASHBOARD VIEW
             <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
               <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
                 <div className="flex flex-wrap items-center gap-2.5">
@@ -1756,7 +1579,6 @@
                 </div>
               </div>
 
-              {/* HUD Command Centre */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0 animate-fade-in select-none">
                 <div onClick={() => setHudFilter("All")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'All' ? 'border-indigo-500/60 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-slate-800/80 hover:border-indigo-500/30'}`}>
                   <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
@@ -1796,7 +1618,7 @@
                           setActiveTab(item.isCoroner ? "pickup" : "care"); 
                         }}
                         className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${
-                          (!isCatherine || item.isCoroner) ? 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl' : 'opacity-60 cursor-not-allowed'
+                          isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'
                         } ${
                           showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'
                         }`}
@@ -1845,7 +1667,6 @@
                         <h3 className="text-base font-black text-white mb-1">{item.title} {item.deceasedName || "Unnamed Admission"}</h3>
                         <p className="text-xs text-slate-400 mb-4">{item.location} • Tray {item.fridgeTray || 'Pending'}</p>
                         
-                        {/* ACTIVE MILESTONE BLOCK */}
                         {(item.keyDate || item.keyMilestoneName || (item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None')) && (
                           <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
                             <div className="flex items-center gap-1.5 mb-2.5">
@@ -1867,7 +1688,6 @@
                           </div>
                         )}
 
-                        {/* DISPATCH / TRANSFER LOGISTICS STAGES TIMELINE */}
                         {showAsCoroner && (() => {
                           const isTransferActive = (item.transferStatus && item.transferStatus !== 'Pending') || !!item.transferDateTime;
                           const activeStatusLabel = isTransferActive ? 'Transfer Stage:' : 'Dispatch Stage:';
@@ -1892,7 +1712,6 @@
                           );
                         })()}
 
-                        {/* STANDARD FUNERAL BOTTOM ROW */}
                         {!showAsCoroner && (
                           <div className="mt-auto pt-3 border-t border-slate-800/60 flex flex-col gap-1 text-[10px] font-bold text-slate-500">
                             <div className="flex items-center justify-between">
@@ -1919,7 +1738,6 @@
               <p className="mt-4 text-xs font-bold text-slate-400">Loading Case File...</p>
             </div>
           ) : (
-            // DETAILS VIEW
             <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 animate-fade-in">
               <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md select-none">
                 <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
@@ -1946,10 +1764,8 @@
               <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
                   
-                  {/* LEFT COLUMN: EDITING CARDS */}
                   <div className="lg:col-span-2 space-y-6">
                     
-                    {/* CARE TAB FORM MODULES */}
                     {activeTab === "care" && (
                       <>
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
@@ -1965,30 +1781,41 @@
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.deceasedName}</label>
                               <input type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors" />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Branch</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.location}</label>
                               <select value={formState?.location || 'Cromer'} onChange={(e) => handleFieldChange('location', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none">
                                 {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                               </select>
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Tray No.</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.fridgeTray}</label>
                               <input type="text" value={formState?.fridgeTray || ''} onChange={(e) => handleFieldChange('fridgeTray', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-black w-full focus:outline-none text-center focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.dob}</label>
                               <input type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.dod}</label>
                               <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
                           </div>
+                          
+                          {customFields.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-800">
+                              {customFields.map(cf => (
+                                <div key={cf.id}>
+                                  <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{cf.label}</label>
+                                  <input type="text" value={formState?.[cf.id] || ''} onChange={(e) => handleFieldChange(cf.id, e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
 
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
@@ -2061,68 +1888,6 @@
 
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
-                            <Icons.Hammer className="text-amber-500" size={16} />
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Selected Wood</label>
-                              <select value={formState?.coffin || ''} onChange={(e) => handleFieldChange('coffin', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold">
-                                <option value="">-- Select Coffin Model --</option>
-                                {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Handles Spec</label>
-                              <select value={formState?.coffinHandles || ''} onChange={(e) => handleFieldChange('coffinHandles', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-bold">
-                                <option value="">-- Select Handles Spec --</option>
-                                {handlesList.map(h => <option key={h} value={h}>{h}</option>)}
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border-t border-slate-900 pt-4">
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Wreath Holders</label>
-                              <select value={formState?.wreathHolders || ''} onChange={(e) => handleFieldChange('wreathHolders', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-bold">
-                                <option value="">-- Select Wreath Holders --</option>
-                                {wreathHoldersList.map(w => <option key={w} value={w}>{w}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-amber-400 block mb-1">Crucifix Model</label>
-                              <select value={formState?.crucifix || ''} onChange={(e) => handleFieldChange('crucifix', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-bold">
-                                <option value="">-- Select Crucifix Spec --</option>
-                                {crucifixesList.map(c => <option key={c} value={c}>{c}</option>)}
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4">
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Coffin Size</label>
-                              <input type="text" value={formState?.bodySize || ''} onChange={(e) => handleFieldChange('bodySize', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono text-center font-bold focus:border-indigo-500 transition-colors" />
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Engraved Name Plate</label>
-                              <select value={formState?.plate || 'No'} onChange={(e) => handleFieldChange('plate', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold text-center">
-                                {triStateOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Grave Marker</label>
-                              <select value={formState?.graveMarker || 'None'} onChange={(e) => handleFieldChange('graveMarker', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-205 w-full focus:outline-none font-semibold">
-                                <option value="None">None</option>
-                                <option value="Temporary Oak Cross">Temporary Oak Cross</option>
-                                <option value="Standard Wooden Marker">Standard Wooden Marker</option>
-                                <option value="Premium Engraved Plaque">Premium Engraved Plaque</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
-                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Users size={16} />
                             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Dressing & Viewings</h3>
                           </div>
@@ -2142,7 +1907,6 @@
                       </>
                     )}
 
-                    {/* WORKSHOP TAB FORM MODULES */}
                     {activeTab === "workshop" && (
                       <>
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
@@ -2209,7 +1973,6 @@
                       </>
                     )}
 
-                    {/* CORONER TAB FORM MODULES */}
                     {activeTab === "pickup" && formState?.isCoroner && (
                       <>
                         {isLogisticsLocked && (
@@ -2245,35 +2008,44 @@
                               </select>
                             </div>
                             <div className="col-span-2 sm:col-span-4">
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Deceased Name</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.deceasedName}</label>
                               <input disabled={isLogisticsLocked} type="text" value={formState?.deceasedName || ''} onChange={(e) => handleFieldChange('deceasedName', e.target.value)} placeholder="e.g. Dennis Harrison" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.B.</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.dob}</label>
                               <input disabled={isLogisticsLocked} type="text" value={formState?.dob || ''} onChange={(e) => handleFieldChange('dob', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-amber-400 font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">D.O.D.</label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.dod}</label>
                               <input disabled={isLogisticsLocked} type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-205 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">CAD</label>
-                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                              <div>
+                                <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.coronerRef}</label>
+                                <input disabled={isLogisticsLocked} type="text" value={formState?.coronerRef || ''} onChange={(e) => handleFieldChange('coronerRef', e.target.value)} placeholder="e.g. CAD-10294-2026" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-mono font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.coronerOfficer}</label>
+                                <input disabled={isLogisticsLocked} type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
+                              </div>
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer / Contact</label>
-                              <input disabled={isLogisticsLocked} type="text" value={formState?.coronerOfficer || ''} onChange={(e) => handleFieldChange('coronerOfficer', e.target.value)} placeholder="e.g. Officer J. Miller" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" />
+                              <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer Digital Signature (Sign Below)</label>
+                              <SignaturePad 
+                                value={formState?.coronerSignature || ''} 
+                                onChange={(val) => handleFieldChange('coronerSignature', val)} 
+                                disabled={isLogisticsLocked} 
+                              />
                             </div>
                           </div>
                         </div>
 
-                        {/* DISPATCH AND FLEET MANAGEMENT */}
                         <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none">
                             <Icons.Truck className="text-amber-500" size={16} />
@@ -2309,7 +2081,7 @@
                             </div>
                             <div className="space-y-4">
                               <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Target Destination</label>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">{labels.pickupDestination}</label>
                                 <select disabled={isLogisticsLocked} value={formState?.pickupDestination || 'Cromer Mortuary'} onChange={(e) => handleFieldChange('pickupDestination', e.target.value)} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none font-semibold disabled:bg-slate-950 disabled:border-slate-855">
                                   <option value="Cromer Mortuary">Cromer Mortuary</option>
                                   <option value="Fakenham Mortuary">Fakenham Mortuary</option>
@@ -2344,7 +2116,7 @@
                           </div>
                           
                           <div>
-                            <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1 select-none">Pick-up Address & Notes</label>
+                            <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1 select-none">{labels.pickupLocation}</label>
                             <textarea disabled={isLogisticsLocked} value={formState?.pickupLocation || ''} onChange={(e) => handleFieldChange('pickupLocation', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none mb-2 focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-855" placeholder="e.g. Norfolk & Norwich University Hospital (NNUH) - Pathology Entrance B" />
                             <textarea disabled={isLogisticsLocked} value={formState?.pickupInstructions || ''} onChange={(e) => handleFieldChange('pickupInstructions', e.target.value)} rows={2} className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-202 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:border-slate-855" placeholder="e.g. Bring identity collar tag and scoop stretcher." />
                           </div>
@@ -2368,7 +2140,6 @@
                       </>
                     )}
 
-                    {/* HOSPITAL TRANSFER TAB FORM MODULES */}
                     {activeTab === "hospital" && formState?.isCoroner && (
                       <>
                         {isLogisticsLocked && (
@@ -2469,7 +2240,6 @@
                       </>
                     )}
 
-                    {/* SAVE & RETURN BUTTON */}
                     <div className="flex justify-end pb-8 pt-4 select-none">
                       <button 
                         onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }}
@@ -2480,10 +2250,8 @@
                     </div>
                   </div>
 
-                  {/* RIGHT COLUMN: UTILITY WIDGETS */}
                   <div className="space-y-6 select-none">
                     
-                    {/* DOCUMENT PRINT STATION */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
                       <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450">
                         <Icons.Printer size={13} className="text-indigo-400" />
@@ -2556,7 +2324,6 @@
                       </div>
                     </div>
 
-                    {/* QR WIDGET */}
                     <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
                       <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Tracking Pass</span></div>
                       <div className="mt-8 mb-4 bg-white p-3 rounded-xl shadow-inner">
@@ -2570,7 +2337,6 @@
                       </div>
                     </div>
 
-                    {/* ANATOMICAL SKULL CONDITION METRIC WIDGET */}
                     {activeTab === "care" && (
                       <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
                         <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
@@ -2581,7 +2347,6 @@
                       </div>
                     )}
 
-                    {/* FILE ADMINISTRATION CARD */}
                     {!isCatherine && (
                       <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
                         <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455">
@@ -2637,7 +2402,6 @@
             </div>
           )}
 
-          {/* QR MAXIMIZE MODAL */}
           {isQrModalOpen && formState && (
             <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
               <div className="bg-slate-955 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl">
@@ -2655,7 +2419,6 @@
             </div>
           )}
 
-          {/* EMAIL PREVIEW LOGISTICS MODAL */}
           {isEmailModalOpen && formState && dispatchEmailData && (
             <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[9999] animate-fade-in">
               <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full p-6 relative shadow-2xl">
@@ -2674,7 +2437,6 @@
             </div>
           )}
 
-          {/* SYSTEM CONFIRMATION MODAL */}
           {dialog.isOpen && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
               <div className="bg-slate-955 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">

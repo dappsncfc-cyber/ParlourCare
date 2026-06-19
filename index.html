@@ -80,7 +80,8 @@
   <script type="text/babel" data-type="module" data-presets="react-classic">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    // IMPORTING initializeFirestore & persistentLocalCache for true offline PWA capabilities
+    import { getFirestore, initializeFirestore, persistentLocalCache, doc, setDoc, deleteDoc, collection, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     const norfolkStaffList = [
       { id: "staff-1", name: "David (Cromer)", email: "david@cromerfunerals.co.uk" },
@@ -156,7 +157,12 @@
       try {
         app = initializeApp(firebaseConfig);
         auth = getAuth(app);
-        db = getFirestore(app);
+        
+        // Enabling robust offline persistence for seamless PWA operations
+        db = initializeFirestore(app, {
+          localCache: persistentLocalCache()
+        });
+        
         isFirebaseEnabled = true;
       } catch (e) {
         console.error("Firebase initialisation failed:", e);
@@ -316,6 +322,7 @@
       const [username, setUsername] = useState('adrian');
       const [passwordInput, setPasswordInput] = useState('');
       const [loginError, setLoginError] = useState('');
+      const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
       const [deceasedList, setDeceasedList] = useState(() => {
         try {
@@ -481,8 +488,18 @@
         return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
       }, [stockLevels, stockSearchQuery]);
 
-
       // 3. USE EFFECT HOOKS
+      useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+          window.removeEventListener('online', handleOnline);
+          window.removeEventListener('offline', handleOffline);
+        };
+      }, []);
+
       useEffect(() => {
         if (!isFirebaseEnabled) return;
         const initAuth = async () => {
@@ -727,6 +744,7 @@
         if (isFirebaseEnabled && auth.currentUser) {
           try {
             const docRef = doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id));
+            // This setDoc writes locally instantly and queues for sync when offline!
             await setDoc(docRef, JSON.parse(JSON.stringify(record)));
           } catch (err) {}
         }
@@ -1152,7 +1170,7 @@
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Transfer Type:</span> <strong>${record.transferType || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Hospital:</span> <strong>${record.transferHospital || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Scheduled Date:</span> <strong>${record.transferDateTime || 'N/A'}</strong></div>
-                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Fleet Vehicle:</span> <strong>${record.transferVehicle || 'N/A'}</strong></div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Vehicle Assigned:</span> <strong>${record.transferVehicle || 'N/A'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Assigned Staff:</span> <strong>${(record.transferStaff || []).join(', ') || 'PENDING'}</strong></div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Transfer Stage:</span> <strong>${record.transferStatus || 'Pending'}</strong></div>
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
@@ -1312,9 +1330,15 @@
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="bg-slate-950 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-800 uppercase tracking-wider">Mortuary Management</span>
                   {isFirebaseEnabled ? (
-                    <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-0.5 rounded-full animate-pulse">
-                      {user ? "🟢 Live Cloud Sync Active" : "🟠 Authenticating Cloud..."}
-                    </span>
+                    isOnline ? (
+                      <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-0.5 rounded-full animate-pulse">
+                        {user ? "🟢 Live Cloud Sync Active" : "🟠 Authenticating Cloud..."}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-amber-400 font-extrabold flex items-center gap-1.5 bg-amber-950/40 border border-amber-900/50 px-2.5 py-0.5 rounded-full">
+                        🟠 Offline: Changes Queued (Auto-syncs on 4G)
+                      </span>
+                    )
                   ) : (
                     <span className="text-[10px] text-amber-400 font-extrabold flex items-center gap-1.5 bg-amber-950/40 border border-amber-900/50 px-2.5 py-0.5 rounded-full">
                       💾 Offline Local Storage Active

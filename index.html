@@ -176,7 +176,7 @@
       FolderOpen: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M2 10h20"/></svg>,
       Building2: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="15" y1="22" x2="15" y2="16"/><line x1="9" y1="16" x2="15" y2="16"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/></svg>,
       Hammer: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18.42 9.59l-1.9 1.9a1 1 0 0 1-1.41 0L12.5 8.9a1 1 0 0 1 0-1.41l1.9-1.9a4 4 0 1 1 5.66 5.66z"/><path d="M9 13l-6 6a1.5 1.5 0 1 0 2 2l6-6"/><path d="M13 13l-4-4"/></svg>,
-      Layers: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polygon points="2 17 12 22 22 17"/><polygon points="2 12 12 17 22 12"/></svg>,
+      Layers: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polygon points="2 17 12 22 17"/><polygon points="2 12 12 17 22 12"/></svg>,
       Heart: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
       Bell: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
       QrCode: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="7" y1="17" x2="7" y2="17.01"/><line x1="17" y1="17" x2="17" y2="17.01"/><line x1="17" y1="7" x2="17" y2="7.01"/><line x1="7" y1="7" x2="7" y2="7.01"/></svg>,
@@ -443,7 +443,7 @@
           
           let matchHud = true;
           if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
-          if (hudFilter === "Transfers") matchHud = !!item.transferDateTime && item.transferStatus !== 'Completed'; // Removed isCoroner check
+          if (hudFilter === "Transfers") matchHud = !!item.transferDateTime && item.transferStatus !== 'Completed';
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
 
           return matchSearch && matchLoc && matchStatus && matchHud;
@@ -466,7 +466,7 @@
         return {
           active: activeDashboardCases.length,
           coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
-          transfers: activeDashboardCases.filter(c => c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length, // Removed isCoroner check
+          transfers: activeDashboardCases.filter(c => c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
       }, [deceasedList, activeBrand]);
@@ -577,32 +577,54 @@
               cases.forEach(curr => {
                 const prev = prevMap.get(curr.id);
                 if (!prev) {
-                  newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'addition', title: 'Case Added', message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) was registered.`, timestamp: getTimestamp() });
+                  newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'addition', caseId: curr.id, title: 'Case Added', message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) was registered.`, timestamp: getTimestamp() });
                 } else {
                   const changedFields = [];
                   for (let f of fieldsToCheck) {
                     if (JSON.stringify(curr[f]) !== JSON.stringify(prev[f])) changedFields.push(f);
                   }
                   if (changedFields.length > 0) {
-                    newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'update', title: 'Case Updated', message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) had updates.`, timestamp: getTimestamp() });
+                    newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'update', caseId: curr.id, title: 'Case Updated', message: `${curr.title} ${curr.deceasedName || 'Unnamed Case'} (${curr.ref}) had updates.`, timestamp: getTimestamp() });
                   }
                 }
               });
 
               (prevListRef.current || []).forEach(oldItem => {
                 if (!currentMap.has(oldItem.id)) {
-                  newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'deletion', title: 'Case Removed', message: `${oldItem.title} ${oldItem.deceasedName || 'Unnamed Case'} (${oldItem.ref}) was deleted.`, timestamp: getTimestamp() });
+                  newNotifications.push({ id: String(Date.now()) + Math.random(), type: 'deletion', caseId: oldItem.id, title: 'Case Removed', message: `${oldItem.title} ${oldItem.deceasedName || 'Unnamed Case'} (${oldItem.ref}) was deleted.`, timestamp: getTimestamp() });
                 }
               });
 
               if (newNotifications.length > 0) {
-                setNotifications(prev => [...newNotifications, ...prev].slice(0, 20));
-                setUnreadCount(prev => prev + newNotifications.length);
+                setNotifications(prev => {
+                  let nextNotifs = [...prev];
+                  let newlyAddedCount = 0;
+                  
+                  newNotifications.forEach(nn => {
+                    if (nn.type === 'update') {
+                      const existingIdx = nextNotifs.findIndex(existing => existing.type === 'update' && existing.caseId === nn.caseId);
+                      if (existingIdx > -1) {
+                        nextNotifs.splice(existingIdx, 1);
+                      } else {
+                        newlyAddedCount++;
+                      }
+                    } else {
+                      newlyAddedCount++;
+                    }
+                    nextNotifs.unshift(nn);
+                  });
+                  
+                  if (newlyAddedCount > 0) {
+                    setUnreadCount(u => u + newlyAddedCount);
+                  }
+                  
+                  return nextNotifs.slice(0, 20);
+                });
               }
-              prevListRef.current = cases;
             }
-
+            
             setDeceasedList(cases);
+            prevListRef.current = cases;
             try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases)); } catch(e){}
           }
         });
@@ -781,24 +803,42 @@
         saveStockToDb(updated);
       };
 
+      const INVENTORY_CATEGORY_MAP = {
+        coffin: 'coffins',
+        coffinHandles: 'handles',
+        wreathHolders: 'wreathHolders',
+        crucifix: 'crucifixes'
+      };
+
       const handleFieldChange = (fieldName, value) => {
         if (!formState) return;
         let updatedStock = { ...stockLevels };
         let stockChanged = false;
 
-        if (fieldName === 'coffin' || fieldName === 'coffinHandles' || fieldName === 'wreathHolders' || fieldName === 'crucifix') {
-          const cat = fieldName === 'coffin' ? 'coffins' : fieldName === 'coffinHandles' ? 'handles' : fieldName === 'wreathHolders' ? 'wreathHolders' : 'crucifixes';
+        const cat = INVENTORY_CATEGORY_MAP[fieldName];
+        
+        if (cat) {
           const oldVal = formState[fieldName] || "";
           const newVal = value || "";
           if (oldVal !== newVal) {
-            if (oldVal && updatedStock[cat][oldVal] !== undefined) { updatedStock[cat][oldVal] += 1; stockChanged = true; }
-            if (newVal && updatedStock[cat][newVal] !== undefined) { updatedStock[cat][newVal] = Math.max(0, updatedStock[cat][newVal] - 1); stockChanged = true; }
+            if (oldVal && updatedStock[cat][oldVal] !== undefined) { 
+              updatedStock[cat][oldVal] += 1; 
+              stockChanged = true; 
+            }
+            if (newVal && updatedStock[cat][newVal] !== undefined) { 
+              updatedStock[cat][newVal] = Math.max(0, updatedStock[cat][newVal] - 1); 
+              stockChanged = true; 
+            }
           }
         }
+        
         const updatedRecord = { ...formState, [fieldName]: value };
         setFormState(updatedRecord);
         saveCaseToDb(updatedRecord);
-        if (stockChanged) { setStockLevels(updatedStock); saveStockToDb(updatedStock); }
+        if (stockChanged) { 
+          setStockLevels(updatedStock); 
+          saveStockToDb(updatedStock); 
+        }
       };
 
       const handleStatusChange = (newStatus) => {
@@ -857,7 +897,6 @@
         const defaultMortuary = activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary";
         const locationCount = deceasedList.filter(d => d.location === locationName).length;
 
-        // NOTE: Defaults for transfers are now empty blanks as requested
         const newCase = {
           id: nextId,
           ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
@@ -1433,7 +1472,6 @@
             </div>
           </header>
 
-          {}
           {viewMode === "admin" && isAdmin && !selectedRowId ? (
             <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in bg-slate-900">
               <div className="max-w-5xl mx-auto">
@@ -1619,7 +1657,6 @@
                 </div>
               </div>
 
-              {}
               <div className="flex-1 overflow-y-auto pr-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredList.map((item) => {
@@ -1706,7 +1743,8 @@
                           </div>
                         )}
 
-                        {(item.transferType || item.transferHospital || item.transferDateTime) && (
+                        {/* HIDE THE TILE IF IT'S COMPLETED */}
+                        {(item.transferType || item.transferHospital || item.transferDateTime) && item.transferStatus !== 'Completed' && (
                           <div className="mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700/50 shadow-inner">
                             <div className="flex items-center gap-1.5 mb-2.5">
                               <Icons.Building2 size={12} className="text-rose-400" />
@@ -1802,7 +1840,6 @@
                 </button>
               </div>
 
-              {}
               <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-20">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
                   
@@ -2447,7 +2484,6 @@
             </div>
           )}
 
-          {}
           {isQrModalOpen && formState && (
             <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
               <div className="bg-slate-955 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl">

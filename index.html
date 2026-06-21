@@ -26,6 +26,33 @@
     link.rel = 'manifest';
     link.href = manifestUrl;
     document.head.appendChild(link);
+
+    // DYNAMIC SERVICE WORKER INJECTION FOR PUSH NOTIFICATIONS
+    const swCode = `
+      self.addEventListener('push', function(event) {
+        const data = event.data ? event.data.json() : { title: 'ParlourCare Update', body: 'A case file was updated.' };
+        event.waitUntil(
+          self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M12 2L2 22h20L12 2z'/%3E%3C/svg%3E"
+          })
+        );
+      });
+      self.addEventListener('notificationclick', function(event) {
+        event.notification.close();
+        event.waitUntil(clients.matchAll({ type: 'window' }).then(clientsArr => {
+          if (clientsArr.length) return clientsArr[0].focus();
+          return clients.openWindow('/');
+        }));
+      });
+    `;
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swUrl = URL.createObjectURL(swBlob);
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Reg Failed', err));
+      });
+    }
   </script>
 
   <!-- Tailwind CSS Play CDN -->
@@ -368,11 +395,28 @@
       const [user, setUser] = useState(null);
       const seededRef = useRef(false);
 
+      const [pushEnabled, setPushEnabled] = useState(() => ('Notification' in window) && Notification.permission === 'granted');
       const [notifications, setNotifications] = useState([]);
       const [unreadCount, setUnreadCount] = useState(0);
       const [isNotificationTrayOpen, setIsNotificationTrayOpen] = useState(false);
       const prevListRef = useRef([]);
       const isFirstLoadRef = useRef(true);
+
+      const requestPushPermission = async () => {
+        if (!('Notification' in window)) {
+          showNotification("Unsupported", "Your device does not support Web Push Notifications.", "error");
+          return;
+        }
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            setPushEnabled(true);
+            showNotification("Alerts Enabled", "You will now receive native device notifications for updates.", "info");
+          } else {
+            showNotification("Alerts Denied", "You must allow notifications in your device settings.", "error");
+          }
+        } catch(e) { console.error(e); }
+      };
 
       const isLogisticsLocked = useMemo(() => {
         return formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
@@ -620,9 +664,24 @@
                   
                   return nextNotifs.slice(0, 20);
                 });
+
+                // OS SYSTEM PUSH NOTIFICATION TRIGGER
+                if ('Notification' in window && Notification.permission === 'granted') {
+                  navigator.serviceWorker.ready.then(reg => {
+                    const title = newNotifications.length === 1 ? newNotifications[0].title : `${newNotifications.length} File Updates`;
+                    const body = newNotifications.length === 1 ? newNotifications[0].message : 'Multiple case files have been modified by the team.';
+                    reg.showNotification(title, {
+                      body: body,
+                      icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M12 2L2 22h20L12 2z'/%3E%3C/svg%3E",
+                      tag: 'parlourcare-update',
+                      renotify: true
+                    });
+                  });
+                }
               }
+              prevListRef.current = cases;
             }
-            
+
             setDeceasedList(cases);
             prevListRef.current = cases;
             try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(cases)); } catch(e){}
@@ -1403,14 +1462,18 @@
                     <div className="absolute right-0 mt-3.5 w-80 bg-slate-950 border border-slate-800/80 rounded-2xl shadow-2xl p-4 z-50 animate-fade-in">
                       <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
                         <span className="text-xs font-black uppercase text-slate-255 tracking-wider">Live Activity Log</span>
-                        {notifications.length > 0 && (
-                          <button 
-                            onClick={() => setNotifications([])} 
-                            className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors"
-                          >
-                            Clear Feed
-                          </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {!pushEnabled && (
+                            <button onClick={requestPushPermission} className="text-[10px] text-amber-400 hover:text-amber-300 font-black uppercase tracking-wider transition-colors flex items-center gap-1 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50">
+                              <Icons.Bell size={10} /> Enable OS Push
+                            </button>
+                          )}
+                          {notifications.length > 0 && (
+                            <button onClick={() => setNotifications([])} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors">
+                              Clear Feed
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="max-h-60 overflow-y-auto scrollbar-none space-y-2.5">
                         {notifications.length === 0 ? (
@@ -1657,6 +1720,168 @@
                 </div>
               </div>
 
+              {viewMode === "cases" && !selectedRowId && (
+                (() => {
+                  const todayEvents = [];
+
+                  deceasedList.forEach(item => {
+                    if (item.isArchived) return;
+
+                    let matchLoc = true;
+                    if (activeBrand === "cromer") matchLoc = item.location === "Cromer";
+                    else if (activeBrand === "gowards") matchLoc = item.location === "Fakenham";
+                    if (!matchLoc) return;
+
+                    if (item.isCoroner && item.pickupStatus !== 'Collected' && item.pickupDateTime) {
+                      todayEvents.push({
+                        id: `${item.id}-pickup`,
+                        caseId: item.id,
+                        rawItem: item,
+                        time: item.pickupDateTime,
+                        type: 'CORONER_DISPATCH',
+                        title: `⚖️ PRIORITISED CORONER DISPATCH: ${item.title} ${item.deceasedName || 'Unnamed Case'}`,
+                        detail: `From: ${item.pickupLocation || 'Pending Address'} → Target: ${item.pickupDestination}`,
+                        crew: item.pickupStaff || [],
+                        vehicle: item.pickupVehicle,
+                        status: item.pickupStatus,
+                        ref: item.ref
+                      });
+                    }
+
+                    if (item.transferDateTime && item.transferStatus !== 'Completed') {
+                      todayEvents.push({
+                        id: `${item.id}-transfer`,
+                        caseId: item.id,
+                        rawItem: item,
+                        time: item.transferDateTime,
+                        type: 'TRANSFER',
+                        title: `🚚 Hospital Transfer: ${item.title} ${item.deceasedName || 'Unnamed Case'}`,
+                        detail: `${item.transferType || 'Transfer'}: ${item.transferHospital || 'Pending Location'}`,
+                        crew: item.transferStaff || [],
+                        vehicle: item.transferVehicle,
+                        status: item.transferStatus || 'Pending',
+                        ref: item.ref
+                      });
+                    }
+
+                    if (item.keyDate && item.keyMilestoneUrgency === 'High') {
+                      todayEvents.push({
+                        id: `${item.id}-milestone`,
+                        caseId: item.id,
+                        rawItem: item,
+                        time: item.keyDate,
+                        type: 'HIGH_MILESTONE',
+                        title: `🚨 CRITICAL CARE DEADLINE: ${item.keyMilestoneName || 'Milestone Action Required'}`,
+                        detail: `Profile: ${item.title} ${item.deceasedName || 'Unnamed Case'} (Tray: ${item.fridgeTray || 'Pending'})`,
+                        crew: [],
+                        status: 'Action Required',
+                        ref: item.ref
+                      });
+                    }
+                  });
+
+                  todayEvents.sort((a, b) => a.time.localeCompare(b.time));
+
+                  if (todayEvents.length === 0) return null;
+
+                  return (
+                    <div className="mb-6 bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl animate-fade-in select-none relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500"></div>
+                      
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-4">
+                        <div className="flex items-center space-x-2.5">
+                          <span className="text-xl">📅</span>
+                          <div>
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider">Unified Daily Operations Timeline</h3>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Chronological movements & critical deadlines</p>
+                          </div>
+                        </div>
+                        <span className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-black px-2.5 py-1 rounded-md uppercase tracking-wider">
+                          {todayEvents.length} Active {todayEvents.length === 1 ? 'Event' : 'Events'}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3 max-h-64 overflow-y-auto pr-1.5 scrollbar-none">
+                        {todayEvents.map((evt) => {
+                          const isPriority = evt.type === 'CORONER_DISPATCH' || evt.type === 'HIGH_MILESTONE';
+                          
+                          return (
+                            <div 
+                              key={evt.id}
+                              onClick={() => {
+                                setSelectedRowId(evt.caseId);
+                                setFormState(JSON.parse(JSON.stringify(evt.rawItem)));
+                                setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : "care");
+                              }}
+                              className={`p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${
+                                isPriority 
+                                  ? 'border-rose-900/60 bg-rose-950/5 hover:bg-rose-950/10 hover:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.05)]' 
+                                  : 'border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/80'
+                              }`}
+                            >
+                              <div className="flex items-start space-x-3.5 min-w-0 flex-1">
+                                <div className="flex flex-col items-center justify-center flex-shrink-0">
+                                  <span className="text-xs font-mono font-black text-amber-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg shadow-inner">
+                                    {evt.time.includes(' ') ? evt.time.split(' ')[1] : evt.time}
+                                  </span>
+                                  {evt.time.includes(' ') && (
+                                    <span className="text-[8px] text-slate-500 font-mono mt-1 font-bold">{evt.time.split(' ')[0]}</span>
+                                  )}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-900/40">
+                                      {evt.ref}
+                                    </span>
+                                    {evt.type === 'CORONER_DISPATCH' && (
+                                      <span className="text-[8px] font-black text-rose-400 bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-900 uppercase animate-pulse tracking-wider">
+                                        🚨 Urgent Removal
+                                      </span>
+                                    )}
+                                    {evt.type === 'HIGH_MILESTONE' && (
+                                      <span className="text-[8px] font-black text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-900 uppercase tracking-wider">
+                                        ⚠️ Priority Milestone
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <h4 className={`text-xs font-black truncate leading-snug group-hover:text-white transition-colors ${
+                                    isPriority ? 'text-rose-200' : 'text-slate-200'
+                                  }`}>
+                                    {evt.title}
+                                  </h4>
+                                  <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{evt.detail}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between md:justify-end gap-4 border-t border-slate-900 md:border-0 pt-2 md:pt-0">
+                                {evt.crew.length > 0 && (
+                                  <div className="text-[10px] text-slate-400 font-bold hidden sm:block">
+                                    Crew: <span className="text-slate-300 font-normal">{(evt.crew).join(', ')}</span>
+                                    {evt.vehicle && <span className="text-slate-500 font-mono ml-1.5">[{evt.vehicle}]</span>}
+                                  </div>
+                                )}
+                                <div className="flex items-center space-x-2">
+                                  <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border ${
+                                    evt.type === 'CORONER_DISPATCH' ? 'bg-rose-950/40 text-rose-400 border-rose-900/40' :
+                                    evt.type === 'HIGH_MILESTONE' ? 'bg-amber-950/40 text-amber-400 border-amber-900/40' :
+                                    'bg-slate-950 text-slate-400 border-slate-800'
+                                  }`}>
+                                    {evt.status}
+                                  </span>
+                                </div>
+                              </div>
+
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+
               <div className="flex-1 overflow-y-auto pr-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredList.map((item) => {
@@ -1883,6 +2108,21 @@
                               <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{labels.dod}</label>
                               <input type="text" value={formState?.dod || ''} onChange={(e) => handleFieldChange('dod', e.target.value)} placeholder="DD/MM/YYYY" className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                             </div>
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-slate-800/60">
+                            <label className="flex items-center space-x-2.5 cursor-pointer group w-max">
+                              <input
+                                type="checkbox"
+                                checked={formState?.greenCoroner === 'Yes'}
+                                onChange={(e) => handleFieldChange('greenCoroner', e.target.checked ? 'Yes' : 'No')}
+                                className="w-4 h-4 rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 bg-slate-900 cursor-pointer accent-indigo-500 transition-all"
+                              />
+                              <span className="text-[11px] font-black uppercase tracking-wider text-emerald-500/80 group-hover:text-emerald-400 transition-colors select-none flex items-center gap-1.5">
+                                <Icons.FileText size={12} />
+                                Green Form Filed
+                              </span>
+                            </label>
                           </div>
                           
                           {customFields.length > 0 && (
@@ -2494,7 +2734,7 @@
                   <img src={getQrCodeUrl(formState, 220)} alt="High res QR" className="w-48 h-48 object-contain" />
                 </div>
                 <div className="mt-5 flex gap-2">
-                  <button onClick={() => { printStickerAndCheckBlocks(formState); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black py-2.5 rounded-xl transition-colors">Print Sticker</button>
+                  <button onClick={() => { printStickerAndCheckBlocks(formState); setIsQrModalOpen(false); }} className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-955 text-xs font-black py-2.5 rounded-xl transition-colors">Print Sticker</button>
                   <button onClick={() => setIsQrModalOpen(false)} className="bg-slate-800 hover:bg-slate-705 text-slate-300 text-xs font-bold px-5 py-2.5 rounded-xl transition-colors">Close</button>
                 </div>
               </div>

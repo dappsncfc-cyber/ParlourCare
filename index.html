@@ -998,7 +998,11 @@
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           let matchHud = true;
           if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up' && !item.isConverted);
-          if (hudFilter === "Transfers") matchHud = !!item.transferDateTime && item.transferStatus !== 'Completed';
+          if (hudFilter === "Transfers") {
+            const isTransfer = (item.transferType === 'Pick up' || item.transferType === 'Drop off' || item.transferDateTime) && item.transferStatus !== 'Completed';
+            const isCoronerDispatch = item.isCoroner && !item.isConverted && item.pickupStatus !== 'Collected';
+            matchHud = isTransfer || isCoronerDispatch;
+          }
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
           return matchSearch && matchLoc && matchStatus && matchHud;
         }).sort((a, b) => (urgencyOrder[b.keyMilestoneUrgency] || 0) - (urgencyOrder[a.keyMilestoneUrgency] || 0));
@@ -1014,7 +1018,11 @@
         return {
           active: activeDashboardCases.length,
           coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up' && !c.isConverted)).length,
-          transfers: activeDashboardCases.filter(c => c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
+          transfers: activeDashboardCases.filter(c => {
+            const isTransfer = (c.transferType === 'Pick up' || c.transferType === 'Drop off' || c.transferDateTime) && c.transferStatus !== 'Completed';
+            const isCoronerDispatch = c.isCoroner && !c.isConverted && c.pickupStatus !== 'Collected';
+            return isTransfer || isCoronerDispatch;
+          }).length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
       }, [deceasedList, activeBrand]);

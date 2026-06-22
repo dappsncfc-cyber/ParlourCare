@@ -6,7 +6,6 @@
   <title>ParlourCare Portal</title>
   
   <script>
-    // PWA ON-THE-FLY INJECTION
     const manifest = {
       name: "ParlourCare Portal",
       short_name: "ParlourCare",
@@ -27,7 +26,6 @@
     link.href = manifestUrl;
     document.head.appendChild(link);
 
-    // DYNAMIC SERVICE WORKER INJECTION FOR PUSH NOTIFICATIONS
     const swCode = `
       self.addEventListener('push', function(event) {
         const data = event.data ? event.data.json() : { title: 'ParlourCare Update', body: 'A case file was updated.' };
@@ -55,38 +53,23 @@
     }
   </script>
 
-  <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          animation: {
-            'fade-in': 'fadeIn 0.25s ease-out forwards',
-          },
-          keyframes: {
-            fadeIn: {
-              '0%': { opacity: '0', transform: 'scale(0.97)' },
-              '100%': { opacity: '1', transform: 'scale(1)' },
-            }
-          }
+          animation: { 'fade-in': 'fadeIn 0.25s ease-out forwards' },
+          keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.97)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
         }
       }
     }
   </script>
 
-  <!-- React & ReactDOM CDNs -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <!-- Babel Standalone CDN -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
-    Babel.registerPreset('react-classic', {
-      presets: [
-        [Babel.availablePresets['react'], { runtime: 'classic' }]
-      ]
-    });
+    Babel.registerPreset('react-classic', { presets: [ [Babel.availablePresets['react'], { runtime: 'classic' }] ] });
   </script>
 
   <style>
@@ -102,7 +85,6 @@
 
   <div id="root"></div>
 
-  <!-- React Application Source -->
   <script type="text/babel" data-type="module" data-presets="react-classic">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -110,9 +92,6 @@
 
     const { useState, useMemo, useEffect, useRef } = React;
 
-    // ============================================================================
-    // MODULE 1: CONFIGURATION & INITIAL DATA
-    // ============================================================================
     const norfolkStaffList = [
       { id: "staff-1", name: "David (Cromer)", email: "david@cromerfunerals.co.uk" },
       { id: "staff-2", name: "Barrie (Cromer)", email: "sarah@cromerfunerals.co.uk" },
@@ -183,9 +162,6 @@
       }
     }
 
-    // ============================================================================
-    // MODULE 2: UTILITIES & HELPERS
-    // ============================================================================
     const getBaseUrl = () => {
       try { return window.location.origin + window.location.pathname; } catch (e) { return ''; }
     };
@@ -202,9 +178,6 @@
       return { ...base, bannerGradient: 'from-slate-900 via-indigo-950/80 to-slate-900', brandName: 'Cromer & District & Gowards Group' };
     };
 
-    // ============================================================================
-    // MODULE 3: PRINT ENGINE
-    // ============================================================================
     const PrintEngine = {
       executeIframePrint(htmlContent, isSticker = false) {
         try {
@@ -290,8 +263,11 @@
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Anatomical & Care Status</div>
               ${this.renderRow('Body Condition Score', record?.condition)}
               ${this.renderRow('Implants/Defibrillators', record?.devicesDetails || 'None Registered')}
-              ${this.renderRow('Embalming Action', record?.embalmingDetails || 'None')}
               ${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}
+              ${this.renderRow('Embalming Action', record?.embalmingDetails || 'None')}
+              ${this.renderRow('Key Milestone Action', record?.keyMilestoneName || 'None')}
+              ${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}
+              ${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Sanitary Preparation & Grooming</div>
@@ -302,15 +278,9 @@
               <div style="font-size: 13px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No personal effects logged.'}</div>
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Key Milestones</div>
-              ${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}
-              ${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}
-              ${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Dressing & Viewings</div>
               ${this.renderRow('Dressing Attire', record?.clothes || 'None Specified')}
-              ${this.renderRow('Family Viewing', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}
+              ${this.renderRow('Family Viewing Request', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}
             </div>
           </div>
         `;
@@ -323,7 +293,7 @@
             ${this.getDocHeader(record, "Coffin Joinery & Workshop Specification", themeName)}
             ${this.getRecordCard(record)}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coffin Construction Dimensions</div>
               ${this.renderRow('Timber Specification', record?.coffin || 'PENDING')}
               ${this.renderRow('Handles Selected', record?.coffinHandles || 'PENDING')}
               ${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}
@@ -345,12 +315,12 @@
         }
         const html = `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
-            ${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}
+            ${this.getDocHeader(record, "Hospital Transfer & Pick-up Details", themeName)}
             ${this.getRecordCard(record)}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>
               ${this.renderRow('Transfer Type', record?.transferType || 'N/A')}
-              ${this.renderRow('Pick-up Location', record?.transferHospital || 'N/A')}
+              ${this.renderRow('Pick-up / Drop-off Location', record?.transferHospital || 'N/A')}
               ${this.renderRow('Scheduled Date & Time', record?.transferDateTime || 'PENDING')}
               ${this.renderRow('Vehicle Assigned', record?.transferVehicle || 'N/A')}
             </div>
@@ -405,18 +375,14 @@
               </div>
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Logistics & Dispatch</div>
-              ${this.renderRow('Target Destination', record?.pickupDestination || 'Cromer')}
-              ${this.renderRow('Scheduled Date & Time', record?.pickupDateTime || 'PENDING')}
-              ${this.renderRow('Pick-up Address', record?.pickupLocation || 'PENDING')}
+              ${this.renderRow('Pickup Location', record?.pickupLocation || 'PENDING')}
+              ${this.renderRow('Special Instructions', record?.pickupInstructions || 'None')}
+              ${this.renderRow('Destination', record?.pickupDestination || 'Cromer')}
+              ${this.renderRow('Scheduled Time', record?.pickupDateTime || 'PENDING')}
               ${this.renderRow('Assigned Fleet Vehicle', record?.pickupVehicle || 'N/A')}
-              <div style="margin-top: 10px; font-size: 13px;">
-                <strong>Special Instructions:</strong><br/>
-                <span style="white-space: pre-wrap;">${record?.pickupInstructions || 'None'}</span>
-              </div>
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew</div>
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew Checks</div>
               ${this.renderRow('Crew Dispatched', (record?.pickupStaff || []).join(', ') || 'PENDING')}
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
@@ -455,9 +421,6 @@
     };
 
 
-    // ============================================================================
-    // MODULE 4: ICONS & UI PRIMITIVES
-    // ============================================================================
     const Icons = {
       Users: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
       Search: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
@@ -649,9 +612,6 @@
       );
     }
 
-    // ============================================================================
-    // MODULE 5: FEATURE VIEWS
-    // ============================================================================
     function AuthScreen({ onLogin }) {
       const [username, setUsername] = useState('adrian');
       const [passwordInput, setPasswordInput] = useState('');
@@ -823,9 +783,6 @@
       )
     }
 
-    // ============================================================================
-    // MODULE 6: MAIN APP CONTROLLER
-    // ============================================================================
     function App() {
       const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [loggedInUser, setLoggedInUser] = useState(null);
@@ -866,6 +823,7 @@
       const [hudFilter, setHudFilter] = useState("All");
       const [isQrModalOpen, setIsQrModalOpen] = useState(false);
       const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+      
       const [dialog, setDialog] = useState({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       const closeDialog = () => setDialog({ isOpen: false, title: "", message: "", type: "info", onConfirm: null });
       
@@ -877,7 +835,12 @@
       const prevListRef = useRef([]);
       const isFirstLoadRef = useRef(true);
 
-      const isLogisticsLocked = useMemo(() => formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up', [formState]);
+      const isLogisticsLocked = useMemo(() => {
+        if (!formState?.isCoroner) return false;
+        if (formState?.convertedToAdmission) return true;
+        return formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
+      }, [formState]);
+      
       const selectedRecord = useMemo(() => selectedRowId ? (deceasedList.find(d => d.id === selectedRowId) || null) : null, [deceasedList, selectedRowId]);
       const currentTheme = getBrandTheme(activeBrand);
 
@@ -899,7 +862,7 @@
           else matchLoc = locationFilter === "All" || item.location === locationFilter;
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           let matchHud = true;
-          if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up');
+          if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up') && !item.convertedToAdmission;
           if (hudFilter === "Transfers") matchHud = !!item.transferDateTime && item.transferStatus !== 'Completed';
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
           return matchSearch && matchLoc && matchStatus && matchHud;
@@ -915,7 +878,7 @@
         });
         return {
           active: activeDashboardCases.length,
-          coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
+          coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up') && !c.convertedToAdmission).length,
           transfers: activeDashboardCases.filter(c => c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
@@ -1086,32 +1049,19 @@
         }
       }, [pendingDeepLink, deceasedList]);
 
-      // CRASH PROOF ARRAY EXTRACTORS (Safeguards against corrupt undefined/null local storage states)
-      const getSafeArray = (arr, fallback) => Array.isArray(arr) ? arr : (Array.isArray(fallback) ? fallback : []);
-
       const labels = appSettings.labels || defaultAppSettings.labels;
-      const locations = getSafeArray(appSettings.lists?.locations, defaultAppSettings.lists.locations);
-      const conditions = getSafeArray(appSettings.lists?.conditions, defaultAppSettings.lists.conditions);
-      const infectionRisks = getSafeArray(appSettings.lists?.infectionRisks, defaultAppSettings.lists.infectionRisks);
+      const locations = appSettings.lists?.locations || defaultAppSettings.lists.locations;
+      const conditions = appSettings.lists?.conditions || defaultAppSettings.lists.conditions;
+      const infectionRisks = appSettings.lists?.infectionRisks || defaultAppSettings.lists.infectionRisks;
       const triStateOptions = useMemo(() => ["Yes", "No", "N/A"], []);
-      const coffinsList = getSafeArray(appSettings.lists?.coffins, defaultAppSettings.lists.coffins);
-      const handlesList = getSafeArray(appSettings.lists?.handles, defaultAppSettings.lists.handles);
-      const wreathHoldersList = getSafeArray(appSettings.lists?.wreathHolders, defaultAppSettings.lists.wreathHolders);
-      const crucifixesList = getSafeArray(appSettings.lists?.crucifixes, defaultAppSettings.lists.crucifixes);
-      const titles = getSafeArray(appSettings.lists?.titles, defaultAppSettings.lists.titles);
-      const vehiclesArray = getSafeArray(appSettings.lists?.vehicles, defaultAppSettings.lists.vehicles);
-      const hospitalsArray = getSafeArray(appSettings.lists?.hospitals, defaultAppSettings.lists.hospitals);
-      const customFields = getSafeArray(appSettings.customFields, []);
+      const coffinsList = appSettings.lists?.coffins || defaultAppSettings.lists.coffins;
+      const handlesList = appSettings.lists?.handles || defaultAppSettings.lists.handles;
+      const wreathHoldersList = appSettings.lists?.wreathHolders || defaultAppSettings.lists.wreathHolders;
+      const crucifixesList = appSettings.lists?.crucifixes || defaultAppSettings.lists.crucifixes;
+      const titles = appSettings.lists?.titles || defaultAppSettings.lists.titles;
+      const vehicleOptions = appSettings.lists?.vehicles || defaultAppSettings.lists.vehicles;
+      const customFields = appSettings.customFields || [];
 
-      // SAFELY COMPILED DROPDOWN OPTIONS (Prevents "...undefined is not iterable" crash)
-      const hospitalOptions = [{value: '', label: '-- Select Hospital --'}].concat(hospitalsArray);
-      const vehicleOptionsDropdown = [{value: '', label: '-- Select Vehicle --'}].concat(vehiclesArray);
-      
-      const transferTypeOptions = [{value:'', label:'-- Select Type --'}, {value:'Pick up', label:'Pick up'}];
-      if (formState?.isCoroner) transferTypeOptions.push({value:'Drop off', label:'Drop off'});
-
-
-      // HELPER: App Logic Functions
       const saveSettingsToDb = async (newSettings) => {
         try { localStorage.setItem('parlourcare_settings', JSON.stringify(newSettings)); } catch(e){}
         if (isFirebaseEnabled && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
@@ -1245,6 +1195,14 @@
         if (selectedRowId === id && formState) setFormState(prev => ({ ...prev, isArchived: !item.isArchived }));
       };
 
+      const handleConvertToAdmission = (id) => {
+        if (!formState) return;
+        const updatedRecord = { ...formState, convertedToAdmission: true };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+        setActiveTab("care");
+      };
+
       const handleStaffToggle = (staffName, isTransfer = false) => {
         if (!formState) return;
         const key = isTransfer ? 'transferStaff' : 'pickupStaff';
@@ -1265,7 +1223,7 @@
         const newCase = {
           id: nextId, ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
           fridgeTray: "", keyDate: "", keyMilestoneName: "", keyMilestoneUrgency: "None", deceasedName: "", title: "Mr", dob: "", dod: "", arranger: activeBrand === "gowards" ? "FAK" : "CRM", location: locationName, greenCoroner: "No", encoffined: "No", plate: "No", bodySize: "", condition: "Good", infection: "None", coffin: "", coffinHandles: "", wreathHolders: "", crucifix: "", clothes: "", clothesChecked: false, preparations: "No", preparationsDetails: "", jewellery: "No", jewelleryDetails: "", devices: "No", devicesDetails: "", embalming: "No", embalmingDetails: "", coffinAccessories: "", viewing: "R", ready: "No", 
-          isCoroner: isCoronerCase, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary", pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: activeBrand === "gowards" ? "C25 GFS" : "C17 DFS", pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", 
+          isCoroner: isCoronerCase, convertedToAdmission: false, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary", pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: activeBrand === "gowards" ? "C25 GFS" : "C17 DFS", pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", 
           transferStatus: "", transferStatusTimestamps: {}, transferDateTime: "", transferHospital: "", transferType: "", transferVehicle: "", transferStaff: [], transferStaffEmails: "", isArchived: false
         };
         saveCaseToDb(newCase); setFormState(newCase); setSelectedRowId(nextId); setViewMode("cases"); setActiveTab(isCoronerCase ? "pickup" : "hospital");
@@ -1275,6 +1233,8 @@
 
       const isCatherine = loggedInUser === 'catherine';
       const isAdmin = loggedInUser === 'admin';
+      
+      const hospitalOptions = [{value:'',label:'-- Select Location --'}].concat((appSettings.lists?.hospitals || []).map(h => ({value: h, label: h})));
 
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
@@ -1285,6 +1245,8 @@
             notifications={notifications} setNotifications={setNotifications} unreadCount={unreadCount} setUnreadCount={setUnreadCount}
           />
           <main className="flex-1 overflow-hidden flex flex-col">
+            
+            {}
             {viewMode === "admin" && isAdmin && !selectedRowId && (
               <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in bg-slate-900">
                 <div className="max-w-5xl mx-auto">
@@ -1344,6 +1306,7 @@
               </div>
             )}
 
+            {}
             {viewMode === "stock" && !selectedRowId && (
               <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
@@ -1383,6 +1346,7 @@
               </div>
             )}
 
+            {}
             {viewMode === "cases" && !selectedRowId && (
               <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
@@ -1491,14 +1455,17 @@
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filteredList.map((item) => {
                       const isTransferCompleted = item.isCoroner && item.transferStatus === 'Completed' && item.transferType === 'Pick up';
-                      const showAsCoroner = item.isCoroner && !isTransferCompleted;
+                      const isConverted = item.convertedToAdmission;
+                      const showAsCoroner = item.isCoroner && !isTransferCompleted && !isConverted;
+
                       return (
-                        <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner ? "pickup" : "hospital"); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
+                        <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.convertedToAdmission ? "pickup" : "care"); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex flex-wrap gap-1.5 items-center">
                               <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
                               {showAsCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
-                              {isTransferCompleted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
+                              {isTransferCompleted && !isConverted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
+                              {isConverted && <span className="text-[9px] font-black text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-900 uppercase">Converted</span>}
                               {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' : item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' : 'bg-emerald-950/60 text-emerald-300 border-emerald-900'}`}>Urgency: {item.keyMilestoneUrgency}</span>}
                             </div>
                             <div className="flex items-center space-x-1.5">
@@ -1551,6 +1518,7 @@
               </div>
             )}
 
+            {}
             {selectedRowId && !formState && (
               <div className="flex-1 flex flex-col justify-center items-center py-20 select-none"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div></div>
             )}
@@ -1559,6 +1527,7 @@
               <div className="flex-1 flex flex-col overflow-hidden animate-fade-in">
                 <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 py-0 overflow-x-auto whitespace-nowrap scrollbar-none shadow-md">
                   <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors"><Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard</button>
+                  
                   {!formState?.isCoroner && (
                     <>
                       <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Building2 size={14} className="text-indigo-400" /> 1. Hospital / Home Pick-up</button>
@@ -1566,10 +1535,20 @@
                       <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Hammer size={14} className="text-indigo-400" /> 3. Coffin Workshop</button>
                     </>
                   )}
-                  {formState?.isCoroner && (
+
+                  {formState?.isCoroner && !formState?.convertedToAdmission && (
                     <>
                       <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Mail size={14} className="text-indigo-400" /> 1. Coroner's Dispatch</button>
                       <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Building2 size={14} className="text-indigo-400" /> 2. Hospital Transfer</button>
+                    </>
+                  )}
+
+                  {formState?.isCoroner && formState?.convertedToAdmission && (
+                    <>
+                      <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Users size={14} className="text-indigo-400" /> 1. Deceased Care</button>
+                      <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Hammer size={14} className="text-indigo-400" /> 2. Coffin Workshop</button>
+                      <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Mail size={14} className="text-indigo-400" /> 3. Coroner Dispatch</button>
+                      <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Building2 size={14} className="text-indigo-400" /> 4. Coroner Transfer</button>
                     </>
                   )}
                 </div>
@@ -1661,7 +1640,9 @@
                           {isLogisticsLocked && (
                             <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
                               <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked.</p></div></div>
-                              <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
+                              {!formState?.convertedToAdmission && (
+                                <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
+                              )}
                             </div>
                           )}
                           <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-305 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
@@ -1673,7 +1654,7 @@
                             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                               <FormSelect disabled={isLogisticsLocked} label={labels.location} value={formState?.location} onChange={(val) => handleFieldChange('location', val)} options={locations} />
                               <FormSelect disabled={isLogisticsLocked} label="Condition" value={formState?.condition} onChange={(val) => handleFieldChange('condition', val)} options={conditions} />
-                              <FormInput disabled={isLogisticsLocked} label={labels.fridgeTray} value={formState?.fridgeTray} onChange={(val) => handleFieldChange('fridgeTray', val)} textClass="text-amber-400 text-center font-black" />
+                              <FormInput disabled={isLogisticsLocked} label={labels.fridgeTray} value={formState?.fridgeTray} onChange={(val) => handleFieldChange('fridgeTray', val)} textClass="text-amber-400 font-bold" />
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-4">
                               <FormInput disabled={isLogisticsLocked} label={labels.dob} value={formState?.dob} onChange={(val) => handleFieldChange('dob', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY" />
@@ -1711,7 +1692,7 @@
                               </div>
                               <div className="space-y-4">
                                 <FormSelect disabled={isLogisticsLocked} label={labels.pickupDestination} value={formState?.pickupDestination} onChange={(val) => handleFieldChange('pickupDestination', val)} options={["Cromer Mortuary", "Fakenham Mortuary"]} />
-                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.pickupVehicle} onChange={(val) => handleFieldChange('pickupVehicle', val)} options={vehicleOptionsDropdown} />
+                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.pickupVehicle} onChange={(val) => handleFieldChange('pickupVehicle', val)} options={vehicleOptions} />
                                 <FormInput disabled={isLogisticsLocked} label="Scheduled Date & Time" value={formState?.pickupDateTime} onChange={(val) => handleFieldChange('pickupDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
                               </div>
                             </div>
@@ -1751,7 +1732,9 @@
                           {isLogisticsLocked && (
                             <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
                               <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked to preserve audit integrity.</p></div></div>
-                              <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
+                              {!formState?.convertedToAdmission && (
+                                <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
+                              )}
                             </div>
                           )}
                           <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
@@ -1774,15 +1757,9 @@
                                 </div>
                               </div>
                               <div className="space-y-4">
-                                <FormSelect disabled={isLogisticsLocked} label="Transfer Type" value={formState?.transferType} onChange={(val) => handleFieldChange('transferType', val)} options={transferTypeOptions} />
-                                
-                                {formState?.isCoroner ? (
-                                  <FormSelect disabled={isLogisticsLocked} label="Pick-up/Drop-off Location" value={formState?.transferHospital} onChange={(val) => handleFieldChange('transferHospital', val)} options={hospitalOptions} />
-                                ) : (
-                                  <FormInput disabled={isLogisticsLocked} label="Pick-up / Home Location" value={formState?.transferHospital} onChange={(val) => handleFieldChange('transferHospital', val)} placeholder="e.g. Hospital Ward or House Address" />
-                                )}
-
-                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.transferVehicle} onChange={(val) => handleFieldChange('transferVehicle', val)} options={vehicleOptionsDropdown} />
+                                <FormSelect disabled={isLogisticsLocked} label="Transfer Type" value={formState?.transferType} onChange={(val) => handleFieldChange('transferType', val)} options={[{value:'',label:'-- Select Type --'}, "Pick up", ...(formState?.isCoroner ? ["Drop off"] : [])]} />
+                                <FormSelect disabled={isLogisticsLocked} label={formState?.isCoroner ? "Pick-up / Drop-off Location" : "Pick-up Location"} value={formState?.transferHospital} onChange={(val) => handleFieldChange('transferHospital', val)} options={hospitalOptions} />
+                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.transferVehicle} onChange={(val) => handleFieldChange('transferVehicle', val)} options={[{value:'',label:'-- Select Vehicle --'}, ...vehicleOptions]} />
                                 <FormInput disabled={isLogisticsLocked} label="Scheduled Date & Time" value={formState?.transferDateTime} onChange={(val) => handleFieldChange('transferDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
                               </div>
                             </div>
@@ -1792,7 +1769,7 @@
                                 {norfolkStaffList.map((staff) => {
                                   const isChecked = (formState?.transferStaff || []).includes(staff.name);
                                   return (
-                                    <div key={staff.id} onClick={() => handleTransferStaffToggle(staff.name, true)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
+                                    <div key={staff.id} onClick={() => handleStaffToggle(staff.name, true)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
                                       {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}<div className="text-xs font-bold">{staff.name}</div>
                                     </div>
                                   );
@@ -1814,11 +1791,13 @@
                       <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
                         <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.Printer size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Document Print Station</span></div>
                         <div className="mt-8 space-y-2.5 w-full">
-                          {!formState?.isCoroner && (
+                          {(!formState?.isCoroner || formState?.convertedToAdmission) && (
                             <>
-                              <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Pick-up (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
-                              <button type="button" onClick={() => PrintEngine.printCareDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Users size={14} className="text-amber-400" /> Print Care Form (Tab 2)</span><Icons.Printer size={12} className="text-slate-500" /></button>
-                              <button type="button" onClick={() => PrintEngine.printWorkshopDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Hammer size={14} className="text-amber-400" /> Print Workshop Spec (Tab 3)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              {!formState?.isCoroner && (
+                                <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Pick-up (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              )}
+                              <button type="button" onClick={() => PrintEngine.printCareDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Users size={14} className="text-amber-400" /> Print Care Form</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printWorkshopDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Hammer size={14} className="text-amber-400" /> Print Workshop Spec</span><Icons.Printer size={12} className="text-slate-500" /></button>
                             </>
                           )}
                           {formState?.isCoroner && (
@@ -1851,6 +1830,14 @@
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
                           <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455"><Icons.FolderOpen size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">File Administration</span></div>
                           <div className="mt-8 space-y-2.5 w-full">
+                            
+                            {formState?.isCoroner && !formState?.convertedToAdmission && (
+                              <button type="button" onClick={() => setDialog({ isOpen: true, title: "Convert to Admission", message: "Convert this Coroner's case into a standard admission? This will lock the coroner dispatch/transfer tabs and permanently unlock the care and workshop tabs.", type: "confirm", onConfirm: () => { handleConvertToAdmission(formState.id); closeDialog(); } })} className="w-full bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-500/30 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between">
+                                <span className="flex items-center gap-2"><Icons.Layers size={14} className="text-indigo-400" /> Convert to Admission</span>
+                                <span className="text-[9px] text-indigo-500 font-mono font-bold">CONVERT</span>
+                              </button>
+                            )}
+                            
                             <button type="button" onClick={() => handleArchiveToggle(formState.id)} className="w-full bg-slate-900 hover:bg-slate-800 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.FolderOpen size={14} className="text-amber-400" />{formState?.isArchived ? "Restore Case" : "Archive Custody Profile"}</span></button>
                             <button type="button" onClick={() => setDialog({ isOpen: true, title: "Confirm Case Removal", message: `Delete the record for ${formState.deceasedName}?`, type: "confirm", onConfirm: () => { deleteCaseFromDb(formState.id); setSelectedRowId(null); setFormState(null); closeDialog(); } })} className="w-full bg-red-955/20 hover:bg-red-950/40 text-red-200 border border-red-900/40 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Trash2 size={14} className="text-red-400" />Delete Case Record</span></button>
                           </div>
@@ -1904,7 +1891,7 @@
                 <p className="text-xs text-slate-300 leading-relaxed">{dialog.message}</p>
                 <div className="flex items-center justify-end space-x-2 pt-2">
                   {dialog.type === "confirm" ? (
-                    <><button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-755 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button><button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Confirm & Delete</button></>
+                    <><button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-755 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button><button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Confirm & Action</button></>
                   ) : (
                     <button onClick={closeDialog} className="bg-amber-500 hover:bg-amber-400 text-slate-955 text-xs font-bold px-5 py-2 rounded-xl transition-colors shadow-lg">Ok</button>
                   )}

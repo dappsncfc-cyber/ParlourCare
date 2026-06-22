@@ -6,6 +6,7 @@
   <title>ParlourCare Portal</title>
   
   <script>
+    // PWA ON-THE-FLY INJECTION
     const manifest = {
       name: "ParlourCare Portal",
       short_name: "ParlourCare",
@@ -26,6 +27,7 @@
     link.href = manifestUrl;
     document.head.appendChild(link);
 
+    // DYNAMIC SERVICE WORKER INJECTION FOR PUSH NOTIFICATIONS
     const swCode = `
       self.addEventListener('push', function(event) {
         const data = event.data ? event.data.json() : { title: 'ParlourCare Update', body: 'A case file was updated.' };
@@ -53,23 +55,38 @@
     }
   </script>
 
+  <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          animation: { 'fade-in': 'fadeIn 0.25s ease-out forwards' },
-          keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.97)' }, '100%': { opacity: '1', transform: 'scale(1)' } } }
+          animation: {
+            'fade-in': 'fadeIn 0.25s ease-out forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'scale(0.97)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            }
+          }
         }
       }
     }
   </script>
 
+  <!-- React & ReactDOM CDNs -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone CDN -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
-    Babel.registerPreset('react-classic', { presets: [ [Babel.availablePresets['react'], { runtime: 'classic' }] ] });
+    Babel.registerPreset('react-classic', {
+      presets: [
+        [Babel.availablePresets['react'], { runtime: 'classic' }]
+      ]
+    });
   </script>
 
   <style>
@@ -85,6 +102,7 @@
 
   <div id="root"></div>
 
+  <!-- React Application Source -->
   <script type="text/babel" data-type="module" data-presets="react-classic">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -92,6 +110,9 @@
 
     const { useState, useMemo, useEffect, useRef } = React;
 
+    // ============================================================================
+    // MODULE 1: CONFIGURATION & INITIAL DATA
+    // ============================================================================
     const norfolkStaffList = [
       { id: "staff-1", name: "David (Cromer)", email: "david@cromerfunerals.co.uk" },
       { id: "staff-2", name: "Barrie (Cromer)", email: "sarah@cromerfunerals.co.uk" },
@@ -162,6 +183,9 @@
       }
     }
 
+    // ============================================================================
+    // MODULE 2: UTILITIES & HELPERS
+    // ============================================================================
     const getBaseUrl = () => {
       try { return window.location.origin + window.location.pathname; } catch (e) { return ''; }
     };
@@ -178,6 +202,9 @@
       return { ...base, bannerGradient: 'from-slate-900 via-indigo-950/80 to-slate-900', brandName: 'Cromer & District & Gowards Group' };
     };
 
+    // ============================================================================
+    // MODULE 3: PRINT ENGINE (Removes Duplicated HTML Wrappers)
+    // ============================================================================
     const PrintEngine = {
       executeIframePrint(htmlContent, isSticker = false) {
         try {
@@ -243,7 +270,7 @@
             <div><strong>Date of Birth:</strong> ${record?.dob || 'PENDING'}</div>
             <div><strong>Date of Death:</strong> ${record?.dod || 'PENDING'}</div>
             <div><strong>Branch Location:</strong> ${record?.location}</div>
-            <div><strong>Case Type:</strong> ${record?.isCoroner ? '⚖️ Coroner Mandate' : 'Standard Private'}</div>
+            <div><strong>Case Type:</strong> ${record?.isCoroner && !record?.isConverted ? '⚖️ Coroner Mandate' : 'Standard Private'}</div>
           </div>
         `;
       },
@@ -265,8 +292,8 @@
               ${this.renderRow('Implants/Defibrillators', record?.devicesDetails || 'None Registered')}
               ${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}
               ${this.renderRow('Embalming Action', record?.embalmingDetails || 'None')}
-              ${this.renderRow('Key Milestone Action', record?.keyMilestoneName || 'None')}
               ${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}
+              ${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}
               ${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
@@ -280,7 +307,7 @@
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Dressing & Viewings</div>
               ${this.renderRow('Dressing Attire', record?.clothes || 'None Specified')}
-              ${this.renderRow('Family Viewing Request', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}
+              ${this.renderRow('Family Viewing', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}
             </div>
           </div>
         `;
@@ -293,7 +320,7 @@
             ${this.getDocHeader(record, "Coffin Joinery & Workshop Specification", themeName)}
             ${this.getRecordCard(record)}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coffin Construction Dimensions</div>
+              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>
               ${this.renderRow('Timber Specification', record?.coffin || 'PENDING')}
               ${this.renderRow('Handles Selected', record?.coffinHandles || 'PENDING')}
               ${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}
@@ -315,7 +342,7 @@
         }
         const html = `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
-            ${this.getDocHeader(record, "Hospital Transfer & Pick-up Details", themeName)}
+            ${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}
             ${this.getRecordCard(record)}
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>
@@ -366,6 +393,9 @@
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>
               ${this.renderRow('CAD Reference', record?.coronerRef || 'N/A')}
+              ${this.renderRow('Branch', record?.location || 'N/A')}
+              ${this.renderRow('Body Condition', record?.condition || 'N/A')}
+              ${this.renderRow('Tray No.', record?.fridgeTray || 'PENDING')}
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;">
                 <span>Instructing Officer:</span> 
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -376,7 +406,6 @@
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               ${this.renderRow('Pickup Location', record?.pickupLocation || 'PENDING')}
-              ${this.renderRow('Special Instructions', record?.pickupInstructions || 'None')}
               ${this.renderRow('Destination', record?.pickupDestination || 'Cromer')}
               ${this.renderRow('Scheduled Time', record?.pickupDateTime || 'PENDING')}
               ${this.renderRow('Assigned Fleet Vehicle', record?.pickupVehicle || 'N/A')}
@@ -384,6 +413,7 @@
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew Checks</div>
               ${this.renderRow('Crew Dispatched', (record?.pickupStaff || []).join(', ') || 'PENDING')}
+              ${this.renderRow('Special Instructions', record?.pickupInstructions || 'None')}
             </div>
             <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>
@@ -391,6 +421,105 @@
               <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;">
                 <div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>
                 ${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}
+              </div>
+            </div>
+          </div>
+        `;
+        this.executeIframePrint(html);
+      },
+
+      printCombinedMasterDocument(record, themeName) {
+        let timelineHtml = '';
+        if (record?.pickupStatusTimestamps) {
+          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
+        }
+        let transferTimelineHtml = '';
+        if (record?.transferStatusTimestamps) {
+          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { transferTimelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
+        }
+        const html = `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.4;">
+            ${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)", themeName)}
+            ${this.getRecordCard(record)}
+            ${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}</div>` : ''}
+            
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>
+              ${this.renderRow('Body Condition', record?.condition)}
+              ${this.renderRow('Defibrillators/Pacemaker', record?.devicesDetails || 'None')}
+              ${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}
+              ${this.renderRow('Embalming Logs', record?.embalmingDetails || 'None')}
+              ${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}
+              ${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}
+              ${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}
+            </div>
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div>
+              <div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div>
+            </div>
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div>
+              <div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div>
+            </div>
+            
+            <div style="page-break-before: always; margin-top: 40px;"></div>
+            ${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2", themeName)}
+            
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
+              ${this.renderRow('Timber Specification', record?.coffin || 'None')}
+              ${this.renderRow('Handles Selected', record?.coffinHandles || 'None')}
+              ${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}
+              ${this.renderRow('Crucifix', record?.crucifix || 'None')}
+              ${this.renderRow('Coffin Size', record?.bodySize || 'PENDING SPEC')}
+              ${this.renderRow('Engraved Plate Affixed', record?.plate || 'No')}
+              ${this.renderRow('Grave Marker', record?.graveMarker || 'None')}
+            </div>
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>
+              ${this.renderRow('Dressing Apparel', record?.clothes || 'None')}
+              ${this.renderRow('Family Viewing Status', record?.viewing || 'Requested')}
+            </div>
+
+            ${record?.isCoroner ? `
+              <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>
+                ${this.renderRow('CAD Ref', record.coronerRef || 'N/A')}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;">
+                  <span>Coroner Officer:</span> 
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <strong>${record.coronerOfficer || 'N/A'}</strong>
+                    ${record.coronerSignature ? `
+                      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px; border-left: 2px solid #e2e8f0; padding-left: 10px;">
+                        <span style="font-size: 10px; color: #64748b; font-weight: bold;">Signed:</span>
+                        <img src="${record.coronerSignature}" style="height: 45px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
+                        <span style="font-size: 10px; color: #64748b; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+                ${this.renderRow('Pick-up Location', record.pickupLocation || 'N/A')}
+                ${this.renderRow('Scheduled Date', record.pickupDateTime || 'N/A')}
+                ${this.renderRow('Assigned Fleet Vehicle', record.pickupVehicle || 'N/A')}
+                ${this.renderRow('Stage Status', record.pickupStatus || 'N/A')}
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
+                  <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
+                  ${timelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
+                </div>
+              </div>
+            ` : ''}
+            
+            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital / Home Transfer Details</div>
+              ${this.renderRow('Transfer Type', record.transferType || 'N/A')}
+              ${this.renderRow('Location', record.transferHospital || 'N/A')}
+              ${this.renderRow('Scheduled Date', record.transferDateTime || 'N/A')}
+              ${this.renderRow('Vehicle', record.transferVehicle || 'N/A')}
+              ${this.renderRow('Staff', (record.transferStaff || []).join(', ') || 'PENDING')}
+              ${this.renderRow('Transfer Stage', record.transferStatus || 'Pending')}
+              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
+                <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
+                ${transferTimelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
               </div>
             </div>
           </div>
@@ -421,6 +550,9 @@
     };
 
 
+    // ============================================================================
+    // MODULE 4: ICONS & UI PRIMITIVES
+    // ============================================================================
     const Icons = {
       Users: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
       Search: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
@@ -612,6 +744,9 @@
       );
     }
 
+    // ============================================================================
+    // MODULE 5: FEATURE VIEWS
+    // ============================================================================
     function AuthScreen({ onLogin }) {
       const [username, setUsername] = useState('adrian');
       const [passwordInput, setPasswordInput] = useState('');
@@ -783,6 +918,9 @@
       )
     }
 
+    // ============================================================================
+    // MODULE 6: MAIN APP CONTROLLER
+    // ============================================================================
     function App() {
       const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [loggedInUser, setLoggedInUser] = useState(null);
@@ -835,12 +973,9 @@
       const prevListRef = useRef([]);
       const isFirstLoadRef = useRef(true);
 
-      const isLogisticsLocked = useMemo(() => {
-        if (!formState?.isCoroner) return false;
-        if (formState?.convertedToAdmission) return true;
-        return formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up';
-      }, [formState]);
-      
+      const [isCustomTransferLoc, setIsCustomTransferLoc] = useState(false);
+
+      const isLogisticsLocked = useMemo(() => formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up' && !formState?.isConverted, [formState]);
       const selectedRecord = useMemo(() => selectedRowId ? (deceasedList.find(d => d.id === selectedRowId) || null) : null, [deceasedList, selectedRowId]);
       const currentTheme = getBrandTheme(activeBrand);
 
@@ -862,7 +997,7 @@
           else matchLoc = locationFilter === "All" || item.location === locationFilter;
           const matchStatus = statusFilter === "Active" ? !item.isArchived : item.isArchived;
           let matchHud = true;
-          if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up') && !item.convertedToAdmission;
+          if (hudFilter === "Coroner") matchHud = item.isCoroner && !(item.transferStatus === 'Completed' && item.transferType === 'Pick up' && !item.isConverted);
           if (hudFilter === "Transfers") matchHud = !!item.transferDateTime && item.transferStatus !== 'Completed';
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
           return matchSearch && matchLoc && matchStatus && matchHud;
@@ -878,7 +1013,7 @@
         });
         return {
           active: activeDashboardCases.length,
-          coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up') && !c.convertedToAdmission).length,
+          coroner: activeDashboardCases.filter(c => c.isCoroner && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up' && !c.isConverted)).length,
           transfers: activeDashboardCases.filter(c => c.transferDateTime && !(c.transferStatus === 'Completed' && c.transferType === 'Pick up')).length,
           urgent: activeDashboardCases.filter(c => c.keyMilestoneUrgency === 'High').length
         };
@@ -886,10 +1021,12 @@
 
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
+        
         const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
         const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
         const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
         const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
+        
         return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
       }, [stockLevels, stockSearchQuery, appSettings.lists]);
 
@@ -1062,6 +1199,13 @@
       const vehicleOptions = appSettings.lists?.vehicles || defaultAppSettings.lists.vehicles;
       const customFields = appSettings.customFields || [];
 
+      // SAFE FALLBACK FOR HOSPITALS LIST
+      const safeHospitalsList = useMemo(() => {
+        const h = appSettings.lists?.hospitals;
+        return Array.isArray(h) ? h : defaultAppSettings.lists.hospitals;
+      }, [appSettings.lists?.hospitals]);
+
+      // HELPER: App Logic Functions
       const saveSettingsToDb = async (newSettings) => {
         try { localStorage.setItem('parlourcare_settings', JSON.stringify(newSettings)); } catch(e){}
         if (isFirebaseEnabled && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
@@ -1195,14 +1339,6 @@
         if (selectedRowId === id && formState) setFormState(prev => ({ ...prev, isArchived: !item.isArchived }));
       };
 
-      const handleConvertToAdmission = (id) => {
-        if (!formState) return;
-        const updatedRecord = { ...formState, convertedToAdmission: true };
-        setFormState(updatedRecord);
-        saveCaseToDb(updatedRecord);
-        setActiveTab("care");
-      };
-
       const handleStaffToggle = (staffName, isTransfer = false) => {
         if (!formState) return;
         const key = isTransfer ? 'transferStaff' : 'pickupStaff';
@@ -1223,18 +1359,37 @@
         const newCase = {
           id: nextId, ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
           fridgeTray: "", keyDate: "", keyMilestoneName: "", keyMilestoneUrgency: "None", deceasedName: "", title: "Mr", dob: "", dod: "", arranger: activeBrand === "gowards" ? "FAK" : "CRM", location: locationName, greenCoroner: "No", encoffined: "No", plate: "No", bodySize: "", condition: "Good", infection: "None", coffin: "", coffinHandles: "", wreathHolders: "", crucifix: "", clothes: "", clothesChecked: false, preparations: "No", preparationsDetails: "", jewellery: "No", jewelleryDetails: "", devices: "No", devicesDetails: "", embalming: "No", embalmingDetails: "", coffinAccessories: "", viewing: "R", ready: "No", 
-          isCoroner: isCoronerCase, convertedToAdmission: false, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary", pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: activeBrand === "gowards" ? "C25 GFS" : "C17 DFS", pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", 
+          isCoroner: isCoronerCase, isConverted: false, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary", pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: activeBrand === "gowards" ? "C25 GFS" : "C17 DFS", pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", 
           transferStatus: "", transferStatusTimestamps: {}, transferDateTime: "", transferHospital: "", transferType: "", transferVehicle: "", transferStaff: [], transferStaffEmails: "", isArchived: false
         };
-        saveCaseToDb(newCase); setFormState(newCase); setSelectedRowId(nextId); setViewMode("cases"); setActiveTab(isCoronerCase ? "pickup" : "hospital");
+        saveCaseToDb(newCase); setFormState(newCase); setSelectedRowId(nextId); setViewMode("cases"); setActiveTab(isCoronerCase ? "pickup" : "hospital"); setIsCustomTransferLoc(false);
+      };
+
+      const convertToAdmission = () => {
+        if (!formState || !formState.isCoroner) return;
+        const updatedRecord = { ...formState, isConverted: true };
+        setFormState(updatedRecord);
+        saveCaseToDb(updatedRecord);
+        setActiveTab("hospital");
+      };
+
+      const isUrgentDatePast = (dateStr) => {
+        if (!dateStr) return false;
+        try {
+          const parts = dateStr.split('/');
+          if (parts.length !== 3) return false;
+          const [d, m, y] = parts;
+          const milestoneDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return milestoneDate < today;
+        } catch(e) { return false; }
       };
 
       if (!isAuthenticated) return <AuthScreen onLogin={(user) => { setIsAuthenticated(true); setLoggedInUser(user); }} />;
 
       const isCatherine = loggedInUser === 'catherine';
       const isAdmin = loggedInUser === 'admin';
-      
-      const hospitalOptions = [{value:'',label:'-- Select Location --'}].concat((appSettings.lists?.hospitals || []).map(h => ({value: h, label: h})));
 
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
@@ -1245,8 +1400,6 @@
             notifications={notifications} setNotifications={setNotifications} unreadCount={unreadCount} setUnreadCount={setUnreadCount}
           />
           <main className="flex-1 overflow-hidden flex flex-col">
-            
-            {}
             {viewMode === "admin" && isAdmin && !selectedRowId && (
               <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in bg-slate-900">
                 <div className="max-w-5xl mx-auto">
@@ -1306,7 +1459,6 @@
               </div>
             )}
 
-            {}
             {viewMode === "stock" && !selectedRowId && (
               <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
@@ -1346,7 +1498,6 @@
               </div>
             )}
 
-            {}
             {viewMode === "cases" && !selectedRowId && (
               <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
@@ -1373,25 +1524,30 @@
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0 animate-fade-in select-none">
                   <div onClick={() => setHudFilter("All")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'All' ? 'border-indigo-500/60 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-slate-800/80 hover:border-indigo-500/30'}`}>
+                    <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-indigo-400 relative z-10">{hudStats.active}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Active Cases</span>
                   </div>
                   <div onClick={() => setHudFilter(prev => prev === "Coroner" ? "All" : "Coroner")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Coroner' ? 'border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'border-slate-800/80 hover:border-rose-500/30'}`}>
+                    <div className="absolute inset-0 bg-rose-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-rose-400 relative z-10">{hudStats.coroner}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Coroner Cases</span>
                   </div>
                   <div onClick={() => setHudFilter(prev => prev === "Transfers" ? "All" : "Transfers")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Transfers' ? 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-800/80 hover:border-emerald-500/30'}`}>
+                    <div className="absolute inset-0 bg-emerald-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-emerald-400 relative z-10">{hudStats.transfers}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Transfers</span>
                   </div>
                   <div onClick={() => setHudFilter(prev => prev === "Urgent" ? "All" : "Urgent")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Urgent' ? 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-slate-800/80 hover:border-amber-500/30'}`}>
+                    <div className="absolute inset-0 bg-amber-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-amber-400 relative z-10">{hudStats.urgent}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">High Urgency</span>
                   </div>
                 </div>
 
                 {(() => {
-                  const todayEvents = [];
+                  const todayEventsMap = new Map();
+                  
                   deceasedList.forEach(item => {
                     if (item.isArchived) return;
                     let matchLoc = true;
@@ -1399,31 +1555,41 @@
                     else if (activeBrand === "gowards") matchLoc = item.location === "Fakenham";
                     if (!matchLoc) return;
 
-                    if (item.isCoroner && item.pickupStatus !== 'Collected' && item.pickupDateTime) {
-                      todayEvents.push({ id: `${item.id}-pickup`, caseId: item.id, rawItem: item, time: item.pickupDateTime, type: 'CORONER_DISPATCH', title: `⚖️ PRIORITISED CORONER DISPATCH: ${item.title} ${item.deceasedName || 'Unnamed Case'}`, detail: `From: ${item.pickupLocation || 'Pending Address'} → Target: ${item.pickupDestination}`, crew: item.pickupStaff || [], vehicle: item.pickupVehicle, status: item.pickupStatus, ref: item.ref });
+                    if (item.isCoroner && !item.isConverted && item.pickupStatus !== 'Collected') {
+                      const id = `${item.id}-pickup`;
+                      todayEventsMap.set(id, { id, caseId: item.id, rawItem: item, time: item.pickupDateTime || 'Unscheduled', type: 'CORONER_DISPATCH', title: `⚖️ PRIORITISED CORONER DISPATCH: ${item.title} ${item.deceasedName || 'Unnamed Case'}`, detail: `From: ${item.pickupLocation || 'Pending Address'} → Target: ${item.pickupDestination}`, crew: item.pickupStaff || [], vehicle: item.pickupVehicle, status: item.pickupStatus || 'Pending', ref: item.ref });
                     }
-                    if (item.transferDateTime && item.transferStatus !== 'Completed') {
-                      todayEvents.push({ id: `${item.id}-transfer`, caseId: item.id, rawItem: item, time: item.transferDateTime, type: 'TRANSFER', title: `🚚 Hospital Transfer: ${item.title} ${item.deceasedName || 'Unnamed Case'}`, detail: `${item.transferType || 'Transfer'}: ${item.transferHospital || 'Pending Location'}`, crew: item.transferStaff || [], vehicle: item.transferVehicle, status: item.transferStatus || 'Pending', ref: item.ref });
+                    if ((item.transferType === 'Pick up' || item.transferType === 'Drop off' || item.transferDateTime) && item.transferStatus !== 'Completed') {
+                      const id = `${item.id}-transfer`;
+                      todayEventsMap.set(id, { id, caseId: item.id, rawItem: item, time: item.transferDateTime || 'Unscheduled', type: 'TRANSFER', title: `🚚 Hospital / Home Transfer: ${item.title} ${item.deceasedName || 'Unnamed Case'}`, detail: `${item.transferType || 'Transfer'}: ${item.transferHospital || 'Pending Location'}`, crew: item.transferStaff || [], vehicle: item.transferVehicle, status: item.transferStatus || 'Pending', ref: item.ref });
                     }
-                    if (item.keyDate && item.keyMilestoneUrgency === 'High') {
-                      todayEvents.push({ id: `${item.id}-milestone`, caseId: item.id, rawItem: item, time: item.keyDate, type: 'HIGH_MILESTONE', title: `🚨 CRITICAL CARE DEADLINE: ${item.keyMilestoneName || 'Milestone Action Required'}`, detail: `Profile: ${item.title} ${item.deceasedName || 'Unnamed Case'} (Tray: ${item.fridgeTray || 'Pending'})`, crew: [], status: 'Action Required', ref: item.ref });
+                    if (item.keyMilestoneUrgency === 'High' && !isUrgentDatePast(item.keyDate)) {
+                      const id = `${item.id}-milestone`;
+                      todayEventsMap.set(id, { id, caseId: item.id, rawItem: item, time: item.keyDate || 'Unscheduled', type: 'HIGH_MILESTONE', title: `🚨 CRITICAL CARE DEADLINE: ${item.keyMilestoneName || 'Milestone Action Required'}`, detail: `Profile: ${item.title} ${item.deceasedName || 'Unnamed Case'} (Tray: ${item.fridgeTray || 'Pending'})`, crew: [], status: 'Action Required', ref: item.ref });
                     }
                   });
-                  todayEvents.sort((a, b) => a.time.localeCompare(b.time));
+                  
+                  const todayEvents = Array.from(todayEventsMap.values());
+                  todayEvents.sort((a, b) => {
+                    if (a.time === 'Unscheduled' && b.time !== 'Unscheduled') return 1;
+                    if (a.time !== 'Unscheduled' && b.time === 'Unscheduled') return -1;
+                    return a.time.localeCompare(b.time);
+                  });
+                  
                   if (todayEvents.length === 0) return null;
 
                   return (
-                    <div className="mb-6 bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+                    <div className="mb-6 bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl animate-fade-in select-none relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500"></div>
                       <div className="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-4">
-                        <div className="flex items-center space-x-2.5"><span className="text-xl">📅</span><div><h3 className="text-sm font-black text-white uppercase tracking-wider">Unified Daily Operations Timeline</h3></div></div>
+                        <div className="flex items-center space-x-2.5"><span className="text-xl">📅</span><div><h3 className="text-sm font-black text-white uppercase tracking-wider">Upcoming Tasks</h3><p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Chronological movements & critical deadlines</p></div></div>
                         <span className="bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-black px-2.5 py-1 rounded-md uppercase tracking-wider">{todayEvents.length} Active {todayEvents.length === 1 ? 'Event' : 'Events'}</span>
                       </div>
                       <div className="space-y-3 max-h-64 overflow-y-auto pr-1.5 scrollbar-none">
                         {todayEvents.map((evt) => {
                           const isPriority = evt.type === 'CORONER_DISPATCH' || evt.type === 'HIGH_MILESTONE';
                           return (
-                            <div key={evt.id} onClick={() => { setSelectedRowId(evt.caseId); setFormState(JSON.parse(JSON.stringify(evt.rawItem))); setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : (evt.rawItem.isCoroner ? "pickup" : "care")); }} className={`p-3.5 rounded-2xl border cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${isPriority ? 'border-rose-900/60 bg-rose-950/5 hover:bg-rose-950/10 hover:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/80'}`}>
+                            <div key={evt.id} onClick={() => { setSelectedRowId(evt.caseId); setFormState(JSON.parse(JSON.stringify(evt.rawItem))); setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : (evt.rawItem.isCoroner && !evt.rawItem.isConverted ? "pickup" : "hospital")); setIsCustomTransferLoc(false); }} className={`p-3.5 rounded-2xl border cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${isPriority ? 'border-rose-900/60 bg-rose-950/5 hover:bg-rose-950/10 hover:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/80'}`}>
                               <div className="flex items-start space-x-3.5 min-w-0 flex-1">
                                 <div className="flex flex-col items-center justify-center flex-shrink-0">
                                   <span className="text-xs font-mono font-black text-amber-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">{evt.time.includes(' ') ? evt.time.split(' ')[1] : evt.time}</span>
@@ -1455,17 +1621,15 @@
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filteredList.map((item) => {
                       const isTransferCompleted = item.isCoroner && item.transferStatus === 'Completed' && item.transferType === 'Pick up';
-                      const isConverted = item.convertedToAdmission;
-                      const showAsCoroner = item.isCoroner && !isTransferCompleted && !isConverted;
-
+                      const showAsCoroner = item.isCoroner && !isTransferCompleted && !item.isConverted;
                       return (
-                        <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.convertedToAdmission ? "pickup" : "care"); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
+                        <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.isConverted ? "pickup" : "hospital"); setIsCustomTransferLoc(false); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex flex-wrap gap-1.5 items-center">
                               <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
                               {showAsCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
-                              {isTransferCompleted && !isConverted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
-                              {isConverted && <span className="text-[9px] font-black text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-900 uppercase">Converted</span>}
+                              {item.isConverted && <span className="text-[9px] font-black text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-900 uppercase">Converted</span>}
+                              {isTransferCompleted && !item.isConverted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
                               {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' : item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' : 'bg-emerald-950/60 text-emerald-300 border-emerald-900'}`}>Urgency: {item.keyMilestoneUrgency}</span>}
                             </div>
                             <div className="flex items-center space-x-1.5">
@@ -1518,37 +1682,39 @@
               </div>
             )}
 
-            {}
             {selectedRowId && !formState && (
               <div className="flex-1 flex flex-col justify-center items-center py-20 select-none"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div></div>
             )}
 
             {selectedRowId && formState && (
-              <div className="flex-1 flex flex-col overflow-hidden animate-fade-in">
-                <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 py-0 overflow-x-auto whitespace-nowrap scrollbar-none shadow-md">
-                  <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors"><Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard</button>
+              <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 animate-fade-in">
+                <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md select-none">
+                  <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
+                    <Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard
+                  </button>
                   
-                  {!formState?.isCoroner && (
+                  {(!formState?.isCoroner || formState?.isConverted) && (
                     <>
-                      <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Building2 size={14} className="text-indigo-400" /> 1. Hospital / Home Pick-up</button>
-                      <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Users size={14} className="text-indigo-400" /> 2. Deceased Care</button>
-                      <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Hammer size={14} className="text-indigo-400" /> 3. Coffin Workshop</button>
+                      <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                        <Icons.Building2 size={14} className="text-indigo-400" /> 1. Hospital / Home Pick-up
+                      </button>
+                      <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                        <Icons.Users size={14} className="text-indigo-400" /> 2. Deceased Care
+                      </button>
+                      <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                        <Icons.Hammer size={14} className="text-indigo-400" /> 3. Coffin Workshop
+                      </button>
                     </>
                   )}
 
-                  {formState?.isCoroner && !formState?.convertedToAdmission && (
+                  {formState?.isCoroner && !formState?.isConverted && (
                     <>
-                      <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Mail size={14} className="text-indigo-400" /> 1. Coroner's Dispatch</button>
-                      <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Building2 size={14} className="text-indigo-400" /> 2. Hospital Transfer</button>
-                    </>
-                  )}
-
-                  {formState?.isCoroner && formState?.convertedToAdmission && (
-                    <>
-                      <button onClick={() => setActiveTab("care")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "care" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Users size={14} className="text-indigo-400" /> 1. Deceased Care</button>
-                      <button onClick={() => setActiveTab("workshop")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "workshop" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Hammer size={14} className="text-indigo-400" /> 2. Coffin Workshop</button>
-                      <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Mail size={14} className="text-indigo-400" /> 3. Coroner Dispatch</button>
-                      <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400'}`}><Icons.Building2 size={14} className="text-indigo-400" /> 4. Coroner Transfer</button>
+                      <button onClick={() => setActiveTab("pickup")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "pickup" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                        <Icons.Mail size={14} className="text-indigo-400" /> 1. Coroner's Dispatch
+                      </button>
+                      <button onClick={() => setActiveTab("hospital")} className={`px-5 py-3.5 text-xs font-bold tracking-wider uppercase border-b-2 flex items-center gap-2 flex-shrink-0 transition-all ${activeTab === "hospital" ? currentTheme.activeTabStyle : 'border-transparent text-slate-400 hover:text-white'}`}>
+                        <Icons.Building2 size={14} className="text-indigo-400" /> 2. Hospital Transfer
+                      </button>
                     </>
                   )}
                 </div>
@@ -1637,48 +1803,41 @@
 
                       {activeTab === "pickup" && formState?.isCoroner && (
                         <>
-                          {isLogisticsLocked && (
+                          {(isLogisticsLocked || formState?.isConverted) && (
                             <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
-                              <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked.</p></div></div>
-                              {!formState?.convertedToAdmission && (
-                                <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
-                              )}
+                              <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed or case converted. Coroner removal logs are locked.</p></div></div>
+                              {!formState?.isConverted && <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>}
                             </div>
                           )}
-                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-305 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-305 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-305">Coroner Authority Details</h3></div>
                             <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
-                              <FormSelect disabled={isLogisticsLocked} label="Title" value={formState?.title} onChange={(val) => handleFieldChange('title', val)} options={titles} wrapperClass="col-span-2 sm:col-span-2" />
-                              <FormInput disabled={isLogisticsLocked} label={labels.deceasedName} value={formState?.deceasedName} onChange={(val) => handleFieldChange('deceasedName', val)} wrapperClass="col-span-2 sm:col-span-4" />
-                            </div>
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                              <FormSelect disabled={isLogisticsLocked} label={labels.location} value={formState?.location} onChange={(val) => handleFieldChange('location', val)} options={locations} />
-                              <FormSelect disabled={isLogisticsLocked} label="Condition" value={formState?.condition} onChange={(val) => handleFieldChange('condition', val)} options={conditions} />
-                              <FormInput disabled={isLogisticsLocked} label={labels.fridgeTray} value={formState?.fridgeTray} onChange={(val) => handleFieldChange('fridgeTray', val)} textClass="text-amber-400 font-bold" />
+                              <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Title" value={formState?.title} onChange={(val) => handleFieldChange('title', val)} options={titles} wrapperClass="col-span-2 sm:col-span-2" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.deceasedName} value={formState?.deceasedName} onChange={(val) => handleFieldChange('deceasedName', val)} wrapperClass="col-span-2 sm:col-span-4" />
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-4">
-                              <FormInput disabled={isLogisticsLocked} label={labels.dob} value={formState?.dob} onChange={(val) => handleFieldChange('dob', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY" />
-                              <FormInput disabled={isLogisticsLocked} label={labels.dod} value={formState?.dod} onChange={(val) => handleFieldChange('dod', val)} placeholder="DD/MM/YYYY" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dob} value={formState?.dob} onChange={(val) => handleFieldChange('dob', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dod} value={formState?.dod} onChange={(val) => handleFieldChange('dod', val)} placeholder="DD/MM/YYYY" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-4">
-                                <FormInput disabled={isLogisticsLocked} label={labels.coronerRef} value={formState?.coronerRef} onChange={(val) => handleFieldChange('coronerRef', val)} textClass="text-white font-mono" placeholder="e.g. CAD-10294-2026" />
-                                <FormInput disabled={isLogisticsLocked} label={labels.coronerOfficer} value={formState?.coronerOfficer} onChange={(val) => handleFieldChange('coronerOfficer', val)} placeholder="e.g. Officer J. Miller" />
+                                <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.coronerRef} value={formState?.coronerRef} onChange={(val) => handleFieldChange('coronerRef', val)} textClass="text-white font-mono" placeholder="e.g. CAD-10294-2026" />
+                                <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.coronerOfficer} value={formState?.coronerOfficer} onChange={(val) => handleFieldChange('coronerOfficer', val)} placeholder="e.g. Officer J. Miller" />
                               </div>
                               <div>
                                 <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer Digital Signature</label>
-                                <SignaturePad value={formState?.coronerSignature || ''} onChange={(val) => handleFieldChange('coronerSignature', val)} disabled={isLogisticsLocked} />
+                                <SignaturePad value={formState?.coronerSignature || ''} onChange={(val) => handleFieldChange('coronerSignature', val)} disabled={isLogisticsLocked || formState?.isConverted} />
                               </div>
                             </div>
                           </div>
-                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
+                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Truck className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Logistics & Dispatch</h3></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Dispatch Stage:</label>
                                 <div className="grid grid-cols-2 gap-2 mb-3">
                                   {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => (
-                                    <button disabled={isLogisticsLocked} key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 disabled:opacity-50 ${formState?.pickupStatus === st ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
+                                    <button disabled={isLogisticsLocked || formState?.isConverted} key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 disabled:opacity-50 ${formState?.pickupStatus === st ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
                                   ))}
                                 </div>
                                 <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner">
@@ -1691,9 +1850,9 @@
                                 </div>
                               </div>
                               <div className="space-y-4">
-                                <FormSelect disabled={isLogisticsLocked} label={labels.pickupDestination} value={formState?.pickupDestination} onChange={(val) => handleFieldChange('pickupDestination', val)} options={["Cromer Mortuary", "Fakenham Mortuary"]} />
-                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.pickupVehicle} onChange={(val) => handleFieldChange('pickupVehicle', val)} options={vehicleOptions} />
-                                <FormInput disabled={isLogisticsLocked} label="Scheduled Date & Time" value={formState?.pickupDateTime} onChange={(val) => handleFieldChange('pickupDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
+                                <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label={labels.pickupDestination} value={formState?.pickupDestination} onChange={(val) => handleFieldChange('pickupDestination', val)} options={["Cromer Mortuary", "Fakenham Mortuary"]} />
+                                <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Vehicle Assigned" value={formState?.pickupVehicle} onChange={(val) => handleFieldChange('pickupVehicle', val)} options={vehicleOptions} />
+                                <FormInput disabled={isLogisticsLocked || formState?.isConverted} label="Scheduled Date & Time" value={formState?.pickupDateTime} onChange={(val) => handleFieldChange('pickupDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
                               </div>
                             </div>
                             <div className="mb-5">
@@ -1702,7 +1861,7 @@
                                 {norfolkStaffList.map((staff) => {
                                   const isChecked = (formState?.pickupStaff || []).includes(staff.name);
                                   return (
-                                    <div key={staff.id} onClick={() => handleStaffToggle(staff.name)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
+                                    <div key={staff.id} onClick={() => handleStaffToggle(staff.name)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${(isLogisticsLocked || formState?.isConverted) ? 'pointer-events-none' : ''}`}>
                                       {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}<div className="text-xs font-bold">{staff.name}</div>
                                     </div>
                                   );
@@ -1710,17 +1869,17 @@
                               </div>
                             </div>
                             <div>
-                              <FormTextArea disabled={isLogisticsLocked} label={labels.pickupLocation} value={formState?.pickupLocation} onChange={(val) => handleFieldChange('pickupLocation', val)} rows={2} placeholder="e.g. Norfolk & Norwich University Hospital (NNUH)" />
-                              <div className="mt-2"><FormTextArea disabled={isLogisticsLocked} label="Special Instructions" value={formState?.pickupInstructions} onChange={(val) => handleFieldChange('pickupInstructions', val)} rows={2} /></div>
+                              <FormTextArea disabled={isLogisticsLocked || formState?.isConverted} label={labels.pickupLocation} value={formState?.pickupLocation} onChange={(val) => handleFieldChange('pickupLocation', val)} rows={2} placeholder="e.g. Norfolk & Norwich University Hospital (NNUH)" />
+                              <div className="mt-2"><FormTextArea disabled={isLogisticsLocked || formState?.isConverted} label="Special Instructions" value={formState?.pickupInstructions} onChange={(val) => handleFieldChange('pickupInstructions', val)} rows={2} /></div>
                             </div>
                           </div>
                           {dispatchEmailData && (
-                            <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                            <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
                               <div className="flex items-center space-x-1.5 text-slate-455 mb-3 border-b border-slate-800 pb-3"><Icons.Mail size={14} className="text-indigo-400" /><span className="text-[10px] font-black tracking-widest uppercase">Dispatch Emailer</span></div>
                               <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono"><div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{formState?.pickupStaffEmails || 'None'}</span></div></div>
                               <div className="mt-4 grid grid-cols-2 gap-2">
-                                <button disabled={isLogisticsLocked} type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800">Preview</button>
-                                <a href={isLogisticsLocked ? '#' : dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-955 text-[10px] font-black py-2 rounded-xl flex items-center justify-center">Send</a>
+                                <button disabled={isLogisticsLocked || formState?.isConverted} type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800">Preview</button>
+                                <a href={(isLogisticsLocked || formState?.isConverted) ? '#' : dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-955 text-[10px] font-black py-2 rounded-xl flex items-center justify-center">Send</a>
                               </div>
                             </div>
                           )}
@@ -1732,13 +1891,11 @@
                           {isLogisticsLocked && (
                             <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
                               <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked to preserve audit integrity.</p></div></div>
-                              {!formState?.convertedToAdmission && (
-                                <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
-                              )}
+                              <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
                             </div>
                           )}
                           <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
-                            <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-355">Hospital Transfer Details</h3></div>
+                            <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-355">Hospital / Home Pick-up Details</h3></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                               <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Transfer Stage:</label>
@@ -1758,7 +1915,53 @@
                               </div>
                               <div className="space-y-4">
                                 <FormSelect disabled={isLogisticsLocked} label="Transfer Type" value={formState?.transferType} onChange={(val) => handleFieldChange('transferType', val)} options={[{value:'',label:'-- Select Type --'}, "Pick up", ...(formState?.isCoroner ? ["Drop off"] : [])]} />
-                                <FormSelect disabled={isLogisticsLocked} label={formState?.isCoroner ? "Pick-up / Drop-off Location" : "Pick-up Location"} value={formState?.transferHospital} onChange={(val) => handleFieldChange('transferHospital', val)} options={hospitalOptions} />
+                                <div>
+                                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">
+                                    {!formState?.isCoroner ? "Pick-up Location" : "Pick-up / Drop-off Location"}
+                                  </label>
+                                  {!isCustomTransferLoc ? (
+                                    <select 
+                                      disabled={isLogisticsLocked} 
+                                      value={formState?.transferHospital || ''} 
+                                      onChange={(e) => {
+                                        if (e.target.value === 'Other') {
+                                          setIsCustomTransferLoc(true);
+                                          handleFieldChange('transferHospital', '');
+                                        } else {
+                                          handleFieldChange('transferHospital', e.target.value);
+                                        }
+                                      }} 
+                                      className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855"
+                                    >
+                                      <option value="">-- Select Location --</option>
+                                      {safeHospitalsList.map(h => <option key={h} value={h}>{h}</option>)}
+                                      <option value="Other">Other (Specify...)</option>
+                                    </select>
+                                  ) : (
+                                    <div className="flex gap-2">
+                                      <input 
+                                        disabled={isLogisticsLocked} 
+                                        type="text" 
+                                        value={formState?.transferHospital || ''} 
+                                        onChange={(e) => handleFieldChange('transferHospital', e.target.value)} 
+                                        placeholder="Enter custom location..." 
+                                        className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" 
+                                      />
+                                      <button 
+                                        type="button" 
+                                        disabled={isLogisticsLocked}
+                                        onClick={() => {
+                                          setIsCustomTransferLoc(false);
+                                          handleFieldChange('transferHospital', '');
+                                        }}
+                                        className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                                        title="Back to Dropdown"
+                                      >
+                                        <Icons.ArrowLeft size={14} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                                 <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.transferVehicle} onChange={(val) => handleFieldChange('transferVehicle', val)} options={[{value:'',label:'-- Select Vehicle --'}, ...vehicleOptions]} />
                                 <FormInput disabled={isLogisticsLocked} label="Scheduled Date & Time" value={formState?.transferDateTime} onChange={(val) => handleFieldChange('transferDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
                               </div>
@@ -1791,19 +1994,17 @@
                       <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
                         <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.Printer size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Document Print Station</span></div>
                         <div className="mt-8 space-y-2.5 w-full">
-                          {(!formState?.isCoroner || formState?.convertedToAdmission) && (
+                          {(!formState?.isCoroner || formState?.isConverted) && (
                             <>
-                              {!formState?.isCoroner && (
-                                <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Pick-up (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
-                              )}
-                              <button type="button" onClick={() => PrintEngine.printCareDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Users size={14} className="text-amber-400" /> Print Care Form</span><Icons.Printer size={12} className="text-slate-500" /></button>
-                              <button type="button" onClick={() => PrintEngine.printWorkshopDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Hammer size={14} className="text-amber-400" /> Print Workshop Spec</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Pick-up (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printCareDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Users size={14} className="text-amber-400" /> Print Care Form (Tab 2)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printWorkshopDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Hammer size={14} className="text-amber-400" /> Print Workshop Spec (Tab 3)</span><Icons.Printer size={12} className="text-slate-500" /></button>
                             </>
                           )}
                           {formState?.isCoroner && (
                             <>
-                              <button type="button" onClick={() => PrintEngine.printCoronerDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Truck size={14} className="text-rose-400" /> Print Coroner Dispatch (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
-                              <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-855 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Transfer (Tab 2)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printCoronerDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Truck size={14} className="text-rose-400" /> Print Coroner Dispatch {formState?.isConverted ? '(Archived)' : '(Tab 1)'}</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              {!formState?.isConverted && <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-855 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Transfer (Tab 2)</span><Icons.Printer size={12} className="text-slate-500" /></button>}
                             </>
                           )}
                         </div>
@@ -1830,14 +2031,9 @@
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
                           <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455"><Icons.FolderOpen size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">File Administration</span></div>
                           <div className="mt-8 space-y-2.5 w-full">
-                            
-                            {formState?.isCoroner && !formState?.convertedToAdmission && (
-                              <button type="button" onClick={() => setDialog({ isOpen: true, title: "Convert to Admission", message: "Convert this Coroner's case into a standard admission? This will lock the coroner dispatch/transfer tabs and permanently unlock the care and workshop tabs.", type: "confirm", onConfirm: () => { handleConvertToAdmission(formState.id); closeDialog(); } })} className="w-full bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-500/30 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between">
-                                <span className="flex items-center gap-2"><Icons.Layers size={14} className="text-indigo-400" /> Convert to Admission</span>
-                                <span className="text-[9px] text-indigo-500 font-mono font-bold">CONVERT</span>
-                              </button>
+                            {formState?.isCoroner && !formState?.isConverted && (
+                              <button type="button" onClick={() => setDialog({ isOpen: true, title: "Convert to Standard Admission", message: `Convert the Coroner profile for ${formState.deceasedName} to a standard admission? This will lock the Coroner logs and unlock the Care and Workshop tabs.`, type: "confirm", onConfirm: () => { convertToAdmission(); closeDialog(); } })} className="w-full bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-900/50 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Layers size={14} className="text-indigo-400" />Convert to Admission</span></button>
                             )}
-                            
                             <button type="button" onClick={() => handleArchiveToggle(formState.id)} className="w-full bg-slate-900 hover:bg-slate-800 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.FolderOpen size={14} className="text-amber-400" />{formState?.isArchived ? "Restore Case" : "Archive Custody Profile"}</span></button>
                             <button type="button" onClick={() => setDialog({ isOpen: true, title: "Confirm Case Removal", message: `Delete the record for ${formState.deceasedName}?`, type: "confirm", onConfirm: () => { deleteCaseFromDb(formState.id); setSelectedRowId(null); setFormState(null); closeDialog(); } })} className="w-full bg-red-955/20 hover:bg-red-950/40 text-red-200 border border-red-900/40 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Trash2 size={14} className="text-red-400" />Delete Case Record</span></button>
                           </div>
@@ -1891,7 +2087,7 @@
                 <p className="text-xs text-slate-300 leading-relaxed">{dialog.message}</p>
                 <div className="flex items-center justify-end space-x-2 pt-2">
                   {dialog.type === "confirm" ? (
-                    <><button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-755 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button><button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Confirm & Action</button></>
+                    <><button onClick={closeDialog} className="bg-slate-800 hover:bg-slate-755 text-slate-300 text-xs font-bold px-4 py-2 rounded-xl transition-colors">Cancel</button><button onClick={dialog.onConfirm} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Confirm</button></>
                   ) : (
                     <button onClick={closeDialog} className="bg-amber-500 hover:bg-amber-400 text-slate-955 text-xs font-bold px-5 py-2 rounded-xl transition-colors shadow-lg">Ok</button>
                   )}

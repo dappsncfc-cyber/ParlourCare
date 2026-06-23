@@ -974,6 +974,7 @@
       const isFirstLoadRef = useRef(true);
 
       const [isCustomTransferLoc, setIsCustomTransferLoc] = useState(false);
+      const [isCustomCoffin, setIsCustomCoffin] = useState(false);
 
       const isLogisticsLocked = useMemo(() => formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up' && !formState?.isConverted, [formState]);
       const selectedRecord = useMemo(() => selectedRowId ? (deceasedList.find(d => d.id === selectedRowId) || null) : null, [deceasedList, selectedRowId]);
@@ -1370,7 +1371,7 @@
           isCoroner: isCoronerCase, isConverted: false, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary", pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: activeBrand === "gowards" ? "C25 GFS" : "C17 DFS", pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", 
           transferStatus: "", transferStatusTimestamps: {}, transferDateTime: "", transferHospital: "", transferType: "", transferVehicle: "", transferStaff: [], transferStaffEmails: "", isArchived: false
         };
-        saveCaseToDb(newCase); setFormState(newCase); setSelectedRowId(nextId); setViewMode("cases"); setActiveTab(isCoronerCase ? "pickup" : "hospital"); setIsCustomTransferLoc(false);
+        saveCaseToDb(newCase); setFormState(newCase); setSelectedRowId(nextId); setViewMode("cases"); setActiveTab(isCoronerCase ? "pickup" : "hospital"); setIsCustomTransferLoc(false); setIsCustomCoffin(false);
       };
 
       const convertToAdmission = () => {
@@ -1597,7 +1598,7 @@
                         {todayEvents.map((evt) => {
                           const isPriority = evt.type === 'CORONER_DISPATCH' || evt.type === 'HIGH_MILESTONE';
                           return (
-                            <div key={evt.id} onClick={() => { setSelectedRowId(evt.caseId); setFormState(JSON.parse(JSON.stringify(evt.rawItem))); setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : (evt.rawItem.isCoroner && !evt.rawItem.isConverted ? "pickup" : "hospital")); setIsCustomTransferLoc(false); }} className={`p-3.5 rounded-2xl border cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${isPriority ? 'border-rose-900/60 bg-rose-950/5 hover:bg-rose-950/10 hover:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/80'}`}>
+                            <div key={evt.id} onClick={() => { setSelectedRowId(evt.caseId); setFormState(JSON.parse(JSON.stringify(evt.rawItem))); setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : (evt.rawItem.isCoroner && !evt.rawItem.isConverted ? "pickup" : "hospital")); setIsCustomTransferLoc(false); setIsCustomCoffin(evt.rawItem.coffin && !coffinsList.includes(evt.rawItem.coffin)); }} className={`p-3.5 rounded-2xl border cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${isPriority ? 'border-rose-900/60 bg-rose-950/5 hover:bg-rose-950/10 hover:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/80'}`}>
                               <div className="flex items-start space-x-3.5 min-w-0 flex-1">
                                 <div className="flex flex-col items-center justify-center flex-shrink-0">
                                   <span className="text-xs font-mono font-black text-amber-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">{evt.time.includes(' ') ? evt.time.split(' ')[1] : evt.time}</span>
@@ -1631,7 +1632,7 @@
                       const isTransferCompleted = item.isCoroner && item.transferStatus === 'Completed' && item.transferType === 'Pick up';
                       const showAsCoroner = item.isCoroner && !isTransferCompleted && !item.isConverted;
                       return (
-                        <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.isConverted ? "pickup" : "hospital"); setIsCustomTransferLoc(false); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
+                        <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.isConverted ? "pickup" : "hospital"); setIsCustomTransferLoc(false); setIsCustomCoffin(item.coffin && !coffinsList.includes(item.coffin)); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex flex-wrap gap-1.5 items-center">
                               <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
@@ -1794,7 +1795,48 @@
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                            <FormSelect label="Selected Wood" value={formState?.coffin} onChange={(val) => handleFieldChange('coffin', val)} options={[{value:'',label:'-- Select Coffin Model --'}, ...coffinsList]} />
+                            <div>
+                              <label className="text-[10px] font-black uppercase text-slate-400 block mb-1">Selected Wood</label>
+                              {!isCustomCoffin ? (
+                                <select
+                                  value={formState?.coffin || ''}
+                                  onChange={(e) => {
+                                    if (e.target.value === 'Other') {
+                                      setIsCustomCoffin(true);
+                                      handleFieldChange('coffin', '');
+                                    } else {
+                                      handleFieldChange('coffin', e.target.value);
+                                    }
+                                  }}
+                                  className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors"
+                                >
+                                  <option value="">-- Select Coffin Model --</option>
+                                  {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
+                                  <option value="Other">Other (Specify...)</option>
+                                </select>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={formState?.coffin || ''}
+                                    onChange={(e) => handleFieldChange('coffin', e.target.value)}
+                                    placeholder="Enter custom coffin..."
+                                    className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIsCustomCoffin(false);
+                                      handleFieldChange('coffin', '');
+                                    }}
+                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                                    title="Back to Dropdown"
+                                  >
+                                    <Icons.ArrowLeft size={14} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                             <FormSelect label="Handles Spec" value={formState?.coffinHandles} onChange={(val) => handleFieldChange('coffinHandles', val)} options={[{value:'',label:'-- Select Handles Spec --'}, ...handlesList]} />
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border-t border-slate-900 pt-4">

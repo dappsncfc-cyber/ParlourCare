@@ -530,18 +530,36 @@
       printStickerAndCheckBlocks(record) {
         const deepLinkUrl = `${getBaseUrl()}?case=${record?.id}`;
         const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
+        
+        let detailsHtml = '';
+        if (record?.isCoroner) {
+          detailsHtml = `
+            <div style="font-size: 10px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 1mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;">
+              ${record?.title} ${record?.deceasedName || "Unnamed Case"}
+            </div>
+            <div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOB: ${record?.dob || 'TBC'} | DOD: ${record?.dod || 'TBC'}</div>
+            <div style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: #000000; line-height: 1.1; margin-bottom: 0.5mm; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">ADDR: ${record?.pickupLocation || 'TBC'}</div>
+            <div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">CAD: ${record?.coronerRef || 'TBC'}</div>
+            <div style="font-size: 6px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1px solid #000; padding-top: 0.5mm;">Scan for Care File</div>
+          `;
+        } else {
+          detailsHtml = `
+            <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+              ${record?.title} ${record?.deceasedName || "Unnamed Case"}
+            </div>
+            <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">DOB: ${record?.dob || 'PENDING'}</div>
+            <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">REF: ${record?.ref}</div>
+            <div style="font-size: 7px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">Scan for Care File</div>
+          `;
+        }
+
         const html = `
           <div style="width: 89mm; height: 36mm; box-sizing: border-box; padding: 3mm 4mm; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; overflow: hidden; gap: 4mm;">
             <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
               <img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 28mm; height: 28mm; display: block; object-fit: contain;" />
             </div>
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">
-              <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-                ${record?.title} ${record?.deceasedName || "Unnamed Case"}
-              </div>
-              <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">DOB: ${record?.dob || 'PENDING'}</div>
-              <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">REF: ${record?.ref}</div>
-              <div style="font-size: 7px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">Scan for Care File</div>
+              ${detailsHtml}
             </div>
           </div>
         `;

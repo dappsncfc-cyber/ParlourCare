@@ -777,7 +777,6 @@
         if ((u === 'adrian' || u === 'paul') && passwordInput === "daniscool2026") valid = true;
         if (u === 'catherine' && passwordInput === "iloveadrian") valid = true;
         if (u === 'admin' && passwordInput === "offscriptlabs2026") valid = true;
-        if (u === 'david' && passwordInput === "candd2026") valid = true;
         
         if (valid) onLogin(u);
         else setLoginError('Invalid password for selected user.');
@@ -800,7 +799,7 @@
                 <div className="relative">
                   <Icons.Users className="absolute left-3 top-3 text-slate-500" size={16} />
                   <select value={username} onChange={(e) => setUsername(e.target.value)} className="w-full bg-slate-900 border border-slate-700/80 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 font-bold appearance-none cursor-pointer" required>
-                    <option value="adrian">Adrian</option><option value="paul">Paul</option><option value="catherine">Catherine</option><option value="david">David</option><option value="admin">System Admin</option>
+                    <option value="adrian">Adrian</option><option value="paul">Paul</option><option value="catherine">Catherine</option><option value="admin">System Admin</option>
                   </select>
                 </div>
               </div>
@@ -822,7 +821,7 @@
     }
 
     function HeaderBar({ 
-      user, activeBrand, setActiveBrand, isFirebaseEnabled, currentTheme, isCatherine, isAdmin, isDavid,
+      user, activeBrand, setActiveBrand, isFirebaseEnabled, currentTheme, isCatherine, isAdmin,
       viewMode, setViewMode, setSelectedRowId, createAdmission, onLogout,
       notifications, setNotifications, unreadCount, setUnreadCount 
     }) {
@@ -874,7 +873,7 @@
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto items-stretch sm:items-center">
-              {!isCatherine && !isDavid && (
+              {!isCatherine && (
                 <div className="relative">
                   <button onClick={() => { setIsNotificationTrayOpen(!isNotificationTrayOpen); setUnreadCount(0); }} className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition-all relative">
                     <Icons.Bell size={18} />
@@ -911,7 +910,7 @@
                   )}
                 </div>
               )}
-              {!isCatherine && !isDavid && (
+              {!isCatherine && (
                 <button onClick={() => { setSelectedRowId(null); setViewMode(viewMode === "stock" ? "cases" : "stock"); }} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 hover:text-white transition transform active:scale-95 shadow-md">
                   {viewMode === "stock" ? "📁 Active Cases" : "📦 Stock Room"}
                 </button>
@@ -921,12 +920,12 @@
                   ⚙️ Admin Portal
                 </button>
               )}
-              {(!isCatherine || (isCatherine && viewMode !== "admin")) && !isAdmin && !isDavid && (
+              {(!isCatherine || (isCatherine && viewMode !== "admin")) && !isAdmin && (
                 <button onClick={() => createAdmission(true)} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-rose-500/50 shadow-lg shadow-rose-600/20 transition transform active:scale-95">
                   <Icons.AlertTriangle size={16} /> Record a Coroner's
                 </button>
               )}
-              {!isCatherine && !isAdmin && !isDavid && (
+              {!isCatherine && !isAdmin && (
                 <button onClick={() => createAdmission(false)} className={`w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black ${currentTheme.primaryBtn} border border-slate-700/50 shadow-lg transition transform active:scale-95`}>
                   <Icons.Plus size={16} /> Quick Add Admission
                 </button>
@@ -998,8 +997,6 @@
       const isLogisticsLocked = useMemo(() => formState?.isCoroner && formState?.transferStatus === 'Completed' && formState?.transferType === 'Pick up' && !formState?.isConverted, [formState]);
       const selectedRecord = useMemo(() => selectedRowId ? (deceasedList.find(d => d.id === selectedRowId) || null) : null, [deceasedList, selectedRowId]);
       const currentTheme = getBrandTheme(activeBrand);
-      
-      const isDavid = loggedInUser === 'david';
 
       const dispatchEmailData = useMemo(() => {
         if (!formState) return null;
@@ -1012,12 +1009,6 @@
       const filteredList = useMemo(() => {
         const urgencyOrder = { 'High': 3, 'Medium': 2, 'Low': 1, 'None': 0, undefined: 0 };
         return deceasedList.filter(item => {
-          if (isDavid) {
-              const isTransferCompleted = item.transferStatus === 'Completed' && item.transferType === 'Pick up';
-              const isActiveCoroner = item.isCoroner && !item.isConverted && !isTransferCompleted;
-              const isActiveTransfer = (item.transferType === 'Pick up' || item.transferType === 'Drop off' || !!item.transferDateTime) && item.transferStatus !== 'Completed';
-              if (!isActiveCoroner && !isActiveTransfer) return false;
-          }
           const matchSearch = (item.deceasedName || "").toLowerCase().includes(searchQuery.toLowerCase()) || (item.ref || "").toLowerCase().includes(searchQuery.toLowerCase());
           let matchLoc = true;
           if (activeBrand === "cromer") matchLoc = item.location === "Cromer";
@@ -1034,7 +1025,7 @@
           if (hudFilter === "Urgent") matchHud = item.keyMilestoneUrgency === 'High';
           return matchSearch && matchLoc && matchStatus && matchHud;
         }).sort((a, b) => (urgencyOrder[b.keyMilestoneUrgency] || 0) - (urgencyOrder[a.keyMilestoneUrgency] || 0));
-      }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand, hudFilter, isDavid]);
+      }, [deceasedList, searchQuery, locationFilter, statusFilter, activeBrand, hudFilter]);
 
       const hudStats = useMemo(() => {
         const activeDashboardCases = deceasedList.filter(item => {
@@ -1431,7 +1422,7 @@
         <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans overflow-hidden">
           <HeaderBar 
             user={loggedInUser} activeBrand={activeBrand} setActiveBrand={setActiveBrand} isFirebaseEnabled={isFirebaseEnabled} currentTheme={currentTheme}
-            isCatherine={isCatherine} isAdmin={isAdmin} isDavid={isDavid} viewMode={viewMode} setViewMode={setViewMode} setSelectedRowId={setSelectedRowId} createAdmission={createAdmission}
+            isCatherine={isCatherine} isAdmin={isAdmin} viewMode={viewMode} setViewMode={setViewMode} setSelectedRowId={setSelectedRowId} createAdmission={createAdmission}
             onLogout={() => { setIsAuthenticated(false); setLoggedInUser(null); setSelectedRowId(null); setViewMode('cases'); }}
             notifications={notifications} setNotifications={setNotifications} unreadCount={unreadCount} setUnreadCount={setUnreadCount}
           />
@@ -1591,13 +1582,6 @@
                     else if (activeBrand === "gowards") matchLoc = item.location === "Fakenham";
                     if (!matchLoc) return;
 
-                    if (isDavid) {
-                      const isTransferCompleted = item.transferStatus === 'Completed' && item.transferType === 'Pick up';
-                      const isActiveCoroner = item.isCoroner && !item.isConverted && !isTransferCompleted;
-                      const isActiveTransfer = (item.transferType === 'Pick up' || item.transferType === 'Drop off' || !!item.transferDateTime) && item.transferStatus !== 'Completed';
-                      if (!isActiveCoroner && !isActiveTransfer) return;
-                    }
-
                     if (item.isCoroner && !item.isConverted && item.pickupStatus !== 'Collected') {
                       const id = `${item.id}-pickup`;
                       todayEventsMap.set(id, { id, caseId: item.id, rawItem: item, time: item.pickupDateTime || 'Unscheduled', type: 'CORONER_DISPATCH', title: `⚖️ PRIORITISED CORONER DISPATCH: ${item.title} ${item.deceasedName || 'Unnamed Case'}`, detail: `From: ${item.pickupLocation || 'Pending Address'} → Target: ${item.pickupDestination}`, crew: item.pickupStaff || [], vehicle: item.pickupVehicle, status: item.pickupStatus || 'Pending', ref: item.ref });
@@ -1676,7 +1660,7 @@
                               {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' : item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' : 'bg-emerald-950/60 text-emerald-300 border-emerald-900'}`}>Urgency: {item.keyMilestoneUrgency}</span>}
                             </div>
                             <div className="flex items-center space-x-1.5">
-                              {!isCatherine && !isDavid && (
+                              {!isCatherine && (
                                 <div className="flex items-center space-x-1 bg-slate-900 px-1 py-0.5 rounded-lg border border-slate-800">
                                   <button onClick={(e) => { e.stopPropagation(); handleArchiveToggle(item.id); }} className="p-1 rounded-md text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors"><Icons.FolderOpen size={13} /></button>
                                   <button onClick={(e) => { e.stopPropagation(); setDialog({ isOpen: true, title: "Confirm Removal", message: "Delete this record?", type: "confirm", onConfirm: () => { deleteCaseFromDb(item.id); closeDialog(); } }); }} className="p-1 rounded-md text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"><Icons.Trash2 size={13} /></button>
@@ -1825,7 +1809,293 @@
                         </>
                       )}
 
-                      {!isCatherine && !isDavid && (
+                      {activeTab === "workshop" && (
+                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                          <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label className="text-[10px] font-black uppercase text-slate-400 block mb-1">Selected Wood</label>
+                              {!isCustomCoffin ? (
+                                <select
+                                  value={formState?.coffin || ''}
+                                  onChange={(e) => {
+                                    if (e.target.value === 'Other') {
+                                      setIsCustomCoffin(true);
+                                      handleFieldChange('coffin', '');
+                                    } else {
+                                      handleFieldChange('coffin', e.target.value);
+                                    }
+                                  }}
+                                  className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors"
+                                >
+                                  <option value="">-- Select Coffin Model --</option>
+                                  {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
+                                  <option value="Other">Other (Specify...)</option>
+                                </select>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={formState?.coffin || ''}
+                                    onChange={(e) => handleFieldChange('coffin', e.target.value)}
+                                    placeholder="Enter custom coffin..."
+                                    className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIsCustomCoffin(false);
+                                      handleFieldChange('coffin', '');
+                                    }}
+                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                                    title="Back to Dropdown"
+                                  >
+                                    <Icons.ArrowLeft size={14} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            <FormSelect label="Handles Spec" value={formState?.coffinHandles} onChange={(val) => handleFieldChange('coffinHandles', val)} options={[{value:'',label:'-- Select Handles Spec --'}, ...handlesList]} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border-t border-slate-900 pt-4">
+                            <FormSelect label="Wreath Holders" value={formState?.wreathHolders} onChange={(val) => handleFieldChange('wreathHolders', val)} options={[{value:'',label:'-- Select Wreath Holders --'}, ...wreathHoldersList]} />
+                            <FormSelect label="Crucifix Model" value={formState?.crucifix} onChange={(val) => handleFieldChange('crucifix', val)} options={[{value:'',label:'-- Select Crucifix Spec --'}, ...crucifixesList]} />
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4">
+                            <FormInput label="Coffin Size" value={formState?.bodySize} onChange={(val) => handleFieldChange('bodySize', val)} textClass="text-white font-mono text-center" />
+                            <FormSelect label="Engraved Name Plate" value={formState?.plate} onChange={(val) => handleFieldChange('plate', val)} options={triStateOptions} textClass="text-slate-200 text-center" />
+                            <FormSelect label="Grave Marker" value={formState?.graveMarker} onChange={(val) => handleFieldChange('graveMarker', val)} options={["None", "Temporary Oak Cross", "Standard Wooden Marker", "Premium Engraved Plaque"]} />
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === "pickup" && formState?.isCoroner && (
+                        <>
+                          {(isLogisticsLocked || formState?.isConverted) && (
+                            <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
+                              <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed or case converted. Coroner removal logs are locked.</p></div></div>
+                              {!formState?.isConverted && <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>}
+                            </div>
+                          )}
+                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-305 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                            <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-305">Coroner Authority Details</h3></div>
+                            <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
+                              <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Title" value={formState?.title} onChange={(val) => handleFieldChange('title', val)} options={titles} wrapperClass="col-span-2 sm:col-span-2" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.deceasedName} value={formState?.deceasedName} onChange={(val) => handleFieldChange('deceasedName', val)} wrapperClass="col-span-2 sm:col-span-4" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dob} value={formState?.dob} onChange={(val) => handleFieldChange('dob', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dod} value={formState?.dod} onChange={(val) => handleFieldChange('dod', val)} placeholder="DD/MM/YYYY" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-4">
+                                <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.coronerRef} value={formState?.coronerRef} onChange={(val) => handleFieldChange('coronerRef', val)} textClass="text-white font-mono" placeholder="e.g. CAD-10294-2026" />
+                                <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.coronerOfficer} value={formState?.coronerOfficer} onChange={(val) => handleFieldChange('coronerOfficer', val)} placeholder="e.g. Officer J. Miller" />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Officer Digital Signature</label>
+                                <SignaturePad value={formState?.coronerSignature || ''} onChange={(val) => handleFieldChange('coronerSignature', val)} disabled={isLogisticsLocked || formState?.isConverted} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
+                            <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Truck className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Logistics & Dispatch</h3></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                              <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Dispatch Stage:</label>
+                                <div className="grid grid-cols-2 gap-2 mb-3">
+                                  {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => (
+                                    <button disabled={isLogisticsLocked || formState?.isConverted} key={st} type="button" onClick={() => handleStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 disabled:opacity-50 ${formState?.pickupStatus === st ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-800'}`}>{st}</button>
+                                  ))}
+                                </div>
+                                <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner">
+                                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">Dispatch Milestone Log</span>
+                                  <div className="space-y-1">
+                                    {["Pending", "Dispatched", "On Scene", "Collected"].map((st) => (
+                                      <div key={st} className="flex justify-between items-center py-0.5 border-b border-slate-800/40 last:border-0"><span className="text-slate-400 font-semibold">{st}:</span><span className="font-mono text-amber-400 font-bold">{formState?.pickupStatusTimestamps?.[st] || <span className="text-slate-600 font-sans italic font-normal">Not logged</span>}</span></div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="space-y-4">
+                                <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label={labels.pickupDestination} value={formState?.pickupDestination} onChange={(val) => handleFieldChange('pickupDestination', val)} options={["Cromer Mortuary", "Fakenham Mortuary"]} />
+                                <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Vehicle Assigned" value={formState?.pickupVehicle} onChange={(val) => handleFieldChange('pickupVehicle', val)} options={vehicleOptions} />
+                                <FormInput disabled={isLogisticsLocked || formState?.isConverted} label="Scheduled Date & Time" value={formState?.pickupDateTime} onChange={(val) => handleFieldChange('pickupDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
+                              </div>
+                            </div>
+                            <div className="mb-5">
+                              <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 select-none">Assigned Staff:</label>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 select-none">
+                                {norfolkStaffList.map((staff) => {
+                                  const isChecked = (formState?.pickupStaff || []).includes(staff.name);
+                                  return (
+                                    <div key={staff.id} onClick={() => handleStaffToggle(staff.name)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${(isLogisticsLocked || formState?.isConverted) ? 'pointer-events-none' : ''}`}>
+                                      {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}<div className="text-xs font-bold">{staff.name}</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            <div>
+                              <FormTextArea disabled={isLogisticsLocked || formState?.isConverted} label={labels.pickupLocation} value={formState?.pickupLocation} onChange={(val) => handleFieldChange('pickupLocation', val)} rows={2} placeholder="e.g. Norfolk & Norwich University Hospital (NNUH)" />
+                              <div className="mt-2"><FormTextArea disabled={isLogisticsLocked || formState?.isConverted} label="Special Instructions" value={formState?.pickupInstructions} onChange={(val) => handleFieldChange('pickupInstructions', val)} rows={2} /></div>
+                            </div>
+                          </div>
+                          {dispatchEmailData && (
+                            <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                              <div className="flex items-center space-x-1.5 text-slate-455 mb-3 border-b border-slate-800 pb-3"><Icons.Mail size={14} className="text-indigo-400" /><span className="text-[10px] font-black tracking-widest uppercase">Dispatch Emailer</span></div>
+                              <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono"><div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{formState?.pickupStaffEmails || 'None'}</span></div></div>
+                              <div className="mt-4 grid grid-cols-2 gap-2">
+                                <button disabled={isLogisticsLocked || formState?.isConverted} type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800">Preview</button>
+                                <a href={(isLogisticsLocked || formState?.isConverted) ? '#' : dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-955 text-[10px] font-black py-2 rounded-xl flex items-center justify-center">Send</a>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {activeTab === "hospital" && (
+                        <>
+                          {isLogisticsLocked && (
+                            <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
+                              <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked to preserve audit integrity.</p></div></div>
+                              <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
+                            </div>
+                          )}
+                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
+                            <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-355">Hospital / Home Pick-up Details</h3></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                              <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Live Transfer Stage:</label>
+                                <div className="grid grid-cols-2 gap-2 mb-3">
+                                  {["Pending", "Completed"].map((st) => (
+                                    <button key={st} type="button" onClick={() => handleTransferStatusChange(st)} className={`py-2.5 md:py-1.5 px-2 rounded-xl text-xs font-black transition text-center uppercase tracking-wider active:scale-95 ${formState?.transferStatus === st ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-extrabold' : 'bg-slate-900 text-slate-400 hover:bg-slate-850'}`}>{st}</button>
+                                  ))}
+                                </div>
+                                <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800/60 text-[11px] font-sans shadow-inner">
+                                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">Transfer Milestone Log</span>
+                                  <div className="space-y-1">
+                                    {["Pending", "Completed"].map((st) => (
+                                      <div key={st} className="flex justify-between items-center py-0.5 border-b border-slate-800/40 last:border-0"><span className="text-slate-400 font-semibold">{st}:</span><span className="font-mono text-amber-400 font-bold">{formState?.transferStatusTimestamps?.[st] || <span className="text-slate-600 font-sans italic font-normal">Not logged</span>}</span></div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="space-y-4">
+                                <FormSelect disabled={isLogisticsLocked} label="Transfer Type" value={formState?.transferType} onChange={(val) => handleFieldChange('transferType', val)} options={[{value:'',label:'-- Select Type --'}, "Pick up", ...(formState?.isCoroner ? ["Drop off"] : [])]} />
+                                <div>
+                                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">
+                                    {!formState?.isCoroner ? "Pick-up Location" : "Pick-up / Drop-off Location"}
+                                  </label>
+                                  {!isCustomTransferLoc ? (
+                                    <select 
+                                      disabled={isLogisticsLocked} 
+                                      value={formState?.transferHospital || ''} 
+                                      onChange={(e) => {
+                                        if (e.target.value === 'Other') {
+                                          setIsCustomTransferLoc(true);
+                                          handleFieldChange('transferHospital', '');
+                                        } else {
+                                          handleFieldChange('transferHospital', e.target.value);
+                                        }
+                                      }} 
+                                      className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855"
+                                    >
+                                      <option value="">-- Select Location --</option>
+                                      {safeHospitalsList.map(h => <option key={h} value={h}>{h}</option>)}
+                                      <option value="Other">Other (Specify...)</option>
+                                    </select>
+                                  ) : (
+                                    <div className="flex gap-2">
+                                      <input 
+                                        disabled={isLogisticsLocked} 
+                                        type="text" 
+                                        value={formState?.transferHospital || ''} 
+                                        onChange={(e) => handleFieldChange('transferHospital', e.target.value)} 
+                                        placeholder="Enter custom location..." 
+                                        className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" 
+                                      />
+                                      <button 
+                                        type="button" 
+                                        disabled={isLogisticsLocked}
+                                        onClick={() => {
+                                          setIsCustomTransferLoc(false);
+                                          handleFieldChange('transferHospital', '');
+                                        }}
+                                        className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                                        title="Back to Dropdown"
+                                      >
+                                        <Icons.ArrowLeft size={14} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                                <FormSelect disabled={isLogisticsLocked} label="Vehicle Assigned" value={formState?.transferVehicle} onChange={(val) => handleFieldChange('transferVehicle', val)} options={[{value:'',label:'-- Select Vehicle --'}, ...vehicleOptions]} />
+                                <FormInput disabled={isLogisticsLocked} label="Scheduled Date & Time" value={formState?.transferDateTime} onChange={(val) => handleFieldChange('transferDateTime', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY HH:MM" />
+                              </div>
+                            </div>
+                            <div className="mb-5">
+                              <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 select-none">Assigned Staff:</label>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 select-none">
+                                {norfolkStaffList.map((staff) => {
+                                  const isChecked = (formState?.transferStaff || []).includes(staff.name);
+                                  return (
+                                    <div key={staff.id} onClick={() => handleStaffToggle(staff.name, true)} className={`flex items-center space-x-2.5 p-2 rounded-xl border cursor-pointer select-none transition-all active:scale-[0.98] ${isChecked ? 'bg-amber-955/20 border-amber-500/50 text-white' : 'bg-slate-900/50 border-slate-800/80 text-slate-400 hover:bg-slate-800'} ${isLogisticsLocked ? 'pointer-events-none' : ''}`}>
+                                      {isChecked ? <Icons.CheckSquare size={16} className="text-amber-400" /> : <Icons.Square size={16} className="text-slate-600" />}<div className="text-xs font-bold">{staff.name}</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      <div className="flex justify-end pb-8 pt-4 select-none">
+                        <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 text-white px-8 py-3.5 sm:py-3 rounded-2xl font-black text-sm tracking-wide shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 transition transform active:scale-95">
+                          <Icons.Save size={18} /> Save & Return to Summary
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6 select-none">
+                      <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
+                        <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.Printer size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Document Print Station</span></div>
+                        <div className="mt-8 space-y-2.5 w-full">
+                          {(!formState?.isCoroner || formState?.isConverted) && (
+                            <>
+                              <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Pick-up (Tab 1)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printCareDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Users size={14} className="text-amber-400" /> Print Care Form (Tab 2)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              <button type="button" onClick={() => PrintEngine.printWorkshopDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Hammer size={14} className="text-amber-400" /> Print Workshop Spec (Tab 3)</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                            </>
+                          )}
+                          {formState?.isCoroner && (
+                            <>
+                              <button type="button" onClick={() => PrintEngine.printCoronerDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-850 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Truck size={14} className="text-rose-400" /> Print Coroner Dispatch {formState?.isConverted ? '(Archived)' : '(Tab 1)'}</span><Icons.Printer size={12} className="text-slate-500" /></button>
+                              {!formState?.isConverted && <button type="button" onClick={() => PrintEngine.printHospitalTransferDocument(formState, currentTheme.brandName)} className="w-full bg-slate-900 hover:bg-slate-855 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Building2 size={14} className="text-rose-400" /> Print Hospital Transfer (Tab 2)</span><Icons.Printer size={12} className="text-slate-500" /></button>}
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
+                        <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Tracking Pass</span></div>
+                        <div className="mt-8 mb-4 bg-white p-3 rounded-xl shadow-inner"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(`${getBaseUrl()}?case=${formState.id}`)}&bgcolor=f8fafc&color=0f172a`} alt="QR Tracking" className="w-32 h-32 object-contain" /></div>
+                        <div className="mt-5 w-full grid grid-cols-2 gap-2">
+                          <button type="button" onClick={(e) => { e.preventDefault(); setIsQrModalOpen(true); }} className="bg-slate-900 hover:bg-slate-855 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800 transition flex items-center justify-center gap-1.5"><Icons.Maximize2 size={12} /><span>Maximize</span></button>
+                          <button type="button" onClick={(e) => { e.preventDefault(); PrintEngine.printStickerAndCheckBlocks(formState); }} className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-955 text-[10px] font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5"><Icons.Printer size={12} /><span>Sticker</span></button>
+                        </div>
+                      </div>
+
+                      {activeTab === "care" && (
+                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
+                          <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
+                          <div className="my-6 p-4 bg-slate-900 rounded-full border border-slate-800/80 shadow-inner"><BodyConditionIcon condition={formState?.condition} size={64} /></div>
+                          <h4 className="text-sm font-black text-white uppercase">Status: {formState?.condition}</h4>
+                        </div>
+                      )}
+
+                      {!isCatherine && (
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
                           <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455"><Icons.FolderOpen size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">File Administration</span></div>
                           <div className="mt-8 space-y-2.5 w-full">

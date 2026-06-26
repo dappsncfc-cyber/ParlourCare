@@ -135,12 +135,16 @@
         conditions: ["Good", "Medium", "Poor"],
         infectionRisks: ["None", "Blood borne", "Sepsis", "CJD", "Other"],
         coffins: ["Elm", "Rookwood Walnut", "Rookwood Elm", "Lamboard"],
-        handles: ["Bar Handles", "Ring Handles", "Wooden Handles", "No handles"],
-        wreathHolders: ["Brass Wreath Holders", "Chrome Wreath Holders", "None"],
-        crucifixes: ["Brass Crucifix", "Chrome Crucifix", "None"],
+        handles: ["None", "Bar Handles", "Ring Handles", "Wooden Handles"], // Added "None" explicitly
+        wreathHolders: ["Brass Wreath Holders", "Chrome Wreath Holders"],
+        crucifixes: ["Brass Crucifix", "Chrome Crucifix"],
+        bellTops: ["Gold Bell tops"],
+        pillows: ["Coffin pillows"],
+        signs: ["Silver at rest signs", "Gold at rest signs"],
         vehicles: ["C17 DFS", "C22 DFS", "C25 GFS"],
         hospitals: ["Norfolk & Norwich University Hospital (NNUH)", "Queen Elizabeth Hospital King's Lynn (QEH)", "James Paget University Hospital (JPUH)", "Cromer Hospital", "Hellesdon Hospital", "North Walsham War Memorial Hospital", "Kelling Hospital"],
-        titles: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"]
+        titles: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"],
+        plates: ["Large", "Small"]
       },
       customFields: []
     };
@@ -150,7 +154,10 @@
       handles: { "Bar Handles": 45, "Ring Handles": 40, "Wooden Handles": 20 },
       wreathHolders: { "Brass Wreath Holders": 30, "Chrome Wreath Holders": 30 },
       crucifixes: { "Brass Crucifix": 20, "Chrome Crucifix": 20 },
-      plates: { "Large": 20, "Small": 20 }
+      plates: { "Large": 20, "Small": 20 },
+      bellTops: { "Gold Bell tops": 20 },
+      pillows: { "Coffin pillows": 20 },
+      signs: { "Silver at rest signs": 15, "Gold at rest signs": 15 }
     };
 
     const myFirebaseConfig = {
@@ -204,7 +211,7 @@
     };
 
     // ============================================================================
-    // MODULE 3: PRINT ENGINE (Removes Duplicated HTML Wrappers)
+    // MODULE 3: PRINT ENGINE
     // ============================================================================
     const PrintEngine = {
       executeIframePrint(htmlContent, isSticker = false) {
@@ -326,6 +333,9 @@
               ${this.renderRow('Handles Selected', record?.coffinHandles || 'PENDING')}
               ${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}
               ${this.renderRow('Crucifix', record?.crucifix || 'None')}
+              ${this.renderRow('Bell Tops', record?.bellTop || 'None')}
+              ${this.renderRow('Coffin Pillow', record?.pillow || 'None')}
+              ${this.renderRow('At Rest Sign', record?.sign || 'None')}
               ${this.renderRow('Coffin Size', `<strong style="font-size: 16px; font-family: monospace;">${record?.bodySize || 'PENDING SPEC'}</strong>`, false)}
               ${this.renderRow('Engraved Name Plate Fixed', record?.plate || 'No')}
               ${this.renderRow('Grave Marker', record?.graveMarker || 'None')}
@@ -472,6 +482,9 @@
               ${this.renderRow('Handles Selected', record?.coffinHandles || 'None')}
               ${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}
               ${this.renderRow('Crucifix', record?.crucifix || 'None')}
+              ${this.renderRow('Bell Tops', record?.bellTop || 'None')}
+              ${this.renderRow('Coffin Pillow', record?.pillow || 'None')}
+              ${this.renderRow('At Rest Sign', record?.sign || 'None')}
               ${this.renderRow('Coffin Size', record?.bodySize || 'PENDING SPEC')}
               ${this.renderRow('Engraved Plate Affixed', record?.plate || 'No')}
               ${this.renderRow('Grave Marker', record?.graveMarker || 'None')}
@@ -964,11 +977,12 @@
             const parsed = JSON.parse(localStock);
             if (!parsed.wreathHolders) parsed.wreathHolders = initialInventory.wreathHolders;
             if (!parsed.crucifixes) parsed.crucifixes = initialInventory.crucifixes;
+            if (!parsed.plates) parsed.plates = initialInventory.plates;
+            if (!parsed.bellTops) parsed.bellTops = initialInventory.bellTops;
+            if (!parsed.pillows) parsed.pillows = initialInventory.pillows;
+            if (!parsed.signs) parsed.signs = initialInventory.signs;
             if (parsed.coffins && parsed.coffins["None"] !== undefined) delete parsed.coffins["None"];
             if (parsed.handles && parsed.handles["None"] !== undefined) delete parsed.handles["None"];
-            if (parsed.handles && parsed.handles["No handles"] !== undefined) delete parsed.handles["No handles"];
-            if (parsed.wreathHolders && parsed.wreathHolders["None"] !== undefined) delete parsed.wreathHolders["None"];
-            if (parsed.crucifixes && parsed.crucifixes["None"] !== undefined) delete parsed.crucifixes["None"];
             return parsed;
           }
           return initialInventory;
@@ -1058,12 +1072,16 @@
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
         
-        const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term) && name !== "None").map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
-        const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term) && name !== "No handles" && name !== "None").map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
-        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term) && name !== "None").map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
-        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term) && name !== "None").map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
+        const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
+        const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
+        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
+        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
+        const plates = (appSettings.lists?.plates || ["Large", "Small"]).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "plates", count: stockLevels.plates?.[name] || 0 }));
+        const bellTops = (appSettings.lists?.bellTops || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "bellTop", count: stockLevels.bellTops?.[name] || 0 }));
+        const pillows = (appSettings.lists?.pillows || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "pillow", count: stockLevels.pillows?.[name] || 0 }));
+        const signs = (appSettings.lists?.signs || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "sign", count: stockLevels.signs?.[name] || 0 }));
         
-        return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
+        return [...coffins, ...handles, ...wreathHolders, ...crucifixes, ...plates, ...bellTops, ...pillows, ...signs];
       }, [stockLevels, stockSearchQuery, appSettings.lists]);
 
       useEffect(() => {
@@ -1100,11 +1118,12 @@
             const remoteStock = snap.data();
             if (!remoteStock.wreathHolders) remoteStock.wreathHolders = initialInventory.wreathHolders;
             if (!remoteStock.crucifixes) remoteStock.crucifixes = initialInventory.crucifixes;
+            if (!remoteStock.plates) remoteStock.plates = initialInventory.plates;
+            if (!remoteStock.bellTops) remoteStock.bellTops = initialInventory.bellTops;
+            if (!remoteStock.pillows) remoteStock.pillows = initialInventory.pillows;
+            if (!remoteStock.signs) remoteStock.signs = initialInventory.signs;
             if (remoteStock.coffins && remoteStock.coffins["None"] !== undefined) delete remoteStock.coffins["None"];
             if (remoteStock.handles && remoteStock.handles["None"] !== undefined) delete remoteStock.handles["None"];
-            if (remoteStock.handles && remoteStock.handles["No handles"] !== undefined) delete remoteStock.handles["No handles"];
-            if (remoteStock.wreathHolders && remoteStock.wreathHolders["None"] !== undefined) delete remoteStock.wreathHolders["None"];
-            if (remoteStock.crucifixes && remoteStock.crucifixes["None"] !== undefined) delete remoteStock.crucifixes["None"];
             setStockLevels(remoteStock);
             try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
           } else {
@@ -1236,6 +1255,9 @@
       const crucifixesList = appSettings.lists?.crucifixes || defaultAppSettings.lists.crucifixes;
       const titles = appSettings.lists?.titles || defaultAppSettings.lists.titles;
       const platesList = appSettings.lists?.plates || ["Large", "Small"];
+      const bellTopsList = appSettings.lists?.bellTops || defaultAppSettings.lists.bellTops;
+      const pillowsList = appSettings.lists?.pillows || defaultAppSettings.lists.pillows;
+      const signsList = appSettings.lists?.signs || defaultAppSettings.lists.signs;
       const vehicleOptions = appSettings.lists?.vehicles || defaultAppSettings.lists.vehicles;
       const customFields = appSettings.customFields || [];
 
@@ -1300,13 +1322,22 @@
             coffins: { ...(stockLevels.coffins || {}) },
             handles: { ...(stockLevels.handles || {}) },
             wreathHolders: { ...(stockLevels.wreathHolders || {}) },
-            crucifixes: { ...(stockLevels.crucifixes || {}) }
+            crucifixes: { ...(stockLevels.crucifixes || {}) },
+            plates: { ...(stockLevels.plates || {}) },
+            bellTops: { ...(stockLevels.bellTops || {}) },
+            pillows: { ...(stockLevels.pillows || {}) },
+            signs: { ...(stockLevels.signs || {}) }
           };
           let changed = false;
-          if (deletedCase.coffin && deletedCase.coffin !== "None") { updatedStock.coffins[deletedCase.coffin] = (updatedStock.coffins[deletedCase.coffin] || 0) + 1; changed = true; }
-          if (deletedCase.coffinHandles && deletedCase.coffinHandles !== "No handles" && deletedCase.coffinHandles !== "None") { updatedStock.handles[deletedCase.coffinHandles] = (updatedStock.handles[deletedCase.coffinHandles] || 0) + 1; changed = true; }
-          if (deletedCase.wreathHolders && deletedCase.wreathHolders !== "None") { updatedStock.wreathHolders[deletedCase.wreathHolders] = (updatedStock.wreathHolders[deletedCase.wreathHolders] || 0) + 1; changed = true; }
-          if (deletedCase.crucifix && deletedCase.crucifix !== "None") { updatedStock.crucifixes[deletedCase.crucifix] = (updatedStock.crucifixes[deletedCase.crucifix] || 0) + 1; changed = true; }
+          if (deletedCase.coffin) { updatedStock.coffins[deletedCase.coffin] = (updatedStock.coffins[deletedCase.coffin] || 0) + 1; changed = true; }
+          if (deletedCase.coffinHandles) { updatedStock.handles[deletedCase.coffinHandles] = (updatedStock.handles[deletedCase.coffinHandles] || 0) + 1; changed = true; }
+          if (deletedCase.wreathHolders) { updatedStock.wreathHolders[deletedCase.wreathHolders] = (updatedStock.wreathHolders[deletedCase.wreathHolders] || 0) + 1; changed = true; }
+          if (deletedCase.crucifix) { updatedStock.crucifixes[deletedCase.crucifix] = (updatedStock.crucifixes[deletedCase.crucifix] || 0) + 1; changed = true; }
+          if (deletedCase.plate && !['Yes','No','N/A'].includes(deletedCase.plate)) { updatedStock.plates[deletedCase.plate] = (updatedStock.plates[deletedCase.plate] || 0) + 1; changed = true; }
+          if (deletedCase.bellTop && !['Yes','No','N/A'].includes(deletedCase.bellTop)) { updatedStock.bellTops[deletedCase.bellTop] = (updatedStock.bellTops[deletedCase.bellTop] || 0) + 1; changed = true; }
+          if (deletedCase.pillow && !['Yes','No','N/A'].includes(deletedCase.pillow)) { updatedStock.pillows[deletedCase.pillow] = (updatedStock.pillows[deletedCase.pillow] || 0) + 1; changed = true; }
+          if (deletedCase.sign && !['Yes','No','N/A'].includes(deletedCase.sign)) { updatedStock.signs[deletedCase.sign] = (updatedStock.signs[deletedCase.sign] || 0) + 1; changed = true; }
+          
           if (changed) { setStockLevels(updatedStock); saveStockToDb(updatedStock); }
         }
         setDeceasedList(prev => {
@@ -1324,13 +1355,20 @@
             handles: { ...(stockLevels.handles || {}) },
             wreathHolders: { ...(stockLevels.wreathHolders || {}) },
             crucifixes: { ...(stockLevels.crucifixes || {}) },
-            plates: { ...(stockLevels.plates || {}) }
+            plates: { ...(stockLevels.plates || {}) },
+            bellTops: { ...(stockLevels.bellTops || {}) },
+            pillows: { ...(stockLevels.pillows || {}) },
+            signs: { ...(stockLevels.signs || {}) }
         };
         if (type === 'coffin') updated.coffins[itemName] = Math.max(0, (updated.coffins[itemName] || 0) + delta);
         else if (type === 'handles') updated.handles[itemName] = Math.max(0, (updated.handles[itemName] || 0) + delta);
         else if (type === 'wreathHolders') updated.wreathHolders[itemName] = Math.max(0, (updated.wreathHolders[itemName] || 0) + delta);
         else if (type === 'crucifix') updated.crucifixes[itemName] = Math.max(0, (updated.crucifixes[itemName] || 0) + delta);
         else if (type === 'plates') updated.plates[itemName] = Math.max(0, (updated.plates[itemName] || 0) + delta);
+        else if (type === 'bellTop') updated.bellTops[itemName] = Math.max(0, (updated.bellTops[itemName] || 0) + delta);
+        else if (type === 'pillow') updated.pillows[itemName] = Math.max(0, (updated.pillows[itemName] || 0) + delta);
+        else if (type === 'sign') updated.signs[itemName] = Math.max(0, (updated.signs[itemName] || 0) + delta);
+        
         setStockLevels(updated); saveStockToDb(updated);
       };
 
@@ -1341,17 +1379,21 @@
             coffins: { ...(stockLevels.coffins || {}) },
             handles: { ...(stockLevels.handles || {}) },
             wreathHolders: { ...(stockLevels.wreathHolders || {}) },
-            crucifixes: { ...(stockLevels.crucifixes || {}) }
+            crucifixes: { ...(stockLevels.crucifixes || {}) },
+            plates: { ...(stockLevels.plates || {}) },
+            bellTops: { ...(stockLevels.bellTops || {}) },
+            pillows: { ...(stockLevels.pillows || {}) },
+            signs: { ...(stockLevels.signs || {}) }
         };
         let stockChanged = false;
-        const catMap = { coffin: 'coffins', coffinHandles: 'handles', wreathHolders: 'wreathHolders', crucifix: 'crucifixes' };
+        const catMap = { coffin: 'coffins', coffinHandles: 'handles', wreathHolders: 'wreathHolders', crucifix: 'crucifixes', plate: 'plates', bellTop: 'bellTops', pillow: 'pillows', sign: 'signs' };
         const cat = catMap[fieldName];
         if (cat) {
           const oldVal = formState[fieldName] || "";
           const newVal = value || "";
           if (oldVal !== newVal) {
-            if (oldVal && oldVal !== "No handles" && oldVal !== "None") { updatedStock[cat][oldVal] = (updatedStock[cat][oldVal] || 0) + 1; stockChanged = true; }
-            if (newVal && newVal !== "No handles" && newVal !== "None") { updatedStock[cat][newVal] = Math.max(0, (updatedStock[cat][newVal] || 0) - 1); stockChanged = true; }
+            if (oldVal && !['Yes','No','N/A'].includes(oldVal)) { updatedStock[cat][oldVal] = (updatedStock[cat][oldVal] || 0) + 1; stockChanged = true; }
+            if (newVal && !['Yes','No','N/A'].includes(newVal)) { updatedStock[cat][newVal] = Math.max(0, (updatedStock[cat][newVal] || 0) - 1); stockChanged = true; }
           }
         }
         const updatedRecord = { ...formState, [fieldName]: value };
@@ -1400,7 +1442,7 @@
         const locationCount = deceasedList.filter(d => d.location === locationName).length;
         const newCase = {
           id: nextId, ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
-          fridgeTray: "", keyDate: "", keyMilestoneName: "", keyMilestoneUrgency: "None", deceasedName: "", title: "Mr", dob: "", dod: "", arranger: activeBrand === "gowards" ? "FAK" : "CRM", location: locationName, greenCoroner: "No", encoffined: "No", plate: "", bodySize: "", condition: "Good", infection: "None", coffin: "", coffinHandles: "", wreathHolders: "", crucifix: "", clothes: "", clothesChecked: false, preparations: "No", preparationsDetails: "", jewellery: "No", jewelleryDetails: "", devices: "No", devicesDetails: "", embalming: "No", embalmingDetails: "", coffinAccessories: "", viewing: "R", ready: "No", 
+          fridgeTray: "", keyDate: "", keyMilestoneName: "", keyMilestoneUrgency: "None", deceasedName: "", title: "Mr", dob: "", dod: "", arranger: activeBrand === "gowards" ? "FAK" : "CRM", location: locationName, greenCoroner: "No", encoffined: "No", plate: "", bodySize: "", condition: "Good", infection: "None", coffin: "", coffinHandles: "", wreathHolders: "", crucifix: "", bellTop: "", pillow: "", sign: "", clothes: "", clothesChecked: false, preparations: "No", preparationsDetails: "", jewellery: "No", jewelleryDetails: "", devices: "No", devicesDetails: "", embalming: "No", embalmingDetails: "", coffinAccessories: "", viewing: "R", ready: "No", 
           isCoroner: isCoronerCase, isConverted: false, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary", pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: activeBrand === "gowards" ? "C25 GFS" : "C17 DFS", pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", 
           transferStatus: "", transferStatusTimestamps: {}, transferDateTime: "", transferHospital: "", transferType: "", transferVehicle: "", transferStaff: [], transferStaffEmails: "", isArchived: false
         };
@@ -1519,7 +1561,14 @@
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filteredStockList.map((item) => {
                       const isLow = item.count <= (item.type === "coffin" ? 3 : 10);
-                      const formattedType = item.type === 'coffin' ? 'coffin' : item.type === 'handles' ? 'handles' : item.type === 'wreathHolders' ? 'wreath holders' : item.type === 'plates' ? 'name plate' : 'crucifix';
+                      const formattedType = item.type === 'coffin' ? 'coffin' : 
+                                            item.type === 'handles' ? 'handles' : 
+                                            item.type === 'wreathHolders' ? 'wreath holders' : 
+                                            item.type === 'plates' ? 'name plate' : 
+                                            item.type === 'crucifix' ? 'crucifix' :
+                                            item.type === 'bellTop' ? 'bell top' :
+                                            item.type === 'pillow' ? 'pillow' :
+                                            item.type === 'sign' ? 'sign' : item.type;
                       return (
                         <div key={item.name} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between relative shadow-md ${isLow ? 'border-l-4 border-l-rose-500 bg-rose-955/5' : 'border-l-4 border-l-indigo-500'}`}>
                           <div>
@@ -1715,7 +1764,15 @@
                           {!showAsCoroner && (
                             <div className="mt-auto pt-3 border-t border-slate-800/60 flex flex-col gap-1 text-[10px] font-bold text-slate-500">
                               <div className="flex items-center justify-between"><span>Coffin: <span className="text-slate-350">{item.coffin || 'Not selected'}</span></span>{item.infection !== "None" && <span className="text-rose-400 bg-rose-955/40 px-1.5 rounded">⚠️ {item.infection}</span>}</div>
-                              {(item.wreathHolders || item.crucifix) && <div className="flex flex-wrap gap-2 text-slate-505 text-[9px] border-t border-slate-900/50 pt-1.5 mt-1">{item.wreathHolders && <span>🌸 {item.wreathHolders}</span>}{item.crucifix && <span>✝️ {item.crucifix}</span>}</div>}
+                              {(item.wreathHolders || item.crucifix || item.bellTop || item.pillow || item.sign) && (
+                                <div className="flex flex-wrap gap-2 text-slate-505 text-[9px] border-t border-slate-900/50 pt-1.5 mt-1">
+                                  {item.wreathHolders && <span>🌸 {item.wreathHolders}</span>}
+                                  {item.crucifix && <span>✝️ {item.crucifix}</span>}
+                                  {item.bellTop && <span>🔔 {item.bellTop}</span>}
+                                  {item.pillow && <span>🛏️ {item.pillow}</span>}
+                                  {item.sign && <span>🏷️ {item.sign}</span>}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1881,6 +1938,14 @@
                             <FormSelect disabled={isDavidLocked} label="Wreath Holders" value={formState?.wreathHolders} onChange={(val) => handleFieldChange('wreathHolders', val)} options={[{value:'',label:'-- Select Wreath Holders --'}, ...wreathHoldersList]} />
                             <FormSelect disabled={isDavidLocked} label="Crucifix Model" value={formState?.crucifix} onChange={(val) => handleFieldChange('crucifix', val)} options={[{value:'',label:'-- Select Crucifix Spec --'}, ...crucifixesList]} />
                           </div>
+                          
+                          {/* NEW WORKSHOP ACCESSORIES FIELDS */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4 mb-4">
+                            <FormSelect disabled={isDavidLocked} label="Bell Tops" value={formState?.bellTop} onChange={(val) => handleFieldChange('bellTop', val)} options={[{value:'',label:'-- Select Bell Tops --'}, ...bellTopsList]} />
+                            <FormSelect disabled={isDavidLocked} label="Coffin Pillow" value={formState?.pillow} onChange={(val) => handleFieldChange('pillow', val)} options={[{value:'',label:'-- Select Pillow --'}, ...pillowsList]} />
+                            <FormSelect disabled={isDavidLocked} label="At Rest Sign" value={formState?.sign} onChange={(val) => handleFieldChange('sign', val)} options={[{value:'',label:'-- Select Sign --'}, ...signsList]} />
+                          </div>
+
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4">
                             <FormInput disabled={isDavidLocked} label="Coffin Size" value={formState?.bodySize} onChange={(val) => handleFieldChange('bodySize', val)} textClass="text-white font-mono text-center" />
                             <FormSelect disabled={isDavidLocked} label="Engraved Name Plate" value={formState?.plate} onChange={(val) => handleFieldChange('plate', val)} options={[{value:'',label:'-- Select Plate Size --'}, ...platesList]} textClass="text-slate-200 text-center" />

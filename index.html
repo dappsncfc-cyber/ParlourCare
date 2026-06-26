@@ -6,7 +6,6 @@
   <title>ParlourCare Portal</title>
   
   <script>
-    // PWA ON-THE-FLY INJECTION
     const manifest = {
       name: "ParlourCare Portal",
       short_name: "ParlourCare",
@@ -27,7 +26,6 @@
     link.href = manifestUrl;
     document.head.appendChild(link);
 
-    // DYNAMIC SERVICE WORKER INJECTION FOR PUSH NOTIFICATIONS
     const swCode = `
       self.addEventListener('push', function(event) {
         const data = event.data ? event.data.json() : { title: 'ParlourCare Update', body: 'A case file was updated.' };
@@ -55,38 +53,17 @@
     }
   </script>
 
-  <!-- Tailwind CSS Play CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      theme: {
-        extend: {
-          animation: {
-            'fade-in': 'fadeIn 0.25s ease-out forwards',
-          },
-          keyframes: {
-            fadeIn: {
-              '0%': { opacity: '0', transform: 'scale(0.97)' },
-              '100%': { opacity: '1', transform: 'scale(1)' },
-            }
-          }
-        }
-      }
+      theme: { extend: { animation: { 'fade-in': 'fadeIn 0.25s ease-out forwards' }, keyframes: { fadeIn: { '0%': { opacity: '0', transform: 'scale(0.97)' }, '100%': { opacity: '1', transform: 'scale(1)' } } } } }
     }
   </script>
-
-  <!-- React & ReactDOM CDNs -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
-  <!-- Babel Standalone CDN -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
-    Babel.registerPreset('react-classic', {
-      presets: [
-        [Babel.availablePresets['react'], { runtime: 'classic' }]
-      ]
-    });
+    Babel.registerPreset('react-classic', { presets: [[Babel.availablePresets['react'], { runtime: 'classic' }]] });
   </script>
 
   <style>
@@ -102,7 +79,6 @@
 
   <div id="root"></div>
 
-  <!-- React Application Source -->
   <script type="text/babel" data-type="module" data-presets="react-classic">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -110,9 +86,6 @@
 
     const { useState, useMemo, useEffect, useRef } = React;
 
-    // ============================================================================
-    // MODULE 1: CONFIGURATION & INITIAL DATA
-    // ============================================================================
     const norfolkStaffList = [
       { id: "staff-1", name: "David (Cromer)", email: "david@cromerfunerals.co.uk" },
       { id: "staff-2", name: "Barrie (Cromer)", email: "sarah@cromerfunerals.co.uk" },
@@ -135,7 +108,7 @@
         conditions: ["Good", "Medium", "Poor"],
         infectionRisks: ["None", "Blood borne", "Sepsis", "CJD", "Other"],
         coffins: ["Elm", "Rookwood Walnut", "Rookwood Elm", "Lamboard"],
-        handles: ["None", "Bar Handles", "Ring Handles", "Wooden Handles"], // Added "None" explicitly
+        handles: ["None", "Bar Handles", "Ring Handles", "Wooden Handles"],
         wreathHolders: ["Brass Wreath Holders", "Chrome Wreath Holders"],
         crucifixes: ["Brass Crucifix", "Chrome Crucifix"],
         bellTops: ["Gold Bell tops"],
@@ -191,13 +164,7 @@
       }
     }
 
-    // ============================================================================
-    // MODULE 2: UTILITIES & HELPERS
-    // ============================================================================
-    const getBaseUrl = () => {
-      try { return window.location.origin + window.location.pathname; } catch (e) { return ''; }
-    };
-
+    const getBaseUrl = () => { try { return window.location.origin + window.location.pathname; } catch (e) { return ''; } };
     const getTimestamp = () => {
       const now = new Date();
       return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -210,39 +177,12 @@
       return { ...base, bannerGradient: 'from-slate-900 via-indigo-950/80 to-slate-900', brandName: 'Cromer & District & Gowards Group' };
     };
 
-    // ============================================================================
-    // MODULE 3: PRINT ENGINE
-    // ============================================================================
     const PrintEngine = {
       executeIframePrint(htmlContent, isSticker = false) {
         try {
           const printWindow = window.open('about:blank', '_blank');
           if (!printWindow) return alert("Allow pop-ups to print.");
-          
-          const decoratedHtml = `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Mortuary Portal - Print</title>
-                <style>
-                  body { margin: 0; padding: 0; background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; color: #000000; font-family: 'Segoe UI', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                  .print-canvas { background: #ffffff; min-height: ${isSticker ? 'auto' : '100vh'}; box-sizing: border-box; padding: ${isSticker ? '0' : '40px'}; ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''} }
-                  @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } .print-canvas { padding: 0 !important; background: transparent !important; } ${isSticker ? '@page { size: 89mm 36mm; margin: 0mm; }' : ''} }
-                </style>
-              </head>
-              <body>
-                <div class="no-print" style="background: #0f172a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; position: sticky; top: 0; z-index: 10000;">
-                  <span style="color: #94a3b8; font-size: 11px; font-weight: 800;">📄 Norfolk Mortuary - Print Desk</span>
-                  <div>
-                    <button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; margin-right: 8px;">🖨️ Print</button>
-                    <button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Close</button>
-                  </div>
-                </div>
-                <div class="print-canvas">${htmlContent}</div>
-                <script>window.onload = function() { setTimeout(() => { window.print(); }, 500); };<\/script>
-              </body>
-            </html>
-          `;
+          const decoratedHtml = `<!DOCTYPE html><html><head><title>Mortuary Portal - Print</title><style>body { margin: 0; padding: 0; background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; color: #000000; font-family: 'Segoe UI', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .print-canvas { background: #ffffff; min-height: ${isSticker ? 'auto' : '100vh'}; box-sizing: border-box; padding: ${isSticker ? '0' : '40px'}; ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''} } @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } .print-canvas { padding: 0 !important; background: transparent !important; } ${isSticker ? '@page { size: 89mm 36mm; margin: 0mm; }' : ''} }</style></head><body><div class="no-print" style="background: #0f172a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; position: sticky; top: 0; z-index: 10000;"><span style="color: #94a3b8; font-size: 11px; font-weight: 800;">📄 Norfolk Mortuary - Print Desk</span><div><button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; margin-right: 8px;">🖨️ Print</button><button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Close</button></div></div><div class="print-canvas">${htmlContent}</div><script>window.onload = function() { setTimeout(() => { window.print(); }, 500); };<\/script></body></html>`;
           printWindow.document.open();
           printWindow.document.write(decoratedHtml);
           printWindow.document.close();
@@ -251,340 +191,85 @@
 
       getDocHeader(record, docTitle, themeName) {
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(`${getBaseUrl()}?case=${record?.id}`)}&bgcolor=ffffff&color=000000`;
-        return `
-          <div style="border-bottom: 3px double #000; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h1 style="font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0; line-height: 1.2;">${themeName}</h1>
-              <h2 style="font-size: 13px; font-weight: bold; text-transform: uppercase; margin: 4px 0 0 0; color: #444;">${docTitle}</h2>
-            </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-              <div style="text-align: right;">
-                <span style="font-size: 12px; font-weight: bold; font-family: monospace; background: #e2e8f0; padding: 3px 8px; border: 1px solid #000; border-radius: 4px;">ARR: ${record?.ref}</span>
-                <div style="font-size: 9px; color: #555; margin-top: 5px;">Printed: ${getTimestamp().split(' ')[0]}</div>
-              </div>
-              <div style="border: 1px solid #000; padding: 2px; background: #fff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-                <img src="${qrCodeUrl}" alt="QR Link" style="width: 100%; height: 100%; object-fit: contain;" />
-              </div>
-            </div>
-          </div>
-        `;
+        return `<div style="border-bottom: 3px double #000; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;"><div><h1 style="font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0; line-height: 1.2;">${themeName}</h1><h2 style="font-size: 13px; font-weight: bold; text-transform: uppercase; margin: 4px 0 0 0; color: #444;">${docTitle}</h2></div><div style="display: flex; align-items: center; gap: 15px;"><div style="text-align: right;"><span style="font-size: 12px; font-weight: bold; font-family: monospace; background: #e2e8f0; padding: 3px 8px; border: 1px solid #000; border-radius: 4px;">ARR: ${record?.ref}</span><div style="font-size: 9px; color: #555; margin-top: 5px;">Printed: ${getTimestamp().split(' ')[0]}</div></div><div style="border: 1px solid #000; padding: 2px; background: #fff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;"><img src="${qrCodeUrl}" alt="QR Link" style="width: 100%; height: 100%; object-fit: contain;" /></div></div></div>`;
       },
 
       getRecordCard(record) {
-        return `
-          <div style="border: 1px solid #000; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
-            <div><strong>Deceased:</strong> ${record?.title} ${record?.deceasedName || "Unnamed Admission"}</div>
-            <div><strong>Tray Assignment:</strong> ${record?.fridgeTray || 'PENDING'}</div>
-            <div><strong>Date of Birth:</strong> ${record?.dob || 'PENDING'}</div>
-            <div><strong>Date of Death:</strong> ${record?.dod || 'PENDING'}</div>
-            <div><strong>Branch Location:</strong> ${record?.location}</div>
-            <div><strong>Case Type:</strong> ${record?.isCoroner && !record?.isConverted ? '⚖️ Coroner Mandate' : 'Standard Private'}</div>
-          </div>
-        `;
+        return `<div style="border: 1px solid #000; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;"><div><strong>Deceased:</strong> ${record?.title} ${record?.deceasedName || "Unnamed Admission"}</div><div><strong>Tray Assignment:</strong> ${record?.fridgeTray || 'PENDING'}</div><div><strong>Date of Birth:</strong> ${record?.dob || 'PENDING'}</div><div><strong>Date of Death:</strong> ${record?.dod || 'PENDING'}</div><div><strong>Branch Location:</strong> ${record?.location}</div><div><strong>Case Type:</strong> ${record?.isCoroner && !record?.isConverted ? '⚖️ Coroner Mandate' : 'Standard Private'}</div></div>`;
       },
 
       renderRow(label, value, strong = true) {
         return `<div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>${label}:</span> ${strong ? `<strong>${value}</strong>` : value}</div>`;
       },
 
+      sortCoronerLogs(timestamps) {
+        if (!timestamps) return '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>';
+        const statusOrder = ["Pending", "Dispatched", "On Scene", "Collected"];
+        const sorted = Object.entries(timestamps).sort((a, b) => {
+          let idxA = statusOrder.indexOf(a[0]);
+          let idxB = statusOrder.indexOf(b[0]);
+          if (idxA === -1) idxA = 99;
+          if (idxB === -1) idxB = 99;
+          return idxA - idxB;
+        });
+        let timelineHtml = '';
+        sorted.forEach(([status, time]) => {
+          timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`;
+        });
+        return timelineHtml;
+      },
+
       printCareDocument(record, themeName) {
         const infectionHtml = record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px;">🚨 BIO-HAZARD PROTOCOLS ACTIVE: ${record.infection.toUpperCase()}</div>` : '';
-        const html = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
-            ${this.getDocHeader(record, "Clinical Mortuary & Registration Record", themeName)}
-            ${this.getRecordCard(record)}
-            ${infectionHtml}
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Anatomical & Care Status</div>
-              ${this.renderRow('Body Condition Score', record?.condition)}
-              ${this.renderRow('Implants/Defibrillators', record?.devicesDetails || 'None Registered')}
-              ${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}
-              ${this.renderRow('Embalming Action', record?.embalmingDetails || 'None')}
-              ${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}
-              ${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}
-              ${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Sanitary Preparation & Grooming</div>
-              <div style="font-size: 13px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations only.'}</div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Valuables & Jewellery Custody Register</div>
-              <div style="font-size: 13px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No personal effects logged.'}</div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Dressing & Viewings</div>
-              ${this.renderRow('Dressing Attire', record?.clothes || 'None Specified')}
-              ${this.renderRow('Family Viewing', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}
-            </div>
-          </div>
-        `;
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Clinical Mortuary & Registration Record", themeName)}${this.getRecordCard(record)}${infectionHtml}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Anatomical & Care Status</div>${this.renderRow('Body Condition Score', record?.condition)}${this.renderRow('Implants/Defibrillators', record?.devicesDetails || 'None Registered')}${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}${this.renderRow('Embalming Action', record?.embalmingDetails || 'None')}${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Sanitary Preparation & Grooming</div><div style="font-size: 13px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations only.'}</div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Valuables & Jewellery Custody Register</div><div style="font-size: 13px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No personal effects logged.'}</div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Dressing & Viewings</div>${this.renderRow('Dressing Attire', record?.clothes || 'None Specified')}${this.renderRow('Family Viewing', record?.viewing === 'Yes' ? '✓ CONFIRMED' : record?.viewing === 'No' ? '✗ DECLINED' : 'R - REQUESTED')}</div></div>`;
         this.executeIframePrint(html);
       },
 
       printWorkshopDocument(record, themeName) {
-        const html = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
-            ${this.getDocHeader(record, "Coffin Joinery & Workshop Specification", themeName)}
-            ${this.getRecordCard(record)}
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>
-              ${this.renderRow('Timber Specification', record?.coffin || 'PENDING')}
-              ${this.renderRow('Handles Selected', record?.coffinHandles || 'PENDING')}
-              ${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}
-              ${this.renderRow('Crucifix', record?.crucifix || 'None')}
-              ${this.renderRow('Bell Tops', record?.bellTop || 'None')}
-              ${this.renderRow('Coffin Pillow', record?.pillow || 'None')}
-              ${this.renderRow('At Rest Sign', record?.sign || 'None')}
-              ${this.renderRow('Coffin Size', `<strong style="font-size: 16px; font-family: monospace;">${record?.bodySize || 'PENDING SPEC'}</strong>`, false)}
-              ${this.renderRow('Engraved Name Plate Fixed', record?.plate || 'No')}
-              ${this.renderRow('Grave Marker', record?.graveMarker || 'None')}
-            </div>
-          </div>
-        `;
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Coffin Joinery & Workshop Specification", themeName)}${this.getRecordCard(record)}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">1. Coffin Construction Dimensions</div>${this.renderRow('Timber Specification', record?.coffin || 'PENDING')}${this.renderRow('Handles Selected', record?.coffinHandles || 'PENDING')}${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}${this.renderRow('Crucifix', record?.crucifix || 'None')}${this.renderRow('Bell Tops', record?.bellTop || 'None')}${this.renderRow('Coffin Pillow', record?.pillow || 'None')}${this.renderRow('At Rest Sign', record?.sign || 'None')}${this.renderRow('Coffin Size', `<strong style="font-size: 16px; font-family: monospace;">${record?.bodySize || 'PENDING SPEC'}</strong>`, false)}${this.renderRow('Engraved Name Plate Fixed', record?.plate || 'No')}${this.renderRow('Grave Marker', record?.graveMarker || 'None')}</div></div>`;
         this.executeIframePrint(html);
       },
 
       printHospitalTransferDocument(record, themeName) {
         if (!record) return;
         let timelineHtml = '';
-        if (record?.transferStatusTimestamps) {
-          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
-        }
-        const html = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
-            ${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}
-            ${this.getRecordCard(record)}
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>
-              ${this.renderRow('Transfer Type', record?.transferType || 'N/A')}
-              ${this.renderRow('Pick-up / Drop-off Location', record?.transferHospital || 'N/A')}
-              ${this.renderRow('Scheduled Date & Time', record?.transferDateTime || 'PENDING')}
-              ${this.renderRow('Vehicle Assigned', record?.transferVehicle || 'N/A')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Assigned Transfer Staff</div>
-              ${this.renderRow('Staff Dispatched', (record?.transferStaff || []).join(', ') || 'PENDING')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Transfer Audits</div>
-              ${this.renderRow('Current Transfer Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.transferStatus || 'Pending'}</strong>`, false)}
-              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;">
-                <div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>
-                ${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}
-              </div>
-            </div>
-          </div>
-        `;
+        if (record?.transferStatusTimestamps) { Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; }); }
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}${this.getRecordCard(record)}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>${this.renderRow('Transfer Type', record?.transferType || 'N/A')}${this.renderRow('Pick-up / Drop-off Location', record?.transferHospital || 'N/A')}${this.renderRow('Scheduled Date & Time', record?.transferDateTime || 'PENDING')}${this.renderRow('Vehicle Assigned', record?.transferVehicle || 'N/A')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Assigned Transfer Staff</div>${this.renderRow('Staff Dispatched', (record?.transferStaff || []).join(', ') || 'PENDING')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Transfer Audits</div>${this.renderRow('Current Transfer Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.transferStatus || 'Pending'}</strong>`, false)}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;"><div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}</div></div></div>`;
         this.executeIframePrint(html);
       },
 
       printCoronerDocument(record, themeName) {
         if (!record?.isCoroner) return;
-        let timelineHtml = '';
-        if (record?.pickupStatusTimestamps) {
-          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
-        }
-        
+        const timelineHtml = this.sortCoronerLogs(record?.pickupStatusTimestamps);
         let signatureHtml = '';
-        if (record?.coronerSignature) {
-          signatureHtml = `
-            <div style="display: flex; align-items: center; gap: 6px; margin-left: 15px; border-left: 2px solid #e2e8f0; padding-left: 15px;">
-              <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signed:</span>
-              <img src="${record.coronerSignature}" style="height: 65px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
-              <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-left: 5px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
-            </div>
-          `;
-        }
-
-        const html = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">
-            ${this.getDocHeader(record, "Coroner's Removal Authority & Dispatch", themeName)}
-            ${this.getRecordCard(record)}
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>
-              ${this.renderRow('CAD Reference', record?.coronerRef || 'N/A')}
-              ${this.renderRow('Branch', record?.location || 'N/A')}
-              ${this.renderRow('Body Condition', record?.condition || 'N/A')}
-              ${this.renderRow('Tray No.', record?.fridgeTray || 'PENDING')}
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;">
-                <span>Instructing Officer:</span> 
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <strong>${record?.coronerOfficer || 'N/A'}</strong>
-                  ${signatureHtml}
-                </div>
-              </div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              ${this.renderRow('Pickup Location', record?.pickupLocation || 'PENDING')}
-              ${this.renderRow('Destination', record?.pickupDestination || 'Cromer')}
-              ${this.renderRow('Scheduled Time', record?.pickupDateTime || 'PENDING')}
-              ${this.renderRow('Assigned Fleet Vehicle', record?.pickupVehicle || 'N/A')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew Checks</div>
-              ${this.renderRow('Crew Dispatched', (record?.pickupStaff || []).join(', ') || 'PENDING')}
-              ${this.renderRow('Special Instructions', record?.pickupInstructions || 'None')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>
-              ${this.renderRow('Current Mission Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.pickupStatus}</strong>`, false)}
-              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;">
-                <div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>
-                ${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}
-              </div>
-            </div>
-          </div>
-        `;
+        if (record?.coronerSignature) { signatureHtml = `<div style="display: flex; align-items: center; gap: 6px; margin-left: 15px; border-left: 2px solid #e2e8f0; padding-left: 15px;"><span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signed:</span><img src="${record.coronerSignature}" style="height: 65px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" /><span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-left: 5px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span></div>`; }
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Coroner's Removal Authority & Dispatch", themeName)}${this.getRecordCard(record)}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>${this.renderRow('CAD Reference', record?.coronerRef || 'N/A')}${this.renderRow('Branch', record?.location || 'N/A')}${this.renderRow('Body Condition', record?.condition || 'N/A')}${this.renderRow('Tray No.', record?.fridgeTray || 'PENDING')}<div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Instructing Officer:</span> <div style="display: flex; align-items: center; gap: 10px;"><strong>${record?.coronerOfficer || 'N/A'}</strong>${signatureHtml}</div></div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">${this.renderRow('Pickup Location', record?.pickupLocation || 'PENDING')}${this.renderRow('Destination', record?.pickupDestination || 'Cromer')}${this.renderRow('Scheduled Time', record?.pickupDateTime || 'PENDING')}${this.renderRow('Assigned Fleet Vehicle', record?.pickupVehicle || 'N/A')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew Checks</div>${this.renderRow('Crew Dispatched', (record?.pickupStaff || []).join(', ') || 'PENDING')}${this.renderRow('Special Instructions', record?.pickupInstructions || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>${this.renderRow('Current Mission Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.pickupStatus}</strong>`, false)}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;"><div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>${timelineHtml}</div></div></div>`;
         this.executeIframePrint(html);
       },
 
       printCombinedMasterDocument(record, themeName) {
-        let timelineHtml = '';
-        if (record?.pickupStatusTimestamps) {
-          Object.entries(record.pickupStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
-        }
+        const timelineHtml = this.sortCoronerLogs(record?.pickupStatusTimestamps);
         let transferTimelineHtml = '';
-        if (record?.transferStatusTimestamps) {
-          Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { transferTimelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; });
-        }
-        const html = `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.4;">
-            ${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)", themeName)}
-            ${this.getRecordCard(record)}
-            ${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}</div>` : ''}
-            
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>
-              ${this.renderRow('Body Condition', record?.condition)}
-              ${this.renderRow('Defibrillators/Pacemaker', record?.devicesDetails || 'None')}
-              ${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}
-              ${this.renderRow('Embalming Logs', record?.embalmingDetails || 'None')}
-              ${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}
-              ${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}
-              ${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div>
-              <div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div>
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div>
-              <div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div>
-            </div>
-            
-            <div style="page-break-before: always; margin-top: 40px;"></div>
-            ${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2", themeName)}
-            
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>
-              ${this.renderRow('Timber Specification', record?.coffin || 'None')}
-              ${this.renderRow('Handles Selected', record?.coffinHandles || 'None')}
-              ${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}
-              ${this.renderRow('Crucifix', record?.crucifix || 'None')}
-              ${this.renderRow('Bell Tops', record?.bellTop || 'None')}
-              ${this.renderRow('Coffin Pillow', record?.pillow || 'None')}
-              ${this.renderRow('At Rest Sign', record?.sign || 'None')}
-              ${this.renderRow('Coffin Size', record?.bodySize || 'PENDING SPEC')}
-              ${this.renderRow('Engraved Plate Affixed', record?.plate || 'No')}
-              ${this.renderRow('Grave Marker', record?.graveMarker || 'None')}
-            </div>
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>
-              ${this.renderRow('Dressing Apparel', record?.clothes || 'None')}
-              ${this.renderRow('Family Viewing Status', record?.viewing || 'Requested')}
-            </div>
-
-            ${record?.isCoroner ? `
-              <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>
-                ${this.renderRow('CAD Ref', record.coronerRef || 'N/A')}
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;">
-                  <span>Coroner Officer:</span> 
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <strong>${record.coronerOfficer || 'N/A'}</strong>
-                    ${record.coronerSignature ? `
-                      <div style="display: flex; align-items: center; gap: 4px; margin-left: 10px; border-left: 2px solid #e2e8f0; padding-left: 10px;">
-                        <span style="font-size: 10px; color: #64748b; font-weight: bold;">Signed:</span>
-                        <img src="${record.coronerSignature}" style="height: 45px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" />
-                        <span style="font-size: 10px; color: #64748b; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span>
-                      </div>
-                    ` : ''}
-                  </div>
-                </div>
-                ${this.renderRow('Pick-up Location', record.pickupLocation || 'N/A')}
-                ${this.renderRow('Scheduled Date', record.pickupDateTime || 'N/A')}
-                ${this.renderRow('Assigned Fleet Vehicle', record.pickupVehicle || 'N/A')}
-                ${this.renderRow('Stage Status', record.pickupStatus || 'N/A')}
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
-                  <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
-                  ${timelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
-                </div>
-              </div>
-            ` : ''}
-            
-            <div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
-              <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital / Home Transfer Details</div>
-              ${this.renderRow('Transfer Type', record.transferType || 'N/A')}
-              ${this.renderRow('Location', record.transferHospital || 'N/A')}
-              ${this.renderRow('Scheduled Date', record.transferDateTime || 'N/A')}
-              ${this.renderRow('Vehicle', record.transferVehicle || 'N/A')}
-              ${this.renderRow('Staff', (record.transferStaff || []).join(', ') || 'PENDING')}
-              ${this.renderRow('Transfer Stage', record.transferStatus || 'Pending')}
-              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;">
-                <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
-                ${transferTimelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}
-              </div>
-            </div>
-          </div>
-        `;
+        if (record?.transferStatusTimestamps) { Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { transferTimelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; }); }
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.4;">${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)", themeName)}${this.getRecordCard(record)}${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}</div>` : ''}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>${this.renderRow('Body Condition', record?.condition)}${this.renderRow('Defibrillators/Pacemaker', record?.devicesDetails || 'None')}${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}${this.renderRow('Embalming Logs', record?.embalmingDetails || 'None')}${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div><div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div><div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div></div><div style="page-break-before: always; margin-top: 40px;"></div>${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2", themeName)}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>${this.renderRow('Timber Specification', record?.coffin || 'None')}${this.renderRow('Handles Selected', record?.coffinHandles || 'None')}${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}${this.renderRow('Crucifix', record?.crucifix || 'None')}${this.renderRow('Bell Tops', record?.bellTop || 'None')}${this.renderRow('Coffin Pillow', record?.pillow || 'None')}${this.renderRow('At Rest Sign', record?.sign || 'None')}${this.renderRow('Coffin Size', record?.bodySize || 'PENDING SPEC')}${this.renderRow('Engraved Plate Affixed', record?.plate || 'No')}${this.renderRow('Grave Marker', record?.graveMarker || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>${this.renderRow('Dressing Apparel', record?.clothes || 'None')}${this.renderRow('Family Viewing Status', record?.viewing || 'Requested')}</div>${record?.isCoroner ? `<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>${this.renderRow('CAD Ref', record.coronerRef || 'N/A')}<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coroner Officer:</span> <div style="display: flex; align-items: center; gap: 8px;"><strong>${record.coronerOfficer || 'N/A'}</strong>${record.coronerSignature ? `<div style="display: flex; align-items: center; gap: 4px; margin-left: 10px; border-left: 2px solid #e2e8f0; padding-left: 10px;"><span style="font-size: 10px; color: #64748b; font-weight: bold;">Signed:</span><img src="${record.coronerSignature}" style="height: 45px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" /><span style="font-size: 10px; color: #64748b; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span></div>` : ''}</div></div>${this.renderRow('Pick-up Location', record.pickupLocation || 'N/A')}${this.renderRow('Scheduled Date', record.pickupDateTime || 'N/A')}${this.renderRow('Assigned Fleet Vehicle', record.pickupVehicle || 'N/A')}${this.renderRow('Stage Status', record.pickupStatus || 'N/A')}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;"><div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>${timelineHtml}</div></div>` : ''}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital / Home Transfer Details</div>${this.renderRow('Transfer Type', record.transferType || 'N/A')}${this.renderRow('Location', record.transferHospital || 'N/A')}${this.renderRow('Scheduled Date', record.transferDateTime || 'N/A')}${this.renderRow('Vehicle', record.transferVehicle || 'N/A')}${this.renderRow('Staff', (record.transferStaff || []).join(', ') || 'PENDING')}${this.renderRow('Transfer Stage', record.transferStatus || 'Pending')}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;"><div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>${transferTimelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}</div></div></div>`;
         this.executeIframePrint(html);
       },
 
       printStickerAndCheckBlocks(record) {
         const deepLinkUrl = `${getBaseUrl()}?case=${record?.id}`;
         const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
-        
         let infoHtml = '';
         if (record?.isCoroner && !record?.isConverted) {
-          infoHtml = `
-            <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 1mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-              ${record?.title} ${record?.deceasedName || "Unnamed Case"}
-            </div>
-            <div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOB: ${record?.dob || 'PENDING'}</div>
-            <div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOD: ${record?.dod || 'PENDING'}</div>
-            <div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">CAD: ${record?.coronerRef || 'PENDING'}</div>
-            <div style="font-size: 7px; font-weight: 900; text-transform: uppercase; color: #000000; margin-bottom: 0.5mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">ADD: ${record?.pickupLocation || 'PENDING'}</div>
-          `;
+          infoHtml = `<div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 1mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${record?.title} ${record?.deceasedName || "Unnamed Case"}</div><div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOB: ${record?.dob || 'PENDING'}</div><div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOD: ${record?.dod || 'PENDING'}</div><div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">CAD: ${record?.coronerRef || 'PENDING'}</div><div style="font-size: 7px; font-weight: 900; text-transform: uppercase; color: #000000; margin-bottom: 0.5mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">ADD: ${record?.pickupLocation || 'PENDING'}</div>`;
         } else {
-          infoHtml = `
-            <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-              ${record?.title} ${record?.deceasedName || "Unnamed Case"}
-            </div>
-            <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">DOB: ${record?.dob || 'PENDING'}</div>
-            <div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">REF: ${record?.ref}</div>
-            <div style="font-size: 7px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">Scan for Care File</div>
-          `;
+          infoHtml = `<div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${record?.title} ${record?.deceasedName || "Unnamed Case"}</div><div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">DOB: ${record?.dob || 'PENDING'}</div><div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">REF: ${record?.ref}</div><div style="font-size: 7px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">Scan for Care File</div>`;
         }
-
-        const html = `
-          <div style="width: 89mm; height: 36mm; box-sizing: border-box; padding: 3mm 4mm; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; overflow: hidden; gap: 4mm;">
-            <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 28mm; height: 28mm; display: block; object-fit: contain;" />
-            </div>
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">
-              ${infoHtml}
-            </div>
-          </div>
-        `;
+        const html = `<div style="width: 89mm; height: 36mm; box-sizing: border-box; padding: 3mm 4mm; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; overflow: hidden; gap: 4mm;"><div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;"><img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 28mm; height: 28mm; display: block; object-fit: contain;" /></div><div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">${infoHtml}</div></div>`;
         this.executeIframePrint(html, true);
       }
     };
 
 
-    // ============================================================================
-    // MODULE 4: ICONS & UI PRIMITIVES
-    // ============================================================================
     const Icons = {
       Users: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
       Search: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
@@ -776,9 +461,6 @@
       );
     }
 
-    // ============================================================================
-    // MODULE 5: FEATURE VIEWS
-    // ============================================================================
     function AuthScreen({ onLogin }) {
       const [username, setUsername] = useState('adrian');
       const [passwordInput, setPasswordInput] = useState('');
@@ -951,9 +633,6 @@
       )
     }
 
-    // ============================================================================
-    // MODULE 6: MAIN APP CONTROLLER
-    // ============================================================================
     function App() {
       const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [loggedInUser, setLoggedInUser] = useState(null);
@@ -1883,6 +1562,7 @@
                         </>
                       )}
 
+                      {}
                       {activeTab === "workshop" && (
                         <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
@@ -1939,7 +1619,6 @@
                             <FormSelect disabled={isDavidLocked} label="Crucifix Model" value={formState?.crucifix} onChange={(val) => handleFieldChange('crucifix', val)} options={[{value:'',label:'-- Select Crucifix Spec --'}, ...crucifixesList]} />
                           </div>
                           
-                          {/* NEW WORKSHOP ACCESSORIES FIELDS */}
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4 mb-4">
                             <FormSelect disabled={isDavidLocked} label="Bell Tops" value={formState?.bellTop} onChange={(val) => handleFieldChange('bellTop', val)} options={[{value:'',label:'-- Select Bell Tops --'}, ...bellTopsList]} />
                             <FormSelect disabled={isDavidLocked} label="Coffin Pillow" value={formState?.pillow} onChange={(val) => handleFieldChange('pillow', val)} options={[{value:'',label:'-- Select Pillow --'}, ...pillowsList]} />
@@ -1954,6 +1633,7 @@
                         </div>
                       )}
 
+                      {}
                       {activeTab === "pickup" && formState?.isCoroner && (
                         <>
                           {(isLogisticsLocked || formState?.isConverted) && (
@@ -1969,11 +1649,11 @@
                               <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.deceasedName} value={formState?.deceasedName} onChange={(val) => handleFieldChange('deceasedName', val)} wrapperClass="col-span-2 sm:col-span-4" />
                             </div>
                             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-                              <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label={labels.location} value={formState?.location} onChange={(val) => handleFieldChange('location', val)} options={locations} />
-                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dob} value={formState?.dob} onChange={(val) => handleFieldChange('dob', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY" />
-                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dod} value={formState?.dod} onChange={(val) => handleFieldChange('dod', val)} placeholder="DD/MM/YYYY" />
-                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.fridgeTray} value={formState?.fridgeTray} onChange={(val) => handleFieldChange('fridgeTray', val)} textClass="text-amber-400 text-center font-black" />
-                              <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Condition" value={formState?.condition} onChange={(val) => handleFieldChange('condition', val)} options={conditions} />
+                              <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label={labels.location} value={formState?.location} onChange={(val) => handleFieldChange('location', val)} options={locations} wrapperClass="col-span-2 lg:col-span-1" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dob} value={formState?.dob} onChange={(val) => handleFieldChange('dob', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY" wrapperClass="col-span-1" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dod} value={formState?.dod} onChange={(val) => handleFieldChange('dod', val)} placeholder="DD/MM/YYYY" wrapperClass="col-span-1" />
+                              <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.fridgeTray} value={formState?.fridgeTray} onChange={(val) => handleFieldChange('fridgeTray', val)} textClass="text-amber-400 text-center font-black" wrapperClass="col-span-1" />
+                              <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Condition" value={formState?.condition} onChange={(val) => handleFieldChange('condition', val)} options={conditions} wrapperClass="col-span-1" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-4">
@@ -2042,6 +1722,7 @@
                         </>
                       )}
 
+                      {}
                       {activeTab === "hospital" && (
                         <>
                           {isLogisticsLocked && (
@@ -2146,6 +1827,7 @@
                       </div>
                     </div>
 
+                    {}
                     <div className="space-y-6 select-none">
                       <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
                         <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.Printer size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Document Print Station</span></div>
@@ -2202,7 +1884,7 @@
             )}
           </main>
 
-          {/* GLOBAL MODALS */}
+          {}
           {isQrModalOpen && formState && (
             <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
               <div className="bg-slate-955 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl">

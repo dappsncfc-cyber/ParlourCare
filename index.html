@@ -751,14 +751,14 @@
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
         
-        const coffins = (appSettings.lists?.coffins || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
-        const handles = (appSettings.lists?.handles || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
-        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
-        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
-        const plates = (appSettings.lists?.plates || ["Large", "Small"]).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "plates", count: stockLevels.plates?.[name] || 0 }));
-        const bellTops = (appSettings.lists?.bellTops || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "bellTop", count: stockLevels.bellTops?.[name] || 0 }));
-        const pillows = (appSettings.lists?.pillows || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "pillow", count: stockLevels.pillows?.[name] || 0 }));
-        const signs = (appSettings.lists?.signs || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "sign", count: stockLevels.signs?.[name] || 0 }));
+        const coffins = (appSettings.lists?.coffins || defaultAppSettings.lists.coffins || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
+        const handles = (appSettings.lists?.handles || defaultAppSettings.lists.handles || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
+        const wreathHolders = (appSettings.lists?.wreathHolders || defaultAppSettings.lists.wreathHolders || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
+        const crucifixes = (appSettings.lists?.crucifixes || defaultAppSettings.lists.crucifixes || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
+        const plates = (appSettings.lists?.plates || defaultAppSettings.lists.plates || ["Large", "Small"]).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "plates", count: stockLevels.plates?.[name] || 0 }));
+        const bellTops = (appSettings.lists?.bellTops || defaultAppSettings.lists.bellTops || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "bellTop", count: stockLevels.bellTops?.[name] || 0 }));
+        const pillows = (appSettings.lists?.pillows || defaultAppSettings.lists.pillows || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "pillow", count: stockLevels.pillows?.[name] || 0 }));
+        const signs = (appSettings.lists?.signs || defaultAppSettings.lists.signs || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "sign", count: stockLevels.signs?.[name] || 0 }));
         
         return [...coffins, ...handles, ...wreathHolders, ...crucifixes, ...plates, ...bellTops, ...pillows, ...signs];
       }, [stockLevels, stockSearchQuery, appSettings.lists]);

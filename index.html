@@ -1968,7 +1968,8 @@
                               <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Title" value={formState?.title} onChange={(val) => handleFieldChange('title', val)} options={titles} wrapperClass="col-span-2 sm:col-span-2" />
                               <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.deceasedName} value={formState?.deceasedName} onChange={(val) => handleFieldChange('deceasedName', val)} wrapperClass="col-span-2 sm:col-span-4" />
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                              <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label={labels.location} value={formState?.location} onChange={(val) => handleFieldChange('location', val)} options={locations} />
                               <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dob} value={formState?.dob} onChange={(val) => handleFieldChange('dob', val)} textClass="text-amber-400" placeholder="DD/MM/YYYY" />
                               <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.dod} value={formState?.dod} onChange={(val) => handleFieldChange('dod', val)} placeholder="DD/MM/YYYY" />
                               <FormInput disabled={isLogisticsLocked || formState?.isConverted} label={labels.fridgeTray} value={formState?.fridgeTray} onChange={(val) => handleFieldChange('fridgeTray', val)} textClass="text-amber-400 text-center font-black" />

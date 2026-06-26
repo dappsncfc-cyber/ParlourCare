@@ -751,14 +751,14 @@
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
         
-        const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
-        const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
-        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
-        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
-        const plates = (appSettings.lists?.plates || ["Large", "Small"]).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "plates", count: stockLevels.plates?.[name] || 0 }));
-        const bellTops = (appSettings.lists?.bellTops || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "bellTop", count: stockLevels.bellTops?.[name] || 0 }));
-        const pillows = (appSettings.lists?.pillows || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "pillow", count: stockLevels.pillows?.[name] || 0 }));
-        const signs = (appSettings.lists?.signs || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "sign", count: stockLevels.signs?.[name] || 0 }));
+        const coffins = (appSettings.lists?.coffins || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
+        const handles = (appSettings.lists?.handles || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
+        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
+        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
+        const plates = (appSettings.lists?.plates || ["Large", "Small"]).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "plates", count: stockLevels.plates?.[name] || 0 }));
+        const bellTops = (appSettings.lists?.bellTops || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "bellTop", count: stockLevels.bellTops?.[name] || 0 }));
+        const pillows = (appSettings.lists?.pillows || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "pillow", count: stockLevels.pillows?.[name] || 0 }));
+        const signs = (appSettings.lists?.signs || []).filter(name => name !== 'None' && name.toLowerCase().includes(term)).map(name => ({ name, type: "sign", count: stockLevels.signs?.[name] || 0 }));
         
         return [...coffins, ...handles, ...wreathHolders, ...crucifixes, ...plates, ...bellTops, ...pillows, ...signs];
       }, [stockLevels, stockSearchQuery, appSettings.lists]);
@@ -1584,7 +1584,8 @@
                                   className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855"
                                 >
                                   <option value="">-- Select Coffin Model --</option>
-                                  {coffinsList.map(c => <option key={c} value={c}>{c}</option>)}
+                                  <option value="None">None</option>
+                                  {coffinsList.map(c => c !== 'None' && <option key={c} value={c}>{c}</option>)}
                                   <option value="Other">Other (Specify...)</option>
                                 </select>
                               ) : (
@@ -1612,28 +1613,27 @@
                                 </div>
                               )}
                             </div>
-                            <FormSelect disabled={isDavidLocked} label="Handles Spec" value={formState?.coffinHandles} onChange={(val) => handleFieldChange('coffinHandles', val)} options={[{value:'',label:'-- Select Handles Spec --'}, ...handlesList]} />
+                            <FormSelect disabled={isDavidLocked} label="Handles Spec" value={formState?.coffinHandles} onChange={(val) => handleFieldChange('coffinHandles', val)} options={[{value:'',label:'-- Select Handles Spec --'}, 'None', ...handlesList.filter(h=>h!=='None')]} />
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border-t border-slate-900 pt-4">
-                            <FormSelect disabled={isDavidLocked} label="Wreath Holders" value={formState?.wreathHolders} onChange={(val) => handleFieldChange('wreathHolders', val)} options={[{value:'',label:'-- Select Wreath Holders --'}, ...wreathHoldersList]} />
-                            <FormSelect disabled={isDavidLocked} label="Crucifix Model" value={formState?.crucifix} onChange={(val) => handleFieldChange('crucifix', val)} options={[{value:'',label:'-- Select Crucifix Spec --'}, ...crucifixesList]} />
+                            <FormSelect disabled={isDavidLocked} label="Wreath Holders" value={formState?.wreathHolders} onChange={(val) => handleFieldChange('wreathHolders', val)} options={[{value:'',label:'-- Select Wreath Holders --'}, 'None', ...wreathHoldersList.filter(h=>h!=='None')]} />
+                            <FormSelect disabled={isDavidLocked} label="Crucifix Model" value={formState?.crucifix} onChange={(val) => handleFieldChange('crucifix', val)} options={[{value:'',label:'-- Select Crucifix Spec --'}, 'None', ...crucifixesList.filter(h=>h!=='None')]} />
                           </div>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4 mb-4">
-                            <FormSelect disabled={isDavidLocked} label="Bell Tops" value={formState?.bellTop} onChange={(val) => handleFieldChange('bellTop', val)} options={[{value:'',label:'-- Select Bell Tops --'}, ...bellTopsList]} />
-                            <FormSelect disabled={isDavidLocked} label="Coffin Pillow" value={formState?.pillow} onChange={(val) => handleFieldChange('pillow', val)} options={[{value:'',label:'-- Select Pillow --'}, ...pillowsList]} />
-                            <FormSelect disabled={isDavidLocked} label="At Rest Sign" value={formState?.sign} onChange={(val) => handleFieldChange('sign', val)} options={[{value:'',label:'-- Select Sign --'}, ...signsList]} />
+                            <FormSelect disabled={isDavidLocked} label="Bell Tops" value={formState?.bellTop} onChange={(val) => handleFieldChange('bellTop', val)} options={[{value:'',label:'-- Select Bell Tops --'}, 'None', ...bellTopsList.filter(h=>h!=='None')]} />
+                            <FormSelect disabled={isDavidLocked} label="Coffin Pillow" value={formState?.pillow} onChange={(val) => handleFieldChange('pillow', val)} options={[{value:'',label:'-- Select Pillow --'}, 'None', ...pillowsList.filter(h=>h!=='None')]} />
+                            <FormSelect disabled={isDavidLocked} label="At Rest Sign" value={formState?.sign} onChange={(val) => handleFieldChange('sign', val)} options={[{value:'',label:'-- Select Sign --'}, 'None', ...signsList.filter(h=>h!=='None')]} />
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-900 pt-4">
                             <FormInput disabled={isDavidLocked} label="Coffin Size" value={formState?.bodySize} onChange={(val) => handleFieldChange('bodySize', val)} textClass="text-white font-mono text-center" />
-                            <FormSelect disabled={isDavidLocked} label="Engraved Name Plate" value={formState?.plate} onChange={(val) => handleFieldChange('plate', val)} options={[{value:'',label:'-- Select Plate Size --'}, ...platesList]} textClass="text-slate-200 text-center" />
+                            <FormSelect disabled={isDavidLocked} label="Engraved Name Plate" value={formState?.plate} onChange={(val) => handleFieldChange('plate', val)} options={[{value:'',label:'-- Select Plate Size --'}, 'None', ...platesList.filter(h=>h!=='None')]} textClass="text-slate-200 text-center" />
                             <FormSelect disabled={isDavidLocked} label="Grave Marker" value={formState?.graveMarker} onChange={(val) => handleFieldChange('graveMarker', val)} options={["None", "Temporary Oak Cross", "Standard Wooden Marker", "Premium Engraved Plaque"]} />
                           </div>
                         </div>
                       )}
 
-                      {}
                       {activeTab === "pickup" && formState?.isCoroner && (
                         <>
                           {(isLogisticsLocked || formState?.isConverted) && (

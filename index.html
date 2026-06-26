@@ -135,13 +135,12 @@
         conditions: ["Good", "Medium", "Poor"],
         infectionRisks: ["None", "Blood borne", "Sepsis", "CJD", "Other"],
         coffins: ["Elm", "Rookwood Walnut", "Rookwood Elm", "Lamboard"],
-        handles: ["Bar Handles", "Ring Handles", "Wooden Handles"],
-        wreathHolders: ["Brass Wreath Holders", "Chrome Wreath Holders"],
-        crucifixes: ["Brass Crucifix", "Chrome Crucifix"],
+        handles: ["Bar Handles", "Ring Handles", "Wooden Handles", "No handles"],
+        wreathHolders: ["Brass Wreath Holders", "Chrome Wreath Holders", "None"],
+        crucifixes: ["Brass Crucifix", "Chrome Crucifix", "None"],
         vehicles: ["C17 DFS", "C22 DFS", "C25 GFS"],
         hospitals: ["Norfolk & Norwich University Hospital (NNUH)", "Queen Elizabeth Hospital King's Lynn (QEH)", "James Paget University Hospital (JPUH)", "Cromer Hospital", "Hellesdon Hospital", "North Walsham War Memorial Hospital", "Kelling Hospital"],
-        titles: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"],
-        plates: ["Large", "Small"]
+        titles: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Rev", "Sir", "Lady"]
       },
       customFields: []
     };
@@ -965,9 +964,11 @@
             const parsed = JSON.parse(localStock);
             if (!parsed.wreathHolders) parsed.wreathHolders = initialInventory.wreathHolders;
             if (!parsed.crucifixes) parsed.crucifixes = initialInventory.crucifixes;
-            if (!parsed.plates) parsed.plates = initialInventory.plates;
             if (parsed.coffins && parsed.coffins["None"] !== undefined) delete parsed.coffins["None"];
             if (parsed.handles && parsed.handles["None"] !== undefined) delete parsed.handles["None"];
+            if (parsed.handles && parsed.handles["No handles"] !== undefined) delete parsed.handles["No handles"];
+            if (parsed.wreathHolders && parsed.wreathHolders["None"] !== undefined) delete parsed.wreathHolders["None"];
+            if (parsed.crucifixes && parsed.crucifixes["None"] !== undefined) delete parsed.crucifixes["None"];
             return parsed;
           }
           return initialInventory;
@@ -1057,13 +1058,12 @@
       const filteredStockList = useMemo(() => {
         const term = stockSearchQuery.toLowerCase();
         
-        const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
-        const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
-        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
-        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
-        const plates = (appSettings.lists?.plates || ["Large", "Small"]).filter(name => name.toLowerCase().includes(term)).map(name => ({ name, type: "plates", count: stockLevels.plates?.[name] || 0 }));
+        const coffins = (appSettings.lists?.coffins || []).filter(name => name.toLowerCase().includes(term) && name !== "None").map(name => ({ name, type: "coffin", count: stockLevels.coffins?.[name] || 0 }));
+        const handles = (appSettings.lists?.handles || []).filter(name => name.toLowerCase().includes(term) && name !== "No handles" && name !== "None").map(name => ({ name, type: "handles", count: stockLevels.handles?.[name] || 0 }));
+        const wreathHolders = (appSettings.lists?.wreathHolders || []).filter(name => name.toLowerCase().includes(term) && name !== "None").map(name => ({ name, type: "wreathHolders", count: stockLevels.wreathHolders?.[name] || 0 }));
+        const crucifixes = (appSettings.lists?.crucifixes || []).filter(name => name.toLowerCase().includes(term) && name !== "None").map(name => ({ name, type: "crucifix", count: stockLevels.crucifixes?.[name] || 0 }));
         
-        return [...coffins, ...handles, ...wreathHolders, ...crucifixes, ...plates];
+        return [...coffins, ...handles, ...wreathHolders, ...crucifixes];
       }, [stockLevels, stockSearchQuery, appSettings.lists]);
 
       useEffect(() => {
@@ -1100,9 +1100,11 @@
             const remoteStock = snap.data();
             if (!remoteStock.wreathHolders) remoteStock.wreathHolders = initialInventory.wreathHolders;
             if (!remoteStock.crucifixes) remoteStock.crucifixes = initialInventory.crucifixes;
-            if (!remoteStock.plates) remoteStock.plates = initialInventory.plates;
             if (remoteStock.coffins && remoteStock.coffins["None"] !== undefined) delete remoteStock.coffins["None"];
             if (remoteStock.handles && remoteStock.handles["None"] !== undefined) delete remoteStock.handles["None"];
+            if (remoteStock.handles && remoteStock.handles["No handles"] !== undefined) delete remoteStock.handles["No handles"];
+            if (remoteStock.wreathHolders && remoteStock.wreathHolders["None"] !== undefined) delete remoteStock.wreathHolders["None"];
+            if (remoteStock.crucifixes && remoteStock.crucifixes["None"] !== undefined) delete remoteStock.crucifixes["None"];
             setStockLevels(remoteStock);
             try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
           } else {
@@ -1298,15 +1300,13 @@
             coffins: { ...(stockLevels.coffins || {}) },
             handles: { ...(stockLevels.handles || {}) },
             wreathHolders: { ...(stockLevels.wreathHolders || {}) },
-            crucifixes: { ...(stockLevels.crucifixes || {}) },
-            plates: { ...(stockLevels.plates || {}) }
+            crucifixes: { ...(stockLevels.crucifixes || {}) }
           };
           let changed = false;
-          if (deletedCase.coffin) { updatedStock.coffins[deletedCase.coffin] = (updatedStock.coffins[deletedCase.coffin] || 0) + 1; changed = true; }
-          if (deletedCase.coffinHandles) { updatedStock.handles[deletedCase.coffinHandles] = (updatedStock.handles[deletedCase.coffinHandles] || 0) + 1; changed = true; }
-          if (deletedCase.wreathHolders) { updatedStock.wreathHolders[deletedCase.wreathHolders] = (updatedStock.wreathHolders[deletedCase.wreathHolders] || 0) + 1; changed = true; }
-          if (deletedCase.crucifix) { updatedStock.crucifixes[deletedCase.crucifix] = (updatedStock.crucifixes[deletedCase.crucifix] || 0) + 1; changed = true; }
-          if (deletedCase.plate && !['Yes','No','N/A'].includes(deletedCase.plate)) { updatedStock.plates[deletedCase.plate] = (updatedStock.plates[deletedCase.plate] || 0) + 1; changed = true; }
+          if (deletedCase.coffin && deletedCase.coffin !== "None") { updatedStock.coffins[deletedCase.coffin] = (updatedStock.coffins[deletedCase.coffin] || 0) + 1; changed = true; }
+          if (deletedCase.coffinHandles && deletedCase.coffinHandles !== "No handles" && deletedCase.coffinHandles !== "None") { updatedStock.handles[deletedCase.coffinHandles] = (updatedStock.handles[deletedCase.coffinHandles] || 0) + 1; changed = true; }
+          if (deletedCase.wreathHolders && deletedCase.wreathHolders !== "None") { updatedStock.wreathHolders[deletedCase.wreathHolders] = (updatedStock.wreathHolders[deletedCase.wreathHolders] || 0) + 1; changed = true; }
+          if (deletedCase.crucifix && deletedCase.crucifix !== "None") { updatedStock.crucifixes[deletedCase.crucifix] = (updatedStock.crucifixes[deletedCase.crucifix] || 0) + 1; changed = true; }
           if (changed) { setStockLevels(updatedStock); saveStockToDb(updatedStock); }
         }
         setDeceasedList(prev => {
@@ -1341,18 +1341,17 @@
             coffins: { ...(stockLevels.coffins || {}) },
             handles: { ...(stockLevels.handles || {}) },
             wreathHolders: { ...(stockLevels.wreathHolders || {}) },
-            crucifixes: { ...(stockLevels.crucifixes || {}) },
-            plates: { ...(stockLevels.plates || {}) }
+            crucifixes: { ...(stockLevels.crucifixes || {}) }
         };
         let stockChanged = false;
-        const catMap = { coffin: 'coffins', coffinHandles: 'handles', wreathHolders: 'wreathHolders', crucifix: 'crucifixes', plate: 'plates' };
+        const catMap = { coffin: 'coffins', coffinHandles: 'handles', wreathHolders: 'wreathHolders', crucifix: 'crucifixes' };
         const cat = catMap[fieldName];
         if (cat) {
           const oldVal = formState[fieldName] || "";
           const newVal = value || "";
           if (oldVal !== newVal) {
-            if (oldVal && !['Yes','No','N/A'].includes(oldVal)) { updatedStock[cat][oldVal] = (updatedStock[cat][oldVal] || 0) + 1; stockChanged = true; }
-            if (newVal && !['Yes','No','N/A'].includes(newVal)) { updatedStock[cat][newVal] = Math.max(0, (updatedStock[cat][newVal] || 0) - 1); stockChanged = true; }
+            if (oldVal && oldVal !== "No handles" && oldVal !== "None") { updatedStock[cat][oldVal] = (updatedStock[cat][oldVal] || 0) + 1; stockChanged = true; }
+            if (newVal && newVal !== "No handles" && newVal !== "None") { updatedStock[cat][newVal] = Math.max(0, (updatedStock[cat][newVal] || 0) - 1); stockChanged = true; }
           }
         }
         const updatedRecord = { ...formState, [fieldName]: value };

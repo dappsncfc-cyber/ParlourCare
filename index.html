@@ -798,19 +798,27 @@
         const unsubscribeStock = onSnapshot(stockDocRef, (snap) => {
           if (snap.exists()) {
             const remoteStock = snap.data();
-            if (!remoteStock.wreathHolders) remoteStock.wreathHolders = initialInventory.wreathHolders;
-            if (!remoteStock.crucifixes) remoteStock.crucifixes = initialInventory.crucifixes;
-            if (!remoteStock.plates) remoteStock.plates = initialInventory.plates;
-            if (!remoteStock.bellTops) remoteStock.bellTops = initialInventory.bellTops;
-            if (!remoteStock.pillows) remoteStock.pillows = initialInventory.pillows;
-            if (!remoteStock.signs) remoteStock.signs = initialInventory.signs;
-            if (remoteStock.coffins && remoteStock.coffins["None"] !== undefined) delete remoteStock.coffins["None"];
-            if (remoteStock.handles && remoteStock.handles["None"] !== undefined) delete remoteStock.handles["None"];
+            let needsUpdate = false;
+            if (!remoteStock.wreathHolders) { remoteStock.wreathHolders = initialInventory.wreathHolders; needsUpdate = true; }
+            if (!remoteStock.crucifixes) { remoteStock.crucifixes = initialInventory.crucifixes; needsUpdate = true; }
+            if (!remoteStock.plates) { remoteStock.plates = initialInventory.plates; needsUpdate = true; }
+            if (!remoteStock.bellTops) { remoteStock.bellTops = initialInventory.bellTops; needsUpdate = true; }
+            if (!remoteStock.pillows) { remoteStock.pillows = initialInventory.pillows; needsUpdate = true; }
+            if (!remoteStock.signs) { remoteStock.signs = initialInventory.signs; needsUpdate = true; }
+            if (remoteStock.coffins && remoteStock.coffins["None"] !== undefined) { delete remoteStock.coffins["None"]; needsUpdate = true; }
+            if (remoteStock.handles && remoteStock.handles["None"] !== undefined) { delete remoteStock.handles["None"]; needsUpdate = true; }
+            
             setStockLevels(remoteStock);
             try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
+            
+            if (needsUpdate) {
+              setDoc(stockDocRef, remoteStock).catch(e => console.error("Error updating stock structure:", e));
+            }
           } else {
-            setDoc(stockDocRef, initialInventory).catch(e => console.error(e));
+            setDoc(stockDocRef, initialInventory).catch(e => console.error("Error initializing stock:", e));
           }
+        }, (error) => {
+          console.error("Stock sync error:", error);
         });
 
         const settingsDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'config', 'settings');
@@ -984,7 +992,11 @@
 
       const saveStockToDb = async (newStock) => {
         try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock)); } catch(e){}
-        if (isFirebaseEnabled && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory'), JSON.parse(JSON.stringify(newStock))); } catch(err) {} }
+        if (isFirebaseEnabled && user) { 
+            try { 
+                await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory'), JSON.parse(JSON.stringify(newStock))); 
+            } catch(err) { console.error("Stock save error:", err); } 
+        }
       };
 
       const saveCaseToDb = async (record) => {

@@ -1,4 +1,4 @@
-<!DOCTYPE html><!--  -->
+<!DOCTYPE html>
 <html lang="en-GB">
 <head>
   <meta charset="UTF-8">
@@ -636,6 +636,9 @@
       )
     }
 
+    // ============================================================================
+    // MODULE 6: MAIN APP CONTROLLER
+    // ============================================================================
     function App() {
       const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [loggedInUser, setLoggedInUser] = useState(null);
@@ -793,6 +796,8 @@
         if (!user) return;
         const safeAppId = String(appId);
         const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
+        
+        // FIX: Must use collection() queries for security rules to allow syncing
         const stockColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'stock');
         const configColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'config');
 
@@ -817,10 +822,10 @@
             try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
             
             if (needsUpdate) {
-              setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), remoteStock).catch(e => console.error(e));
+              setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), remoteStock, { merge: true }).catch(e => console.error("Error updating stock structure:", e));
             }
           } else {
-            setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), initialInventory).catch(e => console.error(e));
+            setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), initialInventory).catch(e => console.error("Error initializing stock:", e));
           }
         }, (error) => {
           console.error("Stock sync error:", error);
@@ -836,7 +841,7 @@
             setAppSettings(remoteSettings);
             try { localStorage.setItem('parlourcare_settings', JSON.stringify(remoteSettings)); } catch(e){}
           } else {
-            setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'config', 'settings'), defaultAppSettings).catch(e => console.error(e));
+            setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'config', 'settings'), defaultAppSettings).catch(e => console.error("Error initializing settings:", e));
           }
         }, (error) => {
           console.error("Settings sync error:", error);
@@ -1002,7 +1007,8 @@
         try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock)); } catch(e){}
         if (isFirebaseEnabled && user) { 
             try { 
-                await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory'), JSON.parse(JSON.stringify(newStock))); 
+                // FIX: Add { merge: true } to guarantee it creates the document if missing 
+                await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory'), JSON.parse(JSON.stringify(newStock)), { merge: true }); 
             } catch(err) { console.error("Stock save error:", err); } 
         }
       };
@@ -1050,7 +1056,7 @@
         if (isFirebaseEnabled && user) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
       };
 
-      const handleStockLevelAdjust = (type, itemName, delta) => {
+      const handleStockLevelAdjust = async (type, itemName, delta) => {
         let updated = { 
             ...stockLevels,
             coffins: { ...(stockLevels.coffins || {}) },
@@ -1071,10 +1077,10 @@
         else if (type === 'pillow') updated.pillows[itemName] = Math.max(0, (updated.pillows[itemName] || 0) + delta);
         else if (type === 'sign') updated.signs[itemName] = Math.max(0, (updated.signs[itemName] || 0) + delta);
         
-        setStockLevels(updated); saveStockToDb(updated);
+        setStockLevels(updated); await saveStockToDb(updated);
       };
 
-      const handleStockLevelSet = (type, itemName, value) => {
+      const handleStockLevelSet = async (type, itemName, value) => {
         let updated = { 
             ...stockLevels,
             coffins: { ...(stockLevels.coffins || {}) },
@@ -1096,7 +1102,7 @@
         else if (type === 'pillow') updated.pillows[itemName] = safeValue;
         else if (type === 'sign') updated.signs[itemName] = safeValue;
         
-        setStockLevels(updated); saveStockToDb(updated);
+        setStockLevels(updated); await saveStockToDb(updated);
       };
 
       const handleFieldChange = (fieldName, value) => {

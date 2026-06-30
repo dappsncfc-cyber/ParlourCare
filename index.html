@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!--  -->
 <html lang="en-GB">
 <head>
   <meta charset="UTF-8">
@@ -960,7 +960,7 @@
       // HELPER: App Logic Functions
       const saveSettingsToDb = async (newSettings) => {
         try { localStorage.setItem('parlourcare_settings', JSON.stringify(newSettings)); } catch(e){}
-        if (isFirebaseEnabled && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
+        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
       };
 
       const handleAddListItem = (listName) => {
@@ -992,7 +992,7 @@
 
       const saveStockToDb = async (newStock) => {
         try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock)); } catch(e){}
-        if (isFirebaseEnabled && user) { 
+        if (isFirebaseEnabled && auth && auth.currentUser) { 
             try { 
                 await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory'), JSON.parse(JSON.stringify(newStock))); 
             } catch(err) { console.error("Stock save error:", err); } 
@@ -1005,7 +1005,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
+        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
       };
 
       const deleteCaseFromDb = async (id) => {
@@ -1039,7 +1039,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && user) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
+        if (isFirebaseEnabled && auth && auth.currentUser) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
       };
 
       const handleStockLevelAdjust = (type, itemName, delta) => {

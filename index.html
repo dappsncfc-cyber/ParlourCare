@@ -792,7 +792,7 @@
         const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
         const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
 
-        getDoc(stockDocRef).then((snap) => {
+        const unsubscribeStock = onSnapshot(stockDocRef, (snap) => {
           if (snap.exists()) {
             const remoteStock = snap.data();
             if (!remoteStock.wreathHolders) remoteStock.wreathHolders = initialInventory.wreathHolders;
@@ -904,7 +904,7 @@
           }
         });
 
-        return () => { if (unsubscribe) unsubscribe(); if (unsubscribeSettings) unsubscribeSettings(); };
+        return () => { if (unsubscribe) unsubscribe(); if (unsubscribeSettings) unsubscribeSettings(); if (unsubscribeStock) unsubscribeStock(); };
       }, [user]);
 
       useEffect(() => {

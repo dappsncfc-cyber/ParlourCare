@@ -797,7 +797,7 @@
         const safeAppId = String(appId);
         const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
         
-        // FIX: Must use collection() queries for security rules to allow syncing
+        // Use collection() queries for security rules to allow syncing
         const stockColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'stock');
         const configColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'config');
 
@@ -973,7 +973,7 @@
       // HELPER: App Logic Functions
       const saveSettingsToDb = async (newSettings) => {
         try { localStorage.setItem('parlourcare_settings', JSON.stringify(newSettings)); } catch(e){}
-        if (isFirebaseEnabled && user) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
+        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
       };
 
       const handleAddListItem = (listName) => {
@@ -1005,10 +1005,23 @@
 
       const saveStockToDb = async (newStock) => {
         try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock)); } catch(e){}
-        if (isFirebaseEnabled && user) { 
+        
+        // Checking auth.currentUser directly avoids capturing any stale variables when components render
+        if (isFirebaseEnabled && auth && auth.currentUser) { 
             try { 
-                // FIX: Add { merge: true } to guarantee it creates the document if missing 
-                await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory'), JSON.parse(JSON.stringify(newStock)), { merge: true }); 
+                const dbRef = doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory');
+                // Force explicit map creation to guarantee missing fields are initialized in Firebase 
+                const safeStock = {
+                  coffins: newStock.coffins || {},
+                  handles: newStock.handles || {},
+                  wreathHolders: newStock.wreathHolders || {},
+                  crucifixes: newStock.crucifixes || {},
+                  plates: newStock.plates || {},
+                  bellTops: newStock.bellTops || {},
+                  pillows: newStock.pillows || {},
+                  signs: newStock.signs || {}
+                };
+                await setDoc(dbRef, safeStock, { merge: true }); 
             } catch(err) { console.error("Stock save error:", err); } 
         }
       };
@@ -1019,7 +1032,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && user) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
+        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
       };
 
       const deleteCaseFromDb = async (id) => {
@@ -1053,7 +1066,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && user) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
+        if (isFirebaseEnabled && auth && auth.currentUser) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
       };
 
       const handleStockLevelAdjust = async (type, itemName, delta) => {
@@ -1949,7 +1962,7 @@
             )}
           </main>
 
-          {}
+          {/* GLOBAL MODALS */}
           {isQrModalOpen && formState && (
             <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none animate-fade-in">
               <div className="bg-slate-955 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center relative shadow-2xl">

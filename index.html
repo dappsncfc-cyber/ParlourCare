@@ -793,11 +793,16 @@
         if (!user) return;
         const safeAppId = String(appId);
         const colRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'cases');
-        const stockDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory');
+        const stockColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'stock');
+        const configColRef = collection(db, 'artifacts', safeAppId, 'public', 'data', 'config');
 
-        const unsubscribeStock = onSnapshot(stockDocRef, (snap) => {
-          if (snap.exists()) {
-            const remoteStock = snap.data();
+        const unsubscribeStock = onSnapshot(stockColRef, (snapshot) => {
+          let remoteStock = null;
+          snapshot.forEach((docSnap) => {
+            if (docSnap.id === 'inventory') remoteStock = docSnap.data();
+          });
+
+          if (remoteStock) {
             let needsUpdate = false;
             if (!remoteStock.wreathHolders) { remoteStock.wreathHolders = initialInventory.wreathHolders; needsUpdate = true; }
             if (!remoteStock.crucifixes) { remoteStock.crucifixes = initialInventory.crucifixes; needsUpdate = true; }
@@ -812,26 +817,29 @@
             try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
             
             if (needsUpdate) {
-              setDoc(stockDocRef, remoteStock).catch(e => console.error("Error updating stock structure:", e));
+              setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), remoteStock).catch(e => console.error(e));
             }
           } else {
-            setDoc(stockDocRef, initialInventory).catch(e => console.error("Error initializing stock:", e));
+            setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), initialInventory).catch(e => console.error(e));
           }
         }, (error) => {
           console.error("Stock sync error:", error);
         });
 
-        const settingsDocRef = doc(db, 'artifacts', safeAppId, 'public', 'data', 'config', 'settings');
-        getDoc(settingsDocRef).then((snap) => {
-          if (snap.exists()) setAppSettings(snap.data());
-          else setDoc(settingsDocRef, defaultAppSettings);
-        });
+        const unsubscribeSettings = onSnapshot(configColRef, (snapshot) => {
+          let remoteSettings = null;
+          snapshot.forEach((docSnap) => {
+            if (docSnap.id === 'settings') remoteSettings = docSnap.data();
+          });
 
-        const unsubscribeSettings = onSnapshot(settingsDocRef, (doc) => {
-          if (doc.exists()) {
-            setAppSettings(doc.data());
-            try { localStorage.setItem('parlourcare_settings', JSON.stringify(doc.data())); } catch(e){}
+          if (remoteSettings) {
+            setAppSettings(remoteSettings);
+            try { localStorage.setItem('parlourcare_settings', JSON.stringify(remoteSettings)); } catch(e){}
+          } else {
+            setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'config', 'settings'), defaultAppSettings).catch(e => console.error(e));
           }
+        }, (error) => {
+          console.error("Settings sync error:", error);
         });
 
         const unsubscribe = onSnapshot(colRef, (snapshot) => {
@@ -960,7 +968,7 @@
       // HELPER: App Logic Functions
       const saveSettingsToDb = async (newSettings) => {
         try { localStorage.setItem('parlourcare_settings', JSON.stringify(newSettings)); } catch(e){}
-        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
+        if (isFirebaseEnabled && user) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
       };
 
       const handleAddListItem = (listName) => {
@@ -992,7 +1000,7 @@
 
       const saveStockToDb = async (newStock) => {
         try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock)); } catch(e){}
-        if (isFirebaseEnabled && auth && auth.currentUser) { 
+        if (isFirebaseEnabled && user) { 
             try { 
                 await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory'), JSON.parse(JSON.stringify(newStock))); 
             } catch(err) { console.error("Stock save error:", err); } 
@@ -1005,7 +1013,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
+        if (isFirebaseEnabled && user) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
       };
 
       const deleteCaseFromDb = async (id) => {
@@ -1039,7 +1047,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && auth && auth.currentUser) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
+        if (isFirebaseEnabled && user) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
       };
 
       const handleStockLevelAdjust = (type, itemName, delta) => {

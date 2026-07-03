@@ -263,11 +263,11 @@
         const qrImgUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(deepLinkUrl) + "&bgcolor=ffffff&color=000000";
         let infoHtml = '';
         if (record?.isCoroner && !record?.isConverted) {
-          infoHtml = `<div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 1mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${record?.title} ${record?.deceasedName || "Unnamed Case"}</div><div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOB: ${record?.dob || 'PENDING'}</div><div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOD: ${record?.dod || 'PENDING'}</div><div style="font-size: 8px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">CAD: ${record?.coronerRef || 'PENDING'}</div><div style="font-size: 7px; font-weight: 900; text-transform: uppercase; color: #000000; margin-bottom: 0.5mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">ADD: ${record?.pickupLocation || 'PENDING'}</div>`;
+          infoHtml = `<div style="font-size: 14px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 1mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${record?.title} ${record?.deceasedName || "Unnamed Case"}</div><div style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOB: ${record?.dob || 'PENDING'}</div><div style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">DOD: ${record?.dod || 'PENDING'}</div><div style="font-size: 10px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 0.5mm;">CAD: ${record?.coronerRef || 'PENDING'}</div><div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; margin-top: 0.5mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">ADD: ${record?.pickupLocation || 'PENDING'}</div>`;
         } else {
-          infoHtml = `<div style="font-size: 11px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${record?.title} ${record?.deceasedName || "Unnamed Case"}</div><div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">DOB: ${record?.dob || 'PENDING'}</div><div style="font-size: 9px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">REF: ${record?.ref}</div><div style="font-size: 7px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">Scan for Care File</div>`;
+          infoHtml = `<div style="font-size: 14px; font-weight: 900; text-transform: uppercase; line-height: 1.1; margin-bottom: 2mm; word-wrap: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${record?.title} ${record?.deceasedName || "Unnamed Case"}</div><div style="font-size: 11px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1mm;">DOB: ${record?.dob || 'PENDING'}</div><div style="font-size: 11px; font-weight: 900; text-transform: uppercase; color: #000000; font-family: monospace; margin-bottom: 1.5mm;">REF: ${record?.ref}</div><div style="font-size: 9px; font-weight: 900; letter-spacing: 0.2px; text-transform: uppercase; color: #333333; border-top: 1.5px solid #000; padding-top: 1mm;">Scan for Care File</div>`;
         }
-        const html = `<div style="width: 89mm; height: 36mm; box-sizing: border-box; padding: 3mm 4mm; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; overflow: hidden; gap: 4mm;"><div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;"><img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 28mm; height: 28mm; display: block; object-fit: contain;" /></div><div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">${infoHtml}</div></div>`;
+        const html = `<div style="width: 89mm; height: 36mm; box-sizing: border-box; padding: 2mm 3mm; display: flex; flex-direction: row; align-items: center; justify-content: space-between; font-family: 'Arial', sans-serif; background: #ffffff; color: #000000; overflow: hidden; gap: 3mm;"><div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;"><img src="${qrImgUrl}" alt="Sticker QR Code" style="width: 28mm; height: 28mm; display: block; object-fit: contain;" /></div><div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">${infoHtml}</div></div>`;
         this.executeIframePrint(html, true);
       }
     };
@@ -821,8 +821,9 @@
             setStockLevels(remoteStock);
             try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(remoteStock)); } catch(e){}
             
+            // Re-write to ensure any added keys exist firmly in DB immediately
             if (needsUpdate) {
-              setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), remoteStock, { merge: true }).catch(e => console.error("Error updating stock structure:", e));
+              setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), remoteStock).catch(e => console.error("Error updating stock structure:", e));
             }
           } else {
             setDoc(doc(db, 'artifacts', safeAppId, 'public', 'data', 'stock', 'inventory'), initialInventory).catch(e => console.error("Error initializing stock:", e));
@@ -973,7 +974,7 @@
       // HELPER: App Logic Functions
       const saveSettingsToDb = async (newSettings) => {
         try { localStorage.setItem('parlourcare_settings', JSON.stringify(newSettings)); } catch(e){}
-        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
+        if (isFirebaseEnabled && (user || (auth && auth.currentUser))) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'config', 'settings'), newSettings); } catch(err) {} }
       };
 
       const handleAddListItem = (listName) => {
@@ -1006,11 +1007,12 @@
       const saveStockToDb = async (newStock) => {
         try { localStorage.setItem('norfolk_mortuary_stock', JSON.stringify(newStock)); } catch(e){}
         
-        // Checking auth.currentUser directly avoids capturing any stale variables when components render
-        if (isFirebaseEnabled && auth && auth.currentUser) { 
+        if (isFirebaseEnabled && (user || (auth && auth.currentUser))) { 
             try { 
                 const dbRef = doc(db, 'artifacts', String(appId), 'public', 'data', 'stock', 'inventory');
-                // Force explicit map creation to guarantee missing fields are initialized in Firebase 
+                // Creating a strictly formulated object ensures no missing segments cause failures.
+                // We completely removed {merge: true} to forcefully replace the document.
+                // This guarantees Firebase accepts and dynamically instantiates missing arrays/maps immediately.
                 const safeStock = {
                   coffins: newStock.coffins || {},
                   handles: newStock.handles || {},
@@ -1021,7 +1023,7 @@
                   pillows: newStock.pillows || {},
                   signs: newStock.signs || {}
                 };
-                await setDoc(dbRef, safeStock, { merge: true }); 
+                await setDoc(dbRef, JSON.parse(JSON.stringify(safeStock))); 
             } catch(err) { console.error("Stock save error:", err); } 
         }
       };
@@ -1032,7 +1034,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && auth && auth.currentUser) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
+        if (isFirebaseEnabled && (user || (auth && auth.currentUser))) { try { await setDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(record.id)), JSON.parse(JSON.stringify(record))); } catch (err) {} }
       };
 
       const deleteCaseFromDb = async (id) => {
@@ -1066,7 +1068,7 @@
           try { localStorage.setItem('norfolk_mortuary_cases', JSON.stringify(next)); } catch(e){}
           return next;
         });
-        if (isFirebaseEnabled && auth && auth.currentUser) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
+        if (isFirebaseEnabled && (user || (auth && auth.currentUser))) { try { await deleteDoc(doc(db, 'artifacts', String(appId), 'public', 'data', 'cases', String(id))); } catch (err) {} }
       };
 
       const handleStockLevelAdjust = async (type, itemName, delta) => {

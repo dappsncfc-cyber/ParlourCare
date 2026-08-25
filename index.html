@@ -237,7 +237,7 @@
         if (!record) return;
         let timelineHtml = '';
         if (record?.transferStatusTimestamps) { Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; }); }
-        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}${this.getRecordCard(record)}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>${this.renderRow('Transfer Type', record?.transferType || 'N/A')}${this.renderRow('Pick-up / Drop-off Location', record?.transferHospital || 'N/A')}${this.renderRow('Scheduled Date & Time', record?.transferDateTime || 'PENDING')}${this.renderRow('Vehicle Assigned', record?.transferVehicle || 'N/A')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Assigned Transfer Staff</div>${this.renderRow('Staff Dispatched', (record?.transferStaff || []).join(', ') || 'PENDING')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Transfer Audits</div>${this.renderRow('Current Transfer Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.transferStatus || 'Pending'}</strong>`, false)}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;"><div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}</div></div></div>`;
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}${this.getRecordCard(record)}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>${this.renderRow('Transfer Type', record?.transferType || 'N/A')}${this.renderRow('Pick-up / Drop-off Location', record?.transferHospital || 'N/A')}${this.renderRow('Scheduled Date & Time', record?.transferDateTime || 'PENDING')}${this.renderRow('Vehicle Assigned', record?.transferVehicle || 'N/A')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Assigned Transfer Staff</div>${this.renderRow('Staff Dispatched', (record?.transferStaff || []).join(', ') || 'PENDING')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Pick-up Notes & Instructions</div><div style="font-size: 13px; white-space: pre-wrap;">${record?.transferNotes || 'No pick-up notes logged.'}</div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Transfer Audits</div>${this.renderRow('Current Transfer Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.transferStatus || 'Pending'}</strong>`, false)}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;"><div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}</div></div></div>`;
         this.executeIframePrint(html);
       },
 
@@ -254,7 +254,7 @@
         const timelineHtml = this.sortCoronerLogs(record?.pickupStatusTimestamps);
         let transferTimelineHtml = '';
         if (record?.transferStatusTimestamps) { Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { transferTimelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; }); }
-        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.4;">${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)", themeName)}${this.getRecordCard(record)}${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}</div>` : ''}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>${this.renderRow('Body Condition', record?.condition)}${this.renderRow('Defibrillators/Pacemaker', record?.devicesDetails || 'None')}${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}${this.renderRow('Embalming Logs', record?.embalmingDetails || 'None')}${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div><div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div><div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div></div><div style="page-break-before: always; margin-top: 40px;"></div>${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2", themeName)}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>${this.renderRow('Timber Specification', record?.coffin || 'None')}${this.renderRow('Handles Selected', record?.coffinHandles || 'None')}${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}${this.renderRow('Crucifix', record?.crucifix || 'None')}${this.renderRow('Bell Tops', record?.bellTop || 'None')}${this.renderRow('Coffin Pillow', record?.pillow || 'None')}${this.renderRow('At Rest Sign', record?.sign || 'None')}${this.renderRow('Coffin Size', record?.bodySize || 'PENDING SPEC')}${this.renderRow('Engraved Plate Affixed', record?.plate || 'No')}${this.renderRow('Grave Marker', record?.graveMarker || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>${this.renderRow('Dressing Apparel', record?.clothes || 'None')}${this.renderRow('Family Viewing Status', record?.viewing || 'Requested')}</div>${record?.isCoroner ? `<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>${this.renderRow('CAD Ref', record.coronerRef || 'N/A')}<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coroner Officer:</span> <div style="display: flex; align-items: center; gap: 8px;"><strong>${record.coronerOfficer || 'N/A'}</strong>${record.coronerSignature ? `<div style="display: flex; align-items: center; gap: 4px; margin-left: 10px; border-left: 2px solid #e2e8f0; padding-left: 10px;"><span style="font-size: 10px; color: #64748b; font-weight: bold;">Signed:</span><img src="${record.coronerSignature}" style="height: 45px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" /><span style="font-size: 10px; color: #64748b; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span></div>` : ''}</div></div>${this.renderRow('Pick-up Location', record.pickupLocation || 'N/A')}${this.renderRow('Scheduled Date', record.pickupDateTime || 'N/A')}${this.renderRow('Assigned Fleet Vehicle', record.pickupVehicle || 'N/A')}${this.renderRow('Stage Status', record.pickupStatus || 'N/A')}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;"><div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>${timelineHtml}</div></div>` : ''}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital / Home Transfer Details</div>${this.renderRow('Transfer Type', record.transferType || 'N/A')}${this.renderRow('Location', record.transferHospital || 'N/A')}${this.renderRow('Scheduled Date', record.transferDateTime || 'N/A')}${this.renderRow('Vehicle', record.transferVehicle || 'N/A')}${this.renderRow('Staff', (record.transferStaff || []).join(', ') || 'PENDING')}${this.renderRow('Transfer Stage', record.transferStatus || 'Pending')}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;"><div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>${transferTimelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}</div></div></div>`;
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.4;">${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE)", themeName)}${this.getRecordCard(record)}${record?.infection && record?.infection !== 'None' ? `<div style="background: #fee2e2; border: 2px solid #ef4444; color: #991b1b; padding: 8px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 12px; font-size: 12px;">🚨 BIO-HAZARD PROTOCOLS MANDATORY: ${record.infection.toUpperCase()}</div>` : ''}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Clinical & Care Registry Details</div>${this.renderRow('Body Condition', record?.condition)}${this.renderRow('Defibrillators/Pacemaker', record?.devicesDetails || 'None')}${this.renderRow('Green Form Filed', record?.greenCoroner || 'No')}${this.renderRow('Embalming Logs', record?.embalmingDetails || 'None')}${this.renderRow('Key Milestone Date', record?.keyDate || 'Pending')}${this.renderRow('Milestone Action', record?.keyMilestoneName || 'None')}${this.renderRow('Milestone Urgency', record?.keyMilestoneUrgency || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Sanitary Preparations</div><div style="font-size: 12px; white-space: pre-wrap;">${record?.preparationsDetails || 'Standard sanitary preparations registered.'}</div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Jewellery, Valuables & Effects Custody Register</div><div style="font-size: 12px; white-space: pre-wrap;">${record?.jewelleryDetails || 'No jewellery or personal effects currently logged.'}</div></div><div style="page-break-before: always; margin-top: 40px;"></div>${this.getDocHeader(record, "MASTER CUSTODY REGISTER & LOGS (COMBINED FILE) - PAGE 2", themeName)}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coffin Construction Specs</div>${this.renderRow('Timber Specification', record?.coffin || 'None')}${this.renderRow('Handles Selected', record?.coffinHandles || 'None')}${this.renderRow('Wreath Holders', record?.wreathHolders || 'None')}${this.renderRow('Crucifix', record?.crucifix || 'None')}${this.renderRow('Bell Tops', record?.bellTop || 'None')}${this.renderRow('Coffin Pillow', record?.pillow || 'None')}${this.renderRow('At Rest Sign', record?.sign || 'None')}${this.renderRow('Coffin Size', record?.bodySize || 'PENDING SPEC')}${this.renderRow('Engraved Plate Affixed', record?.plate || 'No')}${this.renderRow('Grave Marker', record?.graveMarker || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Dressing & Viewing Details</div>${this.renderRow('Dressing Apparel', record?.clothes || 'None')}${this.renderRow('Family Viewing Status', record?.viewing || 'Requested')}</div>${record?.isCoroner ? `<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Coroner Authority Details & Logistics</div>${this.renderRow('CAD Ref', record.coronerRef || 'N/A')}<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 12px;"><span>Coroner Officer:</span> <div style="display: flex; align-items: center; gap: 8px;"><strong>${record.coronerOfficer || 'N/A'}</strong>${record.coronerSignature ? `<div style="display: flex; align-items: center; gap: 4px; margin-left: 10px; border-left: 2px solid #e2e8f0; padding-left: 10px;"><span style="font-size: 10px; color: #64748b; font-weight: bold;">Signed:</span><img src="${record.coronerSignature}" style="height: 45px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" /><span style="font-size: 10px; color: #64748b; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span></div>` : ''}</div></div>${this.renderRow('Pick-up Location', record.pickupLocation || 'N/A')}${this.renderRow('Scheduled Date', record.pickupDateTime || 'N/A')}${this.renderRow('Assigned Fleet Vehicle', record.pickupVehicle || 'N/A')}${this.renderRow('Stage Status', record.pickupStatus || 'N/A')}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;"><div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>${timelineHtml}</div></div>` : ''}<div style="border: 1px solid #000; border-radius: 6px; padding: 12px; margin-bottom: 12px;"><div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #334155; color: #fff; padding: 4px 8px; border-bottom: 1px solid #000; margin: -12px -12px 10px -12px;">Hospital / Home Transfer Details</div>${this.renderRow('Transfer Type', record.transferType || 'N/A')}${this.renderRow('Location', record.transferHospital || 'N/A')}${this.renderRow('Scheduled Date', record.transferDateTime || 'N/A')}${this.renderRow('Vehicle', record.transferVehicle || 'N/A')}${this.renderRow('Staff', (record.transferStaff || []).join(', ') || 'PENDING')}${this.renderRow('Transfer Notes', record.transferNotes || 'None')}${this.renderRow('Transfer Stage', record.transferStatus || 'Pending')}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; margin-top: 8px;"><div style="font-size: 9px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>${transferTimelineHtml || '<span style="font-size: 11px; color: #64748b;">No log updates recorded.</span>'}</div></div></div>`;
         this.executeIframePrint(html);
       },
 
@@ -271,7 +271,6 @@
         this.executeIframePrint(html, true);
       }
     };
-
 
     const Icons = {
       Users: ({ size = 16, className = "" }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
@@ -431,7 +430,7 @@
           <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{label}</label>
           <input 
             type={type} disabled={disabled} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-            className={`bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855 ${textClass}`}
+            className={`bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none focus:border-indigo-500 transition-colors disabled:bg-slate-955 disabled:text-slate-500 disabled:border-slate-855 ${textClass}`}
           />
         </div>
       );
@@ -441,7 +440,7 @@
       return (
         <div className={wrapperClass}>
           <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{label}</label>
-          <select disabled={disabled} value={value || ''} onChange={(e) => onChange(e.target.value)} className={`bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855 ${textClass}`}>
+          <select disabled={disabled} value={value || ''} onChange={(e) => onChange(e.target.value)} className={`bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 w-full focus:outline-none disabled:bg-slate-955 disabled:text-slate-500 disabled:border-slate-855 ${textClass}`}>
             {options.map((opt, i) => {
                const val = typeof opt === 'object' ? opt.value : opt;
                const lbl = typeof opt === 'object' ? opt.label : opt;
@@ -458,7 +457,7 @@
           <label className="text-[10px] font-bold uppercase text-slate-400 block mb-1">{label}</label>
           <textarea 
             disabled={disabled} value={value || ''} onChange={(e) => onChange(e.target.value)} rows={rows} placeholder={placeholder}
-            className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855"
+            className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none resize-none focus:border-indigo-500 transition-colors disabled:bg-slate-955 disabled:text-slate-500 disabled:border-slate-855"
           />
         </div>
       );
@@ -486,7 +485,7 @@
 
       return (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 antialiased select-none">
-          <div className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl animate-fade-in relative overflow-hidden">
+          <div className="w-full max-w-md bg-slate-955 border border-slate-800 rounded-3xl p-8 shadow-2xl animate-fade-in relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500"></div>
             <div className="text-center mb-8">
               <div className="mx-auto w-16 h-16 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-center mb-4 shadow-inner">
@@ -512,7 +511,7 @@
                   <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} className="w-full bg-slate-900 border border-slate-700/80 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-indigo-500 font-bold" placeholder="Enter access code" required />
                 </div>
               </div>
-              {loginError && <div className="bg-rose-950/50 border border-rose-900/50 text-rose-400 text-xs font-bold p-3 rounded-xl flex items-center gap-2"><Icons.AlertTriangle size={14} /> {loginError}</div>}
+              {loginError && <div className="bg-rose-955/50 border border-rose-900/50 text-rose-400 text-xs font-bold p-3 rounded-xl flex items-center gap-2"><Icons.AlertTriangle size={14} /> {loginError}</div>}
               <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] mt-4">
                 Secure Login
               </button>
@@ -545,7 +544,7 @@
 
       return (
         <>
-          <div className="bg-slate-950 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-30 font-medium select-none">
+          <div className="bg-slate-955 text-xs py-2.5 px-4 md:px-6 flex flex-col sm:flex-row gap-2.5 items-center justify-between border-b border-slate-800/60 z-30 font-medium select-none">
             <div className="flex items-center space-x-2">
               <span className="font-bold tracking-wide uppercase text-[10px] text-teal-400">ParlourCare &copy; Offscript Labs 2026</span>
             </div>
@@ -553,22 +552,22 @@
               <button onClick={() => setActiveBrand("joint")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all text-[11px] font-bold active:scale-95 ${activeBrand === "joint" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🤝 Joint Group</button>
               <button onClick={() => setActiveBrand("cromer")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all text-[11px] font-bold active:scale-95 ${activeBrand === "cromer" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦀 Cromer</button>
               <button onClick={() => setActiveBrand("gowards")} className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg transition-all text-[11px] font-bold active:scale-95 ${activeBrand === "gowards" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/10" : "bg-slate-900 text-slate-300 hover:bg-slate-850"}`}>🦆 Gowards</button>
-              <button onClick={onLogout} className="flex-1 sm:flex-initial ml-2 px-3 py-1.5 rounded-lg transition-all text-[11px] font-bold text-rose-400 border border-rose-900/50 hover:bg-rose-950/40 active:scale-95">Logout</button>
+              <button onClick={onLogout} className="flex-1 sm:flex-initial ml-2 px-3 py-1.5 rounded-lg transition-all text-[11px] font-bold text-rose-400 border border-rose-900/50 hover:bg-rose-955/40 active:scale-95">Logout</button>
             </div>
           </div>
           <header className={`bg-gradient-to-r ${currentTheme.bannerGradient} border-b border-slate-800/80 px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center z-10 shadow-lg select-none`}>
             <div className="flex items-center space-x-3.5">
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/60 shadow-md">
+              <div className="bg-slate-955 p-2.5 rounded-xl border border-slate-800/60 shadow-md">
                 <span className="text-2xl">{activeBrand === "joint" ? "🤝" : activeBrand === "cromer" ? "🦀" : "🦆"}</span>
               </div>
               <div>
                 <h1 className="text-lg md:text-xl font-black text-white tracking-tight">{currentTheme.brandName}</h1>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="bg-slate-950 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-800 uppercase tracking-wider">Mortuary Management</span>
+                  <span className="bg-slate-955 text-amber-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-slate-800 uppercase tracking-wider">Mortuary Management</span>
                   {isFirebaseEnabled ? (
-                    <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-0.5 rounded-full animate-pulse">🟢 Live Cloud Sync Active</span>
+                    <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1.5 bg-emerald-955/40 border border-emerald-900/50 px-2.5 py-0.5 rounded-full animate-pulse">🟢 Live Cloud Sync Active</span>
                   ) : (
-                    <span className="text-[10px] text-amber-400 font-extrabold flex items-center gap-1.5 bg-amber-950/40 border border-amber-900/50 px-2.5 py-0.5 rounded-full">💾 Offline Local Storage Active</span>
+                    <span className="text-[10px] text-amber-400 font-extrabold flex items-center gap-1.5 bg-amber-955/40 border border-amber-900/50 px-2.5 py-0.5 rounded-full">💾 Offline Local Storage Active</span>
                   )}
                 </div>
               </div>
@@ -577,18 +576,18 @@
             <div className="flex flex-col sm:flex-row gap-2.5 w-full lg:w-auto items-stretch sm:items-center">
               {!isCatherine && (
                 <div className="relative">
-                  <button onClick={() => { setIsNotificationTrayOpen(!isNotificationTrayOpen); setUnreadCount(0); }} className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-950 border border-slate-800/80 hover:bg-slate-900 transition-all relative">
+                  <button onClick={() => { setIsNotificationTrayOpen(!isNotificationTrayOpen); setUnreadCount(0); }} className="w-full sm:w-auto h-full px-4 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black text-slate-300 hover:text-white bg-slate-955 border border-slate-800/80 hover:bg-slate-900 transition-all relative">
                     <Icons.Bell size={18} />
                     <span className="sm:hidden font-black">View Activity Log</span>
                     {unreadCount > 0 && <span className="absolute top-1 sm:-top-1 right-2 sm:-right-1 bg-rose-600 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center animate-bounce shadow-md">{unreadCount}</span>}
                   </button>
                   {isNotificationTrayOpen && (
-                    <div className="absolute right-0 mt-3.5 w-80 bg-slate-950 border border-slate-800/80 rounded-2xl shadow-2xl p-4 z-50 animate-fade-in">
+                    <div className="absolute right-0 mt-3.5 w-80 bg-slate-955 border border-slate-800/80 rounded-2xl shadow-2xl p-4 z-50 animate-fade-in">
                       <div className="flex justify-between items-center border-b border-slate-800/60 pb-3 mb-3">
                         <span className="text-xs font-black uppercase text-slate-200 tracking-wider">Live Activity Log</span>
                         <div className="flex items-center gap-2">
                           {!pushEnabled && (
-                            <button onClick={requestPushPermission} className="text-[10px] text-amber-400 hover:text-amber-300 font-black uppercase tracking-wider transition-colors flex items-center gap-1 bg-amber-950/30 px-2 py-0.5 rounded border border-amber-900/50"><Icons.Bell size={10} /> Enable OS Push</button>
+                            <button onClick={requestPushPermission} className="text-[10px] text-amber-400 hover:text-amber-300 font-black uppercase tracking-wider transition-colors flex items-center gap-1 bg-amber-955/30 px-2 py-0.5 rounded border border-amber-900/50"><Icons.Bell size={10} /> Enable OS Push</button>
                           )}
                           {notifications.length > 0 && <button onClick={() => setNotifications([])} className="text-[10px] text-indigo-400 hover:text-indigo-300 font-black uppercase tracking-wider transition-colors">Clear Feed</button>}
                         </div>
@@ -600,7 +599,7 @@
                           notifications.map(notif => (
                             <div key={notif.id} className="p-3 bg-slate-900 border border-slate-800/40 rounded-xl text-left">
                               <div className="flex justify-between items-center mb-1.5">
-                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider border ${notif.type === 'addition' ? 'bg-emerald-950/50 text-emerald-400 border-emerald-900/30' : notif.type === 'deletion' ? 'bg-rose-950/50 text-rose-400 border-rose-900/30' : 'bg-indigo-950/50 text-indigo-400 border-indigo-900/30'}`}>{notif.title}</span>
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider border ${notif.type === 'addition' ? 'bg-emerald-955/50 text-emerald-400 border-emerald-900/30' : notif.type === 'deletion' ? 'bg-rose-955/50 text-rose-400 border-rose-900/30' : 'bg-indigo-955/50 text-indigo-400 border-indigo-900/30'}`}>{notif.title}</span>
                                 <span className="text-[9px] text-slate-500 font-mono font-bold">{notif.timestamp.split(' ')[1]}</span>
                               </div>
                               <p className="text-[11px] text-slate-300 leading-normal font-medium">{notif.message}</p>
@@ -613,7 +612,7 @@
                 </div>
               )}
               {!isCatherine && (
-                <button onClick={() => { setSelectedRowId(null); setViewMode(viewMode === "stock" ? "cases" : "stock"); }} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-300 hover:text-white transition transform active:scale-95 shadow-md">
+                <button onClick={() => { setSelectedRowId(null); setViewMode(viewMode === "stock" ? "cases" : "stock"); }} className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black bg-slate-955 border border-slate-800 hover:bg-slate-900 text-slate-300 hover:text-white transition transform active:scale-95 shadow-md">
                   {viewMode === "stock" ? "📁 Active Cases" : "📦 Stock Room"}
                 </button>
               )}
@@ -872,7 +871,7 @@
               const newNotifications = [];
               const prevMap = new Map((prevListRef.current || []).map(c => [c.id, c]));
               const currentMap = new Map(cases.map(c => [c.id, c]));
-              const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'wreathHolders', 'crucifix', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff'];
+              const fieldsToCheck = ['deceasedName', 'title', 'fridgeTray', 'location', 'condition', 'coffin', 'coffinHandles', 'wreathHolders', 'crucifix', 'pickupStatus', 'transferStatus', 'isArchived', 'keyMilestoneName', 'keyMilestoneUrgency', 'transferDateTime', 'transferHospital', 'transferType', 'transferVehicle', 'transferStaff', 'transferNotes'];
               
               cases.forEach(curr => {
                 const prev = prevMap.get(curr.id);
@@ -1183,7 +1182,7 @@
           id: nextId, ref: `26/${locationPrefix}/${String(locationCount + 1).padStart(3, '0')}`,
           fridgeTray: "", keyDate: "", keyMilestoneName: "", keyMilestoneUrgency: "None", deceasedName: "", title: "Mr", dob: "", dod: "", arranger: activeBrand === "gowards" ? "FAK" : "CRM", location: locationName, greenCoroner: "No", encoffined: "No", plate: "", bodySize: "", condition: "Good", infection: "None", coffin: "", coffinHandles: "", wreathHolders: "", crucifix: "", bellTop: "", pillow: "", sign: "", clothes: "", clothesChecked: false, preparations: "No", preparationsDetails: "", jewellery: "No", jewelleryDetails: "", devices: "No", devicesDetails: "", embalming: "No", embalmingDetails: "", coffinAccessories: "", viewing: "R", ready: "No", 
           isCoroner: isCoronerCase, isConverted: false, coronerRef: "", coronerOfficer: "", coronerSignature: "", pickupLocation: "", pickupDestination: activeBrand === "gowards" ? "Fakenham Mortuary" : "Cromer Mortuary", pickupDateTime: "", pickupStaff: [], pickupStaffEmails: "", pickupVehicle: activeBrand === "gowards" ? "C25 GFS" : "C17 DFS", pickupEquipment: ["First Call Stretcher"], pickupStatus: "Pending", pickupStatusTimestamps: { "Pending": getTimestamp() }, pickupInstructions: "", 
-          transferStatus: "", transferStatusTimestamps: {}, transferDateTime: "", transferHospital: "", transferType: "", transferVehicle: "", transferStaff: [], transferStaffEmails: "", isArchived: false
+          transferStatus: "", transferStatusTimestamps: {}, transferDateTime: "", transferHospital: "", transferType: "", transferVehicle: "", transferStaff: [], transferStaffEmails: "", transferNotes: "", isArchived: false
         };
         saveCaseToDb(newCase); setFormState(newCase); setSelectedRowId(nextId); setViewMode("cases"); setActiveTab(isCoronerCase ? "pickup" : "hospital"); setIsCustomTransferLoc(false); setIsCustomCoffin(false);
       };
@@ -1230,11 +1229,11 @@
               <div className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in bg-slate-900">
                 <div className="max-w-5xl mx-auto">
                   <div className="flex items-center gap-3 mb-8 border-b border-slate-800 pb-4">
-                    <div className="p-3 bg-indigo-950 rounded-xl border border-indigo-500/30 text-2xl">⚙️</div>
+                    <div className="p-3 bg-indigo-955 rounded-xl border border-indigo-500/30 text-2xl">⚙️</div>
                     <div><h2 className="text-2xl font-black text-white">System Administration Portal</h2><p className="text-sm text-slate-400">Configure global dropdowns, labels, and add custom fields.</p></div>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <div className="bg-slate-955 border border-slate-800 rounded-2xl p-6 shadow-xl">
                       <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">📝 UI Label Overrides</h3>
                       <div className="space-y-4">
                         {Object.keys(defaultAppSettings.labels).map(lblKey => (
@@ -1242,7 +1241,7 @@
                         ))}
                       </div>
                     </div>
-                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <div className="bg-slate-955 border border-slate-800 rounded-2xl p-6 shadow-xl">
                       <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">➕ Add Custom Care Fields</h3>
                       <div className="flex gap-2 mb-4">
                         <input type="text" placeholder="e.g. Religion, Pacemaker Details" value={adminInput.newFieldName || ''} onChange={(e) => setAdminInput({...adminInput, newFieldName: e.target.value})} className="bg-slate-900 border border-slate-700/80 rounded-lg text-sm p-2.5 text-white w-full focus:border-indigo-500" />
@@ -1253,19 +1252,19 @@
                         {customFields.map(cf => (
                           <div key={cf.id} className="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800/80">
                             <span className="font-bold text-slate-200">{cf.label} <span className="text-[10px] text-slate-500 ml-2 font-mono">({cf.id})</span></span>
-                            <button onClick={() => handleRemoveCustomField(cf.id)} className="text-rose-400 hover:text-rose-300 p-1 bg-rose-950/30 rounded"><Icons.Trash2 size={14}/></button>
+                            <button onClick={() => handleRemoveCustomField(cf.id)} className="text-rose-400 hover:text-rose-300 p-1 bg-rose-955/30 rounded"><Icons.Trash2 size={14}/></button>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                    <div className="lg:col-span-2 bg-slate-955 border border-slate-800 rounded-2xl p-6 shadow-xl">
                       <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">📋 Dropdown List Managers</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {Object.keys(defaultAppSettings.lists).map(listKey => (
                           <div key={listKey} className="bg-slate-900 p-4 rounded-xl border border-slate-800">
                             <h4 className="font-bold text-slate-300 uppercase text-xs tracking-widest mb-3 border-b border-slate-800 pb-2">{listKey}</h4>
                             <div className="flex gap-2 mb-3">
-                              <input type="text" placeholder={`Add item...`} value={adminInput[listKey] || ''} onChange={(e) => setAdminInput({...adminInput, [listKey]: e.target.value})} className="bg-slate-950 border border-slate-700/80 rounded-lg text-xs p-2 text-white w-full focus:border-indigo-500" />
+                              <input type="text" placeholder={`Add item...`} value={adminInput[listKey] || ''} onChange={(e) => setAdminInput({...adminInput, [listKey]: e.target.value})} className="bg-slate-955 border border-slate-700/80 rounded-lg text-xs p-2 text-white w-full focus:border-indigo-500" />
                               <button onClick={() => handleAddListItem(listKey)} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 rounded-lg text-xs"><Icons.Plus size={12}/></button>
                             </div>
                             <div className="max-h-40 overflow-y-auto pr-2 space-y-1 scrollbar-none">
@@ -1285,16 +1284,17 @@
               </div>
             )}
 
+            {}
             {viewMode === "stock" && !selectedRowId && (
               <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
-                <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
+                <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-955/40 p-3 rounded-2xl border border-slate-800/40">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <h2 className="text-base md:text-lg font-black text-white mr-2">Real-Time Stock Room</h2>
-                    <span className="bg-slate-900 border border-slate-850 text-[10px] text-amber-400 font-extrabold px-3 py-1.5 rounded-lg">⚡ Auto-decremented on Joinery assignment</span>
+                    <span className="bg-slate-900 border border-slate-855 text-[10px] text-amber-400 font-extrabold px-3 py-1.5 rounded-lg">⚡ Auto-decremented on Joinery assignment</span>
                   </div>
                   <div className="relative w-full md:w-64">
                     <Icons.Search className="absolute left-3 top-3 md:top-2.5 text-slate-400" size={16} />
-                    <input type="text" placeholder="Search stock catalog..." value={stockSearchQuery} onChange={(e) => setStockSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-850 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-205 w-full focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder="Search stock catalog..." value={stockSearchQuery} onChange={(e) => setStockSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-855 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-205 w-full focus:outline-none focus:border-indigo-500" />
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto pr-2">
@@ -1313,8 +1313,8 @@
                         <div key={item.name} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between relative shadow-md ${isLow ? 'border-l-4 border-l-rose-500 bg-rose-955/5' : 'border-l-4 border-l-indigo-500'}`}>
                           <div>
                             <div className="flex justify-between items-start mb-2">
-                              <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60 uppercase">{formattedType}</span>
-                              {isLow && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Low Stock</span>}
+                              <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-955/50 px-2 py-0.5 rounded border border-indigo-900/60 uppercase">{formattedType}</span>
+                              {isLow && <span className="text-[9px] font-black text-rose-400 bg-rose-955/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Low Stock</span>}
                             </div>
                             <h3 className="text-sm font-black text-white leading-snug mb-1">{item.name}</h3>
                             <div className="text-xs text-slate-400 font-medium mt-1.5 flex items-baseline gap-1">Current level: <span className={`text-base font-black ${isLow ? 'text-rose-400' : 'text-emerald-400'}`}>{item.count}</span> units</div>
@@ -1345,51 +1345,52 @@
             {}
             {viewMode === "cases" && !selectedRowId && (
               <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden animate-fade-in select-none">
-                <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/40">
+                <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between mb-6 bg-slate-955/40 p-3 rounded-2xl border border-slate-800/40">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <h2 className="text-base md:text-lg font-black text-white mr-2">Active Case Dashboard</h2>
                     {activeBrand === "joint" ? (
-                      <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900 border border-slate-850 text-xs text-slate-205 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none">
+                      <select value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="bg-slate-900 border border-slate-855 text-xs text-slate-205 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none">
                         <option value="All">All Branches</option>
                         {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                       </select>
                     ) : (
-                      <span className="bg-slate-900 border border-slate-850 text-xs text-amber-400 font-extrabold px-3 py-1.5 rounded-lg">📍 {activeBrand === "cromer" ? "Cromer Branch" : "Fakenham Branch"} Only</span>
+                      <span className="bg-slate-900 border border-slate-855 text-xs text-amber-400 font-extrabold px-3 py-1.5 rounded-lg">📍 {activeBrand === "cromer" ? "Cromer Branch" : "Fakenham Branch"} Only</span>
                     )}
-                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-900 border border-slate-850 text-xs text-slate-205 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none">
+                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-slate-900 border border-slate-855 text-xs text-slate-205 font-bold p-2 md:p-1.5 rounded-lg focus:outline-none">
                       <option value="Active">📁 Active Custody ({deceasedList.filter(d => !d.isArchived).length})</option>
                       <option value="Archived">🗃️ Archived Files ({deceasedList.filter(d => d.isArchived).length})</option>
                     </select>
                   </div>
                   <div className="relative w-full md:w-64">
                     <Icons.Search className="absolute left-3 top-3 md:top-2.5 text-slate-400" size={16} />
-                    <input type="text" placeholder="Search case roster..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-850 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-205 w-full focus:outline-none focus:border-indigo-500 transition-colors" />
+                    <input type="text" placeholder="Search case roster..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-slate-900 border border-slate-855 rounded-lg pl-9 pr-4 py-3 md:py-2 text-xs text-slate-205 w-full focus:outline-none focus:border-indigo-500 transition-colors" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0 animate-fade-in select-none">
-                  <div onClick={() => setHudFilter("All")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'All' ? 'border-indigo-500/60 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-slate-800/80 hover:border-indigo-500/30'}`}>
+                  <div onClick={() => setHudFilter("All")} className={`bg-slate-955 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'All' ? 'border-indigo-500/60 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'border-slate-800/80 hover:border-indigo-500/30'}`}>
                     <div className="absolute inset-0 bg-indigo-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-indigo-400 relative z-10">{hudStats.active}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Active Cases</span>
                   </div>
-                  <div onClick={() => setHudFilter(prev => prev === "Coroner" ? "All" : "Coroner")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Coroner' ? 'border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'border-slate-800/80 hover:border-rose-500/30'}`}>
+                  <div onClick={() => setHudFilter(prev => prev === "Coroner" ? "All" : "Coroner")} className={`bg-slate-955 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Coroner' ? 'border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'border-slate-800/80 hover:border-rose-500/30'}`}>
                     <div className="absolute inset-0 bg-rose-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-rose-400 relative z-10">{hudStats.coroner}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Coroner Cases</span>
                   </div>
-                  <div onClick={() => setHudFilter(prev => prev === "Transfers" ? "All" : "Transfers")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Transfers' ? 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-800/80 hover:border-emerald-500/30'}`}>
+                  <div onClick={() => setHudFilter(prev => prev === "Transfers" ? "All" : "Transfers")} className={`bg-slate-955 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Transfers' ? 'border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-slate-800/80 hover:border-emerald-500/30'}`}>
                     <div className="absolute inset-0 bg-emerald-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-emerald-400 relative z-10">{hudStats.transfers}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">Transfers</span>
                   </div>
-                  <div onClick={() => setHudFilter(prev => prev === "Urgent" ? "All" : "Urgent")} className={`bg-slate-950 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Urgent' ? 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-slate-800/80 hover:border-amber-500/30'}`}>
+                  <div onClick={() => setHudFilter(prev => prev === "Urgent" ? "All" : "Urgent")} className={`bg-slate-955 border rounded-2xl p-4 flex flex-col justify-center items-center shadow-lg relative overflow-hidden group cursor-pointer transition-all ${hudFilter === 'Urgent' ? 'border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-slate-800/80 hover:border-amber-500/30'}`}>
                     <div className="absolute inset-0 bg-amber-500/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="text-3xl font-black text-amber-400 relative z-10">{hudStats.urgent}</span>
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1 relative z-10">High Urgency</span>
                   </div>
                 </div>
 
+                {}
                 {(() => {
                   const todayEventsMap = new Map();
                   
@@ -1424,7 +1425,7 @@
                   if (todayEvents.length === 0) return null;
 
                   return (
-                    <div className="mb-6 bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl animate-fade-in select-none relative overflow-hidden">
+                    <div className="mb-6 bg-slate-955 border border-slate-800 rounded-3xl p-5 shadow-2xl animate-fade-in select-none relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500"></div>
                       <div className="flex items-center justify-between border-b border-slate-800 pb-3.5 mb-4">
                         <div className="flex items-center space-x-2.5"><span className="text-xl">📅</span><div><h3 className="text-sm font-black text-white uppercase tracking-wider">Upcoming Tasks</h3><p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Chronological movements & critical deadlines</p></div></div>
@@ -1434,17 +1435,17 @@
                         {todayEvents.map((evt) => {
                           const isPriority = evt.type === 'CORONER_DISPATCH' || evt.type === 'HIGH_MILESTONE';
                           return (
-                            <div key={evt.id} onClick={() => { setSelectedRowId(evt.caseId); setFormState(JSON.parse(JSON.stringify(evt.rawItem))); setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : (evt.rawItem.isCoroner && !evt.rawItem.isConverted ? "pickup" : "hospital")); setIsCustomTransferLoc(false); setIsCustomCoffin(evt.rawItem.coffin && !coffinsList.includes(evt.rawItem.coffin)); }} className={`p-3.5 rounded-2xl border cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${isPriority ? 'border-rose-900/60 bg-rose-950/5 hover:bg-rose-950/10 hover:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/80'}`}>
+                            <div key={evt.id} onClick={() => { setSelectedRowId(evt.caseId); setFormState(JSON.parse(JSON.stringify(evt.rawItem))); setActiveTab(evt.type === 'CORONER_DISPATCH' ? "pickup" : evt.type === 'TRANSFER' ? "hospital" : (evt.rawItem.isCoroner && !evt.rawItem.isConverted ? "pickup" : "hospital")); setIsCustomTransferLoc(false); setIsCustomCoffin(evt.rawItem.coffin && !coffinsList.includes(evt.rawItem.coffin)); }} className={`p-3.5 rounded-2xl border cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 group bg-slate-900/40 ${isPriority ? 'border-rose-900/60 bg-rose-955/5 hover:bg-rose-955/10 hover:border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.05)]' : 'border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/80'}`}>
                               <div className="flex items-start space-x-3.5 min-w-0 flex-1">
                                 <div className="flex flex-col items-center justify-center flex-shrink-0">
-                                  <span className="text-xs font-mono font-black text-amber-400 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">{evt.time.includes(' ') ? evt.time.split(' ')[1] : evt.time}</span>
+                                  <span className="text-xs font-mono font-black text-amber-400 bg-slate-955 border border-slate-800 px-2.5 py-1 rounded-lg">{evt.time.includes(' ') ? evt.time.split(' ')[1] : evt.time}</span>
                                   {evt.time.includes(' ') && <span className="text-[8px] text-slate-500 font-mono mt-1 font-bold">{evt.time.split(' ')[0]}</span>}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-900/40">{evt.ref}</span>
-                                    {evt.type === 'CORONER_DISPATCH' && <span className="text-[8px] font-black text-rose-400 bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-900 uppercase animate-pulse">🚨 Urgent Removal</span>}
-                                    {evt.type === 'HIGH_MILESTONE' && <span className="text-[8px] font-black text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-900 uppercase">⚠️ Priority Milestone</span>}
+                                    <span className="text-[9px] font-mono font-bold text-indigo-400 bg-indigo-955/40 px-1.5 py-0.5 rounded border border-indigo-900/40">{evt.ref}</span>
+                                    {evt.type === 'CORONER_DISPATCH' && <span className="text-[8px] font-black text-rose-400 bg-rose-955/60 px-1.5 py-0.5 rounded border border-rose-900 uppercase animate-pulse">🚨 Urgent Removal</span>}
+                                    {evt.type === 'HIGH_MILESTONE' && <span className="text-[8px] font-black text-amber-400 bg-amber-955/60 px-1.5 py-0.5 rounded border border-amber-900 uppercase">⚠️ Priority Milestone</span>}
                                   </div>
                                   <h4 className={`text-xs font-black truncate leading-snug group-hover:text-white transition-colors ${isPriority ? 'text-rose-200' : 'text-slate-200'}`}>{evt.title}</h4>
                                   <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">{evt.detail}</p>
@@ -1452,7 +1453,7 @@
                               </div>
                               <div className="flex items-center justify-between md:justify-end gap-4 border-t border-slate-900 md:border-0 pt-2 md:pt-0">
                                 {evt.crew.length > 0 && <div className="text-[10px] text-slate-400 font-bold hidden sm:block">Crew: <span className="text-slate-300 font-normal">{(evt.crew).join(', ')}</span> {evt.vehicle && <span className="text-slate-500 font-mono ml-1.5">[{evt.vehicle}]</span>}</div>}
-                                <div className="flex items-center space-x-2"><span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-xl border ${evt.type === 'CORONER_DISPATCH' ? 'bg-rose-950/40 text-rose-400 border-rose-900/40' : evt.type === 'HIGH_MILESTONE' ? 'bg-amber-950/40 text-amber-400 border-amber-900/40' : 'bg-slate-950 text-slate-400 border-slate-800'}`}>{evt.status}</span></div>
+                                <div className="flex items-center space-x-2"><span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-xl border ${evt.type === 'CORONER_DISPATCH' ? 'bg-rose-955/40 text-rose-400 border-rose-900/40' : evt.type === 'HIGH_MILESTONE' ? 'bg-amber-955/40 text-amber-400 border-amber-900/40' : 'bg-slate-955 text-slate-400 border-slate-800'}`}>{evt.status}</span></div>
                               </div>
                             </div>
                           );
@@ -1462,6 +1463,7 @@
                   );
                 })()}
 
+                {}
                 <div className="flex-1 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filteredList.map((item) => {
@@ -1471,11 +1473,11 @@
                         <div key={item.id} onClick={() => { if (isCatherine && !item.isCoroner) return; setSelectedRowId(item.id); setFormState(JSON.parse(JSON.stringify(item))); setActiveTab(item.isCoroner && !item.isConverted ? "pickup" : "hospital"); setIsCustomTransferLoc(false); setIsCustomCoffin(item.coffin && !coffinsList.includes(item.coffin)); }} className={`bg-slate-955 border border-slate-800/80 rounded-2xl p-4.5 transition-all flex flex-col relative animate-fade-in shadow-md ${isCatherine && !item.isCoroner ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-indigo-500/50 hover:bg-slate-900/40 hover:shadow-xl'} ${showAsCoroner ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-amber-500'}`}>
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex flex-wrap gap-1.5 items-center">
-                              <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
-                              {showAsCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
-                              {item.isConverted && <span className="text-[9px] font-black text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-900 uppercase">Converted</span>}
-                              {isTransferCompleted && !item.isConverted && <span className="text-[9px] font-black text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
-                              {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${item.keyMilestoneUrgency === 'High' ? 'bg-rose-950/60 text-rose-300 border-rose-900' : item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-950/60 text-amber-300 border-amber-900' : 'bg-emerald-950/60 text-emerald-300 border-emerald-900'}`}>Urgency: {item.keyMilestoneUrgency}</span>}
+                              <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-955/50 px-2 py-0.5 rounded border border-indigo-900/60">{item.ref}</span>
+                              {showAsCoroner && <span className="text-[9px] font-black text-rose-400 bg-rose-955/60 px-2 py-0.5 rounded border border-rose-900 uppercase">Coroner</span>}
+                              {item.isConverted && <span className="text-[9px] font-black text-indigo-400 bg-indigo-955/60 px-2 py-0.5 rounded border border-indigo-900 uppercase">Converted</span>}
+                              {isTransferCompleted && !item.isConverted && <span className="text-[9px] font-black text-amber-400 bg-amber-955/60 px-2 py-0.5 rounded border border-amber-900 uppercase">Standard admission</span>}
+                              {item.keyMilestoneUrgency && item.keyMilestoneUrgency !== 'None' && <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${item.keyMilestoneUrgency === 'High' ? 'bg-rose-955/60 text-rose-300 border-rose-900' : item.keyMilestoneUrgency === 'Medium' ? 'bg-amber-955/60 text-amber-300 border-amber-900' : 'bg-emerald-955/60 text-emerald-300 border-emerald-900'}`}>Urgency: {item.keyMilestoneUrgency}</span>}
                             </div>
                             <div className="flex items-center space-x-1.5">
                               {!isCatherine && !isDavid && (
@@ -1542,7 +1544,7 @@
             {}
             {selectedRowId && formState && (
               <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 animate-fade-in">
-                <div className="bg-slate-950 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md select-none">
+                <div className="bg-slate-955 border-b border-slate-800 flex items-center px-4 md:px-6 py-0 overflow-x-auto whitespace-nowrap scrollbar-none scroll-smooth shadow-md select-none">
                   <button onClick={() => { setSelectedRowId(null); setFormState(null); setViewMode("cases"); }} className="px-4 py-3.5 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 border-r border-slate-800/60 mr-2 flex-shrink-0 transition-colors">
                     <Icons.ArrowLeft size={14} className="text-indigo-400" /> Dashboard
                   </button>
@@ -1577,9 +1579,10 @@
                   <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
                       
+                      {}
                       {activeTab === "care" && (
                         <>
-                          <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                          <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl">
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Layers className="text-indigo-400" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Core Admission Details</h3></div>
                             <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                               <FormSelect disabled={isDavidLocked} label="Title" value={formState?.title} onChange={(val) => handleFieldChange('title', val)} options={titles} wrapperClass="col-span-2 sm:col-span-2" />
@@ -1603,7 +1606,7 @@
                               </div>
                             )}
                           </div>
-                          <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                          <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl">
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.AlertTriangle className="text-rose-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Clinical Protocols & Hazards</h3></div>
                             <div className="grid grid-cols-2 gap-4 mb-4">
                               <FormSelect disabled={isDavidLocked} label="Bio-Hazard Infection" value={formState?.infection} onChange={(val) => handleFieldChange('infection', val)} options={infectionRisks} textClass="text-rose-400 font-bold" />
@@ -1626,7 +1629,7 @@
                               <FormSelect disabled={isDavidLocked} label="Milestone Urgency" value={formState?.keyMilestoneUrgency} onChange={(val) => handleFieldChange('keyMilestoneUrgency', val)} options={['None','Low','Medium','High']} />
                             </div>
                           </div>
-                          <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                          <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl">
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Users size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Dressing & Viewings</h3></div>
                             <div className="grid grid-cols-2 gap-4 mb-4">
                               <FormInput disabled={isDavidLocked} label="Dressing Attire" value={formState?.clothes} onChange={(val) => handleFieldChange('clothes', val)} />
@@ -1636,8 +1639,9 @@
                         </>
                       )}
 
+                      {}
                       {activeTab === "workshop" && (
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                        <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl">
                           <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Hammer className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Construction Specifications</h3></div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             <div>
@@ -1654,7 +1658,7 @@
                                       handleFieldChange('coffin', e.target.value);
                                     }
                                   }}
-                                  className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855"
+                                  className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-955 disabled:text-slate-500 disabled:border-slate-855"
                                 >
                                   <option value="">-- Select Coffin Model --</option>
                                   <option value="None">None</option>
@@ -1669,7 +1673,7 @@
                                     value={formState?.coffin || ''}
                                     onChange={(e) => handleFieldChange('coffin', e.target.value)}
                                     placeholder="Enter custom coffin..."
-                                    className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855"
+                                    className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-bold focus:border-indigo-500 transition-colors disabled:bg-slate-955 disabled:text-slate-500 disabled:border-slate-855"
                                   />
                                   <button
                                     type="button"
@@ -1707,15 +1711,16 @@
                         </div>
                       )}
 
+                      {}
                       {activeTab === "pickup" && formState?.isCoroner && (
                         <>
                           {(isLogisticsLocked || formState?.isConverted) && (
                             <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
                               <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed or case converted. Coroner removal logs are locked.</p></div></div>
-                              {!formState?.isConverted && <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>}
+                              {!formState?.isConverted && <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-855 text-[11px] font-bold">🔓 Unlock Logistics</button>}
                             </div>
                           )}
-                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-305 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-305 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-305">Coroner Authority Details</h3></div>
                             <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 mb-4">
                               <FormSelect disabled={isLogisticsLocked || formState?.isConverted} label="Title" value={formState?.title} onChange={(val) => handleFieldChange('title', val)} options={titles} wrapperClass="col-span-2 sm:col-span-2" />
@@ -1739,7 +1744,7 @@
                               </div>
                             </div>
                           </div>
-                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
+                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Truck className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-300">Logistics & Dispatch</h3></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                               <div>
@@ -1783,9 +1788,9 @@
                             </div>
                           </div>
                           {dispatchEmailData && (
-                            <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-950/40 border-slate-900' : ''}`}>
+                            <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${(isLogisticsLocked || formState?.isConverted) ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                               <div className="flex items-center space-x-1.5 text-slate-455 mb-3 border-b border-slate-800 pb-3"><Icons.Mail size={14} className="text-indigo-400" /><span className="text-[10px] font-black tracking-widest uppercase">Dispatch Emailer</span></div>
-                              <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono"><div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-950 p-1.5 border border-slate-800 mt-1">{formState?.pickupStaffEmails || 'None'}</span></div></div>
+                              <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-mono"><div className="text-slate-400 font-bold">To: <span className="text-slate-200 block font-normal text-[11px] truncate bg-slate-955 p-1.5 border border-slate-800 mt-1">{formState?.pickupStaffEmails || 'None'}</span></div></div>
                               <div className="mt-4 grid grid-cols-2 gap-2">
                                 <button disabled={isLogisticsLocked || formState?.isConverted} type="button" onClick={() => setIsEmailModalOpen(true)} className="bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold py-2 rounded-xl border border-slate-800">Preview</button>
                                 <a href={(isLogisticsLocked || formState?.isConverted) ? '#' : dispatchEmailData.mailtoLink} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 text-slate-955 text-[10px] font-black py-2 rounded-xl flex items-center justify-center">Send</a>
@@ -1795,15 +1800,16 @@
                         </>
                       )}
 
+                      {}
                       {activeTab === "hospital" && (
                         <>
                           {isLogisticsLocked && (
                             <div className="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 select-none">
                               <div className="flex items-center gap-3"><span className="text-2xl">🔒</span><div><h4 className="text-xs font-bold text-white uppercase tracking-wider">Logistics Archive Lock</h4><p className="text-[11px] text-slate-400">Hospital transfer is completed. Coroner removal & transfer logs are locked to preserve audit integrity.</p></div></div>
-                              <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-850 text-[11px] font-bold">🔓 Unlock Logistics</button>
+                              <button type="button" onClick={() => handleTransferStatusChange('Pending')} className="bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-1.5 rounded-lg border border-slate-855 text-[11px] font-bold">🔓 Unlock Logistics</button>
                             </div>
                           )}
-                          <div className={`bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
+                          <div className={`bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl transition-all duration-300 ${isLogisticsLocked ? 'opacity-60 pointer-events-none select-none bg-slate-955/40 border-slate-900' : ''}`}>
                             <div className="flex items-center space-x-2 border-b border-slate-800/60 pb-3 mb-4 select-none"><Icons.Building2 className="text-amber-500" size={16} /><h3 className="text-sm font-bold uppercase tracking-widest text-slate-355">Hospital / Home Pick-up Details</h3></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                               <div>
@@ -1840,7 +1846,7 @@
                                           handleFieldChange('transferHospital', e.target.value);
                                         }
                                       }} 
-                                      className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855"
+                                      className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-slate-200 w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-955 disabled:text-slate-500 disabled:border-slate-855"
                                     >
                                       <option value="">-- Select Location --</option>
                                       {safeHospitalsList.map(h => <option key={h} value={h}>{h}</option>)}
@@ -1854,7 +1860,7 @@
                                         value={formState?.transferHospital || ''} 
                                         onChange={(e) => handleFieldChange('transferHospital', e.target.value)} 
                                         placeholder="Enter custom location..." 
-                                        className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-950 disabled:text-slate-500 disabled:border-slate-855" 
+                                        className="bg-slate-900 border border-slate-700/80 rounded-lg text-xs p-2.5 text-white w-full focus:outline-none font-semibold focus:border-indigo-500 transition-colors disabled:bg-slate-955 disabled:text-slate-500 disabled:border-slate-855" 
                                       />
                                       <button 
                                         type="button" 
@@ -1888,6 +1894,16 @@
                                 })}
                               </div>
                             </div>
+                            <div className="mt-4 pt-4 border-t border-slate-800/60">
+                              <FormTextArea 
+                                disabled={isLogisticsLocked || isDavidLocked} 
+                                label="Pick-up Notes & Special Instructions" 
+                                value={formState?.transferNotes} 
+                                onChange={(val) => handleFieldChange('transferNotes', val)} 
+                                rows={3} 
+                                placeholder="e.g. Ward / room number, access codes, family instructions, or specific transfer requirements..." 
+                              />
+                            </div>
                           </div>
                         </>
                       )}
@@ -1901,7 +1917,7 @@
 
                     {}
                     <div className="space-y-6 select-none">
-                      <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
+                      <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl relative animate-fade-in">
                         <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.Printer size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Document Print Station</span></div>
                         <div className="mt-8 space-y-2.5 w-full">
                           {(!formState?.isCoroner || formState?.isConverted) && (
@@ -1920,7 +1936,7 @@
                         </div>
                       </div>
 
-                      <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
+                      <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative group">
                         <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-450"><Icons.QrCode size={13} className="text-amber-500" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">Tracking Pass</span></div>
                         <div className="mt-8 mb-4 bg-white p-3 rounded-xl shadow-inner"><img src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(`${getBaseUrl()}?case=${formState.id}`)}&bgcolor=f8fafc&color=0f172a`} alt="QR Tracking" className="w-32 h-32 object-contain" /></div>
                         <div className="mt-5 w-full grid grid-cols-2 gap-2">
@@ -1930,7 +1946,7 @@
                       </div>
 
                       {activeTab === "care" && (
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
+                        <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 flex flex-col items-center text-center shadow-xl relative">
                           <span className="absolute top-3 left-4 text-[9px] font-black uppercase tracking-widest text-slate-500">Condition Metric</span>
                           <div className="my-6 p-4 bg-slate-900 rounded-full border border-slate-800/80 shadow-inner"><BodyConditionIcon condition={formState?.condition} size={64} /></div>
                           <h4 className="text-sm font-black text-white uppercase">Status: {formState?.condition}</h4>
@@ -1938,11 +1954,11 @@
                       )}
 
                       {!isCatherine && !isDavid && (
-                        <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
+                        <div className="bg-slate-955 p-5 rounded-2xl border border-slate-800 shadow-xl relative">
                           <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-slate-455"><Icons.FolderOpen size={13} className="text-indigo-400" /><span className="text-[9px] font-bold tracking-widest uppercase text-slate-400">File Administration</span></div>
                           <div className="mt-8 space-y-2.5 w-full">
                             {formState?.isCoroner && !formState?.isConverted && (
-                              <button type="button" onClick={() => setDialog({ isOpen: true, title: "Convert to Standard Admission", message: `Convert the Coroner profile for ${formState.deceasedName} to a standard admission? This will lock the Coroner logs and unlock the Care and Workshop tabs.`, type: "confirm", onConfirm: () => { convertToAdmission(); closeDialog(); } })} className="w-full bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-900/50 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Layers size={14} className="text-indigo-400" />Convert to Admission</span></button>
+                              <button type="button" onClick={() => setDialog({ isOpen: true, title: "Convert to Standard Admission", message: `Convert the Coroner profile for ${formState.deceasedName} to a standard admission? This will lock the Coroner logs and unlock the Care and Workshop tabs.`, type: "confirm", onConfirm: () => { convertToAdmission(); closeDialog(); } })} className="w-full bg-indigo-955/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-900/50 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Layers size={14} className="text-indigo-400" />Convert to Admission</span></button>
                             )}
                             <button type="button" onClick={() => handleArchiveToggle(formState.id)} className="w-full bg-slate-900 hover:bg-slate-800 text-slate-205 border border-slate-800 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.FolderOpen size={14} className="text-amber-400" />{formState?.isArchived ? "Restore Case" : "Archive Custody Profile"}</span></button>
                             <button type="button" onClick={() => setDialog({ isOpen: true, title: "Confirm Case Removal", message: `Delete the record for ${formState.deceasedName}?`, type: "confirm", onConfirm: () => { deleteCaseFromDb(formState.id); setSelectedRowId(null); setFormState(null); closeDialog(); } })} className="w-full bg-red-955/20 hover:bg-red-950/40 text-red-200 border border-red-900/40 text-xs font-semibold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between"><span className="flex items-center gap-2"><Icons.Trash2 size={14} className="text-red-400" />Delete Case Record</span></button>
@@ -1974,7 +1990,7 @@
 
           {isEmailModalOpen && formState && dispatchEmailData && (
             <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-[9999] animate-fade-in">
-              <div className="bg-slate-950 border border-slate-800 rounded-2xl max-w-xl w-full p-6 relative shadow-2xl">
+              <div className="bg-slate-955 border border-slate-800 rounded-2xl max-w-xl w-full p-6 relative shadow-2xl">
                 <button onClick={() => setIsEmailModalOpen(false)} className="absolute top-3 right-3 text-slate-400 hover:text-white p-1.5"><Icons.X size={18} /></button>
                 <h3 className="text-base font-black text-white mb-4 select-none">Email Preview</h3>
                 <div className="space-y-2 bg-slate-900 p-4 rounded-2xl border border-slate-800 text-xs font-mono">

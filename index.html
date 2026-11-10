@@ -181,28 +181,55 @@
     };
 
     const PrintEngine = {
-      executeIframePrint(htmlContent, isSticker = false) {
+      executeIframePrint(htmlContent, isSticker = false, isA4 = false) {
         try {
           const printWindow = window.open('about:blank', '_blank');
           if (!printWindow) return alert("Allow pop-ups to print.");
-          const decoratedHtml = `<!DOCTYPE html><html><head><title>Mortuary Portal - Print</title><style>body { margin: 0; padding: 0; background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; color: #000000; font-family: 'Segoe UI', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .print-canvas { background: #ffffff; min-height: ${isSticker ? 'auto' : '100vh'}; box-sizing: border-box; padding: ${isSticker ? '0' : '40px'}; ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''} } @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } .print-canvas { padding: 0 !important; background: transparent !important; } ${isSticker ? '@page { size: 89mm 36mm; margin: 0mm; }' : ''} }</style></head><body><div class="no-print" style="background: #0f172a; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; position: sticky; top: 0; z-index: 10000;"><span style="color: #94a3b8; font-size: 11px; font-weight: 800;">📄 Norfolk Mortuary - Print Desk</span><div><button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; margin-right: 8px;">🖨️ Print</button><button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Close</button></div></div><div class="print-canvas">${htmlContent}</div><script>window.onload = function() { setTimeout(() => { window.print(); }, 500); };<\/script></body></html>`;
+          const decoratedHtml = `<!DOCTYPE html><html><head><title>Mortuary Portal - Print</title><style>body { margin: 0; padding: 0; background-color: ${isSticker ? '#ffffff' : '#f1f5f9'}; color: #000000; font-family: 'Segoe UI', Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .print-canvas { background: #ffffff; min-height: ${isSticker ? 'auto' : '100vh'}; box-sizing: border-box; padding: ${isSticker ? '0' : (isA4 ? '20px 24px' : '40px')}; ${isSticker ? 'display: flex; justify-content: center; align-items: center;' : ''} } @media print { body { padding: 0 !important; margin: 0 !important; background: #fff !important; } .no-print { display: none !important; } .print-canvas { padding: ${isA4 ? '4mm 6mm' : '0'} !important; background: transparent !important; } ${isSticker ? '@page { size: 89mm 36mm; margin: 0mm; }' : (isA4 ? '@page { size: A4 portrait; margin: 8mm 10mm; }' : '')} }</style></head><body><div class="no-print" style="background: #0f172a; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; position: sticky; top: 0; z-index: 10000;"><span style="color: #94a3b8; font-size: 11px; font-weight: 800;">📄 Norfolk Mortuary - Print Desk</span><div><button onclick="window.print()" style="background: #eab308; color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 12px; margin-right: 8px;">🖨️ Print</button><button onclick="window.close()" style="background: #334155; color: #f1f5f9; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Close</button></div></div><div class="print-canvas">${htmlContent}</div><script>window.onload = function() { setTimeout(() => { window.print(); }, 500); };<\/script></body></html>`;
           printWindow.document.open();
           printWindow.document.write(decoratedHtml);
           printWindow.document.close();
         } catch (error) { console.error("Print Error", error); }
       },
 
-      getDocHeader(record, docTitle, themeName) {
+      getDocHeader(record, docTitle, themeName, receivedTime = null) {
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(`${getBaseUrl()}?case=${record?.id}`)}&bgcolor=ffffff&color=000000`;
-        return `<div style="border-bottom: 3px double #000; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;"><div><h1 style="font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0; line-height: 1.2;">${themeName}</h1><h2 style="font-size: 13px; font-weight: bold; text-transform: uppercase; margin: 4px 0 0 0; color: #444;">${docTitle}</h2></div><div style="display: flex; align-items: center; gap: 15px;"><div style="text-align: right;"><span style="font-size: 12px; font-weight: bold; font-family: monospace; background: #e2e8f0; padding: 3px 8px; border: 1px solid #000; border-radius: 4px;">ARR: ${record?.ref}</span><div style="font-size: 9px; color: #555; margin-top: 5px;">Printed: ${getTimestamp().split(' ')[0]}</div></div><div style="border: 1px solid #000; padding: 2px; background: #fff; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;"><img src="${qrCodeUrl}" alt="QR Link" style="width: 100%; height: 100%; object-fit: contain;" /></div></div></div>`;
+        const receivedHtml = receivedTime ? `<div style="font-size: 10px; font-weight: bold; font-family: monospace; color: #0f172a; background: #fef3c7; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 4px; margin-top: 4px; text-align: right;">CALL RECEIVED: ${receivedTime}</div>` : '';
+        return `<div style="border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;"><div><h1 style="font-size: 16px; font-weight: 900; text-transform: uppercase; margin: 0; line-height: 1.2;">${themeName}</h1><h2 style="font-size: 12px; font-weight: bold; text-transform: uppercase; margin: 3px 0 0 0; color: #333;">${docTitle}</h2></div><div style="display: flex; align-items: center; gap: 12px;"><div style="text-align: right;"><span style="font-size: 11px; font-weight: bold; font-family: monospace; background: #e2e8f0; padding: 2px 7px; border: 1px solid #000; border-radius: 4px;">ARR: ${record?.ref}</span>${receivedHtml}<div style="font-size: 8px; color: #666; margin-top: 3px;">Printed: ${getTimestamp().split(' ')[0]}</div></div><div style="border: 1px solid #000; padding: 2px; background: #fff; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;"><img src="${qrCodeUrl}" alt="QR Link" style="width: 100%; height: 100%; object-fit: contain;" /></div></div></div>`;
       },
 
-      getRecordCard(record) {
-        return `<div style="border: 1px solid #000; padding: 12px; background: #f8fafc; border-radius: 6px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;"><div><strong>Deceased:</strong> ${record?.title} ${record?.deceasedName || "Unnamed Admission"}</div><div><strong>Tray Assignment:</strong> ${record?.fridgeTray || 'PENDING'}</div><div><strong>Date of Birth:</strong> ${record?.dob || 'PENDING'}</div><div><strong>Date of Death:</strong> ${record?.dod || 'PENDING'}</div><div><strong>Branch Location:</strong> ${record?.location}</div><div><strong>Case Type:</strong> ${record?.isCoroner && !record?.isConverted ? '⚖️ Coroner Mandate' : 'Standard Private'}</div></div>`;
+      getRecordCard(record, isWriteIn = false) {
+        const deceasedVal = record?.deceasedName && record.deceasedName.trim() ? `${record?.title || ''} ${record.deceasedName}`.trim() : (isWriteIn ? this.renderWriteInLine('180px') : 'Unnamed Admission');
+        const trayVal = record?.fridgeTray && record.fridgeTray.trim() && record.fridgeTray !== 'PENDING' ? record.fridgeTray : (isWriteIn ? this.renderWriteInLine('80px') : 'PENDING');
+        const dobVal = record?.dob && record.dob.trim() && record.dob !== 'PENDING' ? record.dob : (isWriteIn ? this.renderWriteInLine('100px') : 'PENDING');
+        const dodVal = record?.dod && record.dod.trim() && record.dod !== 'PENDING' ? record.dod : (isWriteIn ? this.renderWriteInLine('100px') : 'PENDING');
+        const locationVal = record?.location && record.location.trim() ? record.location : (isWriteIn ? this.renderWriteInLine('120px') : 'PENDING');
+        const caseType = record?.isCoroner && !record?.isConverted ? '⚖️ Coroner Mandate' : 'Standard Private';
+
+        return `<div style="border: 1px solid #000; padding: 8px 12px; background: #f8fafc; border-radius: 4px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 11px;"><div><strong>Deceased:</strong> ${deceasedVal}</div><div><strong>Tray Assignment:</strong> ${trayVal}</div><div><strong>Date of Birth:</strong> ${dobVal}</div><div><strong>Date of Death:</strong> ${dodVal}</div><div><strong>Branch Location:</strong> ${locationVal}</div><div><strong>Case Type:</strong> ${caseType}</div></div>`;
       },
 
       renderRow(label, value, strong = true) {
         return `<div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>${label}:</span> ${strong ? `<strong>${value}</strong>` : value}</div>`;
+      },
+
+      renderWriteInLine(minWidth = '140px') {
+        return `<span style="display: inline-block; min-width: ${minWidth}; border-bottom: 1px solid #475569; vertical-align: bottom; height: 1.1em; margin-left: 4px;"></span>`;
+      },
+
+      renderDispatchRow(label, val, defaultWriteInWidth = '220px', withTimeDate = false) {
+        const isFilled = val && typeof val === 'string' ? val.trim() !== '' && val !== 'PENDING' && val !== 'N/A' && val !== 'None' : (Array.isArray(val) ? val.length > 0 : Boolean(val));
+        let displayVal = '';
+        if (isFilled) {
+          displayVal = Array.isArray(val) ? `<strong>${val.join(', ')}</strong>` : `<strong>${val}</strong>`;
+        } else {
+          if (withTimeDate) {
+            displayVal = `<div style="display: flex; align-items: center; gap: 8px;"><span style="display: inline-block; min-width: 130px; border-bottom: 1px solid #475569; height: 1.1em;"></span><span style="font-size: 9px; color: #475569; text-transform: uppercase;">Time:</span><span style="display: inline-block; width: 60px; border-bottom: 1px solid #475569; height: 1.1em;"></span><span style="font-size: 9px; color: #475569; text-transform: uppercase;">Date:</span><span style="display: inline-block; width: 75px; border-bottom: 1px solid #475569; height: 1.1em;"></span></div>`;
+          } else {
+            displayVal = `<span style="display: inline-block; min-width: ${defaultWriteInWidth}; border-bottom: 1px solid #475569; height: 1.1em;"></span>`;
+          }
+        }
+        return `<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #cbd5e1; font-size: 11.5px;"><span>${label}:</span> ${displayVal}</div>`;
       },
 
       sortCoronerLogs(timestamps) {
@@ -235,19 +262,116 @@
 
       printHospitalTransferDocument(record, themeName) {
         if (!record) return;
-        let timelineHtml = '';
-        if (record?.transferStatusTimestamps) { Object.entries(record.transferStatusTimestamps).forEach(([status, time]) => { timelineHtml += `<div style="display: flex; justify-content: space-between; font-size: 12px; font-family: monospace; padding: 4px 0; border-bottom: 1px solid #e2e8f0;"><strong>${status}:</strong> <span>${time}</span></div>`; }); }
-        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName)}${this.getRecordCard(record)}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Transfer Specifications</div>${this.renderRow('Transfer Type', record?.transferType || 'N/A')}${this.renderRow('Pick-up / Drop-off Location', record?.transferHospital || 'N/A')}${this.renderRow('Scheduled Date & Time', record?.transferDateTime || 'PENDING')}${this.renderRow('Vehicle Assigned', record?.transferVehicle || 'N/A')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Assigned Transfer Staff</div>${this.renderRow('Staff Dispatched', (record?.transferStaff || []).join(', ') || 'PENDING')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Pick-up Notes & Instructions</div><div style="font-size: 13px; white-space: pre-wrap;">${record?.transferNotes || 'No pick-up notes logged.'}</div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Transfer Audits</div>${this.renderRow('Current Transfer Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.transferStatus || 'Pending'}</strong>`, false)}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;"><div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>${timelineHtml || '<span style="font-size: 12px; color: #64748b;">No log updates recorded.</span>'}</div></div></div>`;
-        this.executeIframePrint(html);
+        const receivedTime = record?.transferStatusTimestamps?.["Pending"] || (record?.transferDateTime ? record.transferDateTime.split(' ')[0] : getTimestamp());
+        const stages = ["Pending", "Completed"];
+        let auditRows = '';
+        stages.forEach(st => {
+          const loggedVal = record?.transferStatusTimestamps?.[st];
+          if (loggedVal) {
+            auditRows += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${st}:</strong> <span>${loggedVal}</span></div>`;
+          } else {
+            auditRows += `<div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${st}:</strong> <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Time:</span><span style="display: inline-block; width: 65px; border-bottom: 1px solid #475569; height: 1.1em;"></span><span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Date:</span><span style="display: inline-block; width: 85px; border-bottom: 1px solid #475569; height: 1.1em;"></span></div></div>`;
+          }
+        });
+
+        const notesContent = record?.transferNotes && record.transferNotes.trim()
+          ? `<div style="font-size: 11.5px; white-space: pre-wrap; min-height: 40px;">${record.transferNotes}</div>`
+          : `<div style="min-height: 48px; border-bottom: 1px solid #cbd5e1; display: flex; flex-direction: column; justify-content: space-between;"><div style="border-bottom: 1px dashed #cbd5e1; height: 24px;"></div><div style="height: 24px;"></div></div>`;
+
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.35; max-width: 100%;">
+          ${this.getDocHeader(record, "Hospital / Home Pick-up Details", themeName, receivedTime)}
+          ${this.getRecordCard(record, true)}
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Transfer Specifications</div>
+            ${this.renderDispatchRow('Transfer Type', record?.transferType, '160px')}
+            ${this.renderDispatchRow('Pick-up / Drop-off Location', record?.transferHospital, '220px')}
+            ${this.renderDispatchRow('Scheduled Date & Time', record?.transferDateTime, '160px', true)}
+            ${this.renderDispatchRow('Vehicle Assigned', record?.transferVehicle, '140px')}
+          </div>
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Assigned Transfer Staff</div>
+            ${this.renderDispatchRow('Staff Dispatched', (record?.transferStaff || []).join(', '), '260px')}
+          </div>
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Pick-up Notes & Instructions</div>
+            ${notesContent}
+          </div>
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Live Transfer Audits</div>
+            ${this.renderDispatchRow('Current Transfer Stage', record?.transferStatus ? `<strong style="text-transform: uppercase; color: #b45309;">${record.transferStatus}</strong>` : null, '140px')}
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 10px; margin-top: 6px;">
+              <div style="font-size: 9.5px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Timeline Logs:</div>
+              ${auditRows}
+            </div>
+          </div>
+        </div>`;
+        this.executeIframePrint(html, false, true);
       },
 
       printCoronerDocument(record, themeName) {
         if (!record?.isCoroner) return;
-        const timelineHtml = this.sortCoronerLogs(record?.pickupStatusTimestamps);
+        const receivedTime = record?.pickupStatusTimestamps?.["Pending"] || (record?.pickupDateTime ? record.pickupDateTime.split(' ')[0] : getTimestamp());
+        const stages = ["Pending", "Dispatched", "On Scene", "Collected"];
+        let auditRows = '';
+        stages.forEach(st => {
+          const loggedVal = record?.pickupStatusTimestamps?.[st];
+          if (loggedVal) {
+            auditRows += `<div style="display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${st}:</strong> <span>${loggedVal}</span></div>`;
+          } else {
+            auditRows += `<div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #e2e8f0;"><strong>${st}:</strong> <div style="display: flex; align-items: center; gap: 8px;"><span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Time:</span><span style="display: inline-block; width: 65px; border-bottom: 1px solid #475569; height: 1.1em;"></span><span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Date:</span><span style="display: inline-block; width: 85px; border-bottom: 1px solid #475569; height: 1.1em;"></span></div></div>`;
+          }
+        });
+
         let signatureHtml = '';
-        if (record?.coronerSignature) { signatureHtml = `<div style="display: flex; align-items: center; gap: 6px; margin-left: 15px; border-left: 2px solid #e2e8f0; padding-left: 15px;"><span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signed:</span><img src="${record.coronerSignature}" style="height: 65px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" /><span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-left: 5px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span></div>`; }
-        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.5;">${this.getDocHeader(record, "Coroner's Removal Authority & Dispatch", themeName)}${this.getRecordCard(record)}<div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Coroner Authority Details</div>${this.renderRow('CAD Reference', record?.coronerRef || 'N/A')}${this.renderRow('Branch', record?.location || 'N/A')}${this.renderRow('Body Condition', record?.condition || 'N/A')}${this.renderRow('Tray No.', record?.fridgeTray || 'PENDING')}<div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px dashed #eee; font-size: 13px;"><span>Instructing Officer:</span> <div style="display: flex; align-items: center; gap: 10px;"><strong>${record?.coronerOfficer || 'N/A'}</strong>${signatureHtml}</div></div></div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;">${this.renderRow('Pickup Location', record?.pickupLocation || 'PENDING')}${this.renderRow('Destination', record?.pickupDestination || 'Cromer')}${this.renderRow('Scheduled Time', record?.pickupDateTime || 'PENDING')}${this.renderRow('Assigned Fleet Vehicle', record?.pickupVehicle || 'N/A')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Road Crew Checks</div>${this.renderRow('Crew Dispatched', (record?.pickupStaff || []).join(', ') || 'PENDING')}${this.renderRow('Special Instructions', record?.pickupInstructions || 'None')}</div><div style="border: 1px solid #000; border-radius: 6px; padding: 15px; margin-bottom: 15px;"><div style="font-size: 12px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 4px 8px; border-bottom: 1px solid #000; margin: -15px -15px 12px -15px;">Live Dispatch Audits</div>${this.renderRow('Current Mission Stage', `<strong style="text-transform: uppercase; color: #b45309;">${record?.pickupStatus}</strong>`, false)}<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px; margin-top: 10px;"><div style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: #475569;">Stage Logs:</div>${timelineHtml}</div></div></div>`;
-        this.executeIframePrint(html);
+        if (record?.coronerSignature) {
+          signatureHtml = `<div style="display: flex; align-items: center; gap: 6px; margin-left: 10px; border-left: 1px solid #cbd5e1; padding-left: 10px;"><span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signed:</span><img src="${record.coronerSignature}" style="height: 40px; object-fit: contain; background: transparent; mix-blend-mode: multiply;" alt="Signature" /><span style="font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; margin-left: 4px;">Date: <span style="color: #0f172a;">${getTimestamp().split(' ')[0]}</span></span></div>`;
+        } else {
+          signatureHtml = `<div style="display: flex; align-items: center; gap: 6px; margin-left: 10px; border-left: 1px solid #cbd5e1; padding-left: 10px;"><span style="font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: bold;">Signature:</span><span style="display: inline-block; width: 90px; border-bottom: 1px solid #475569; height: 1.1em;"></span><span style="font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: bold;">Date:</span><span style="display: inline-block; width: 70px; border-bottom: 1px solid #475569; height: 1.1em;"></span></div>`;
+        }
+
+        const officerVal = record?.coronerOfficer && record.coronerOfficer.trim() && record.coronerOfficer !== 'N/A'
+          ? `<strong>${record.coronerOfficer}</strong>`
+          : `<span style="display: inline-block; min-width: 120px; border-bottom: 1px solid #475569; height: 1.1em;"></span>`;
+
+        const html = `<div style="font-family: 'Segoe UI', Arial, sans-serif; color: #000; line-height: 1.35; max-width: 100%;">
+          ${this.getDocHeader(record, "Coroner's Removal Authority & Dispatch", themeName, receivedTime)}
+          ${this.getRecordCard(record, true)}
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Coroner Authority Details</div>
+            ${this.renderDispatchRow('CAD Reference', record?.coronerRef, '160px')}
+            ${this.renderDispatchRow('Branch', record?.location, '140px')}
+            ${this.renderDispatchRow('Body Condition', record?.condition, '120px')}
+            ${this.renderDispatchRow('Tray No.', record?.fridgeTray, '80px')}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed #cbd5e1; font-size: 11.5px;">
+              <span>Instructing Officer:</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                ${officerVal}
+                ${signatureHtml}
+              </div>
+            </div>
+          </div>
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Location & Scheduling</div>
+            ${this.renderDispatchRow('Pickup Location', record?.pickupLocation, '240px')}
+            ${this.renderDispatchRow('Destination', record?.pickupDestination, '180px')}
+            ${this.renderDispatchRow('Scheduled Time', record?.pickupDateTime, '160px', true)}
+            ${this.renderDispatchRow('Assigned Fleet Vehicle', record?.pickupVehicle, '140px')}
+          </div>
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Road Crew Checks</div>
+            ${this.renderDispatchRow('Crew Dispatched', (record?.pickupStaff || []).join(', '), '260px')}
+            ${this.renderDispatchRow('Special Instructions', record?.pickupInstructions, '260px')}
+          </div>
+          <div style="border: 1px solid #000; border-radius: 5px; padding: 8px 12px; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; background: #e2e8f0; padding: 3px 8px; border-bottom: 1px solid #000; margin: -8px -12px 6px -12px;">Live Dispatch Audits</div>
+            ${this.renderDispatchRow('Current Mission Stage', record?.pickupStatus ? `<strong style="text-transform: uppercase; color: #b45309;">${record.pickupStatus}</strong>` : null, '140px')}
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px 10px; margin-top: 6px;">
+              <div style="font-size: 9.5px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; color: #475569;">Stage Logs:</div>
+              ${auditRows}
+            </div>
+          </div>
+        </div>`;
+        this.executeIframePrint(html, false, true);
       },
 
       printCombinedMasterDocument(record, themeName) {
